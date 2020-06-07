@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="TerminalProjectOptionsProvider">
+    <envs>
+      <env key="AUTOJUMP_ERROR_PATH" value="$USER_HOME$/Library/autojump/errors.log" />
+      <env key="AUTOJUMP_SOURCED" value="1" />
+      <env key="Apple_PubSub_Socket_Render" value="/private/tmp/com.apple.launchd.5kS9GF3PKP/Render" />
+      <env key="CONDA_DEFAULT_ENV" value="base" />
+      <env key="CONDA_EXE" value="/anaconda3/bin/conda" />
+      <env key="CONDA_PREFIX" value="/anaconda3" />
+      <env key="CONDA_PROMPT_MODIFIER" value="(base) " />
+      <env key="CONDA_PYTHON_EXE" value="/anaconda3/bin/python" />
+      <env key="CONDA_SHLVL" value="1" />
+      <env key="DISPLAY" value="/private/tmp/com.apple.launchd.9ak3xXwy9y/org.macosforge.xquartz:0" />
+      <env key="HOME" value="$USER_HOME$" />
+      <env key="JAVA_HOME" value="/Library/java/JavaVirtualMachines/jdk-14.jdk/contents/home\=Library/java/JavaVirtualMachines/jdk-14.jdk/contents/home/" />
+      <env key="LC_CTYPE" value="en_US.UTF-8" />
+      <env key="LOGNAME" value="niallcullinane" />
+      <env key="OMF_CONFIG" value="$USER_HOME$/.config/omf" />
+      <env key="OMF_PATH" value="$USER_HOME$/.local/share/omf" />
+      <env key="OSTYPE" value="" />
+      <env key="PATH" value="$USER_HOME$/google-cloud-sdk/bin:/anaconda3/bin:/anaconda3/condabin:/Users/niallcullinane/textools/build/install/textools/bin:/opt/X11/bin:/Library/TeX/texbin:/usr/local/bin:/usr/bin:/bin:/usr/local/sbin:/usr/sbin:/sbin:/Users/niallcullinane/opt/bin/" />
+      <env key="PATH_TO_FX" value="/Library/javafx-sdk-14/lib\=Library/javafx-sdk-14/lib" />
+      <env key="SHELL" value="/usr/local/bin/fish" />
+      <env key="SSH_AUTH_SOCK" value="/private/tmp/com.apple.launchd.goOAcHxY93/Listeners" />
+      <env key="TMPDIR" value="/var/folders/bv/lcxfrzvd4hj344hgy8qjbkz40000gq/T/" />
+      <env key="TOOLBOX_VERSION" value="1.17.7018" />
+      <env key="USER" value="niallcullinane" />
+      <env key="XPC_FLAGS" value="0x0" />
+      <env key="XPC_SERVICE_NAME" value="com.jetbrains.intellij.93292.2910BF74-AE5D-4A77-915C-04A0DA6AF7CC" />
+      <env key="_CE_CONDA" value="" />
+      <env key="_CE_M" value="" />
+      <env key="__CF_USER_TEXT_ENCODING" value="0x1F7:0x0:0x6C" />
+      <env key="fish_greeting" value="" />
+    </envs>
+  </component>
+</project>
