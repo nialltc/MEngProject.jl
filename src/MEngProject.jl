@@ -1,5 +1,7 @@
 module MEngProject
 
-# Write your package code here.
-
+include("Laminart.jl")
+include("LamKernals.jl")
+include("Utils.jl")
+include("Parameters.jl")
 end
