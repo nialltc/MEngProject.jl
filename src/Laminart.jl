@@ -14,6 +14,7 @@ julia>
 module Laminart
 using NNlib, ImageFiltering, Images
 
+export I_u, fun_v_C
 # retina
 
 function I_u(I::AbstractArray, σ_1=1)
@@ -42,7 +43,7 @@ end
 
 # lgn to l6 and l4
 
-function fun_v_C(v_p::n, v_m::AbstractArray, σ::Real, K::Int, γ=10, l = 4*ceil(Int,σ)+1)
+function fun_v_C(v_p::AbstractArray, v_m::AbstractArray, σ::Real, K::Int, γ=10, l = 4*ceil(Int,σ)+1)
     # isodd(l) || throw(ArgumentError("length must be odd"))
 
     V = exp(-1/8) .* (imfilter((relu.(v_p)-relu.(v_m)), Kernel.gaussian(σ), "circular"))
@@ -50,6 +51,7 @@ function fun_v_C(v_p::n, v_m::AbstractArray, σ::Real, K::Int, γ=10, l = 4*ceil
     A = reshape(Array{eltype(V)}(undef, size(V)[1], size(V)[2]*K),size(V)[1],size(V)[2],K)
     B = copy(A)
 
+# todo replace kern_A() and kern_B with premade kernels here
     for k in 1:K
         θ = π*(k-1)/K
         A[:,:,k] = imfilter(V, kern_A(σ, θ), "circular")

@@ -3,6 +3,9 @@ uuid = "d0493a11-efc0-4c7c-9b66-d0bd5a04cc55"
 authors = ["nialltc <39237476+nialltc@users.noreply.github.com> and contributors"]
 version = "0.1.0"
 
+[deps]
+LanguageServer = "2b0e0bc5-e4fd-59b4-8912-456d1b03d8d7"
+
 [compat]
 julia = "1"
 

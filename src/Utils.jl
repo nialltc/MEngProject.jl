@@ -15,7 +15,7 @@ module Utils
 using Images
 
 # saving plots
-location="/Users/niallcullinane/Dropbox/GCIPA/Project/plot_out/"
+location="../out/"
 
 
 function save_orientations(A::Array, name::String, bright=1, loc=location, filetype=".png")

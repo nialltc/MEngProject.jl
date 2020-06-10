@@ -1,0 +1,212 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="FlexmarkProjectSettings">
+    <FlexmarkHtmlSettings flexmarkSpecExampleRendering="0" flexmarkSpecExampleRenderHtml="false">
+      <flexmarkSectionLanguages>
+        <option name="1" value="Markdown" />
+        <option name="2" value="HTML" />
+        <option name="3" value="flexmark-ast:1" />
+      </flexmarkSectionLanguages>
+    </FlexmarkHtmlSettings>
+  </component>
+  <component name="MarkdownProjectSettings">
+    <PreviewSettings splitEditorLayout="SPLIT" splitEditorPreview="PREVIEW" useGrayscaleRendering="false" zoomFactor="1.0" maxImageWidth="0" synchronizePreviewPosition="true" highlightPreviewType="LINE" highlightFadeOut="5" highlightOnTyping="true" synchronizeSourcePosition="true" verticallyAlignSourceAndPreviewSyncPosition="true" showSearchHighlightsInPreview="true" showSelectionInPreview="true" lastLayoutSetsDefault="false">
+      <PanelProvider>
+        <provider providerId="com.vladsch.md.nav.editor.javafx.html.panel" providerName="JavaFX WebView" />
+      </PanelProvider>
+    </PreviewSettings>
+    <ParserSettings gitHubSyntaxChange="false" correctedInvalidSettings="false" emojiShortcuts="1" emojiImages="0">
+      <PegdownExtensions>
+        <option name="ANCHORLINKS" value="true" />
+        <option name="ATXHEADERSPACE" value="true" />
+        <option name="FENCED_CODE_BLOCKS" value="true" />
+        <option name="INTELLIJ_DUMMY_IDENTIFIER" value="true" />
+        <option name="RELAXEDHRULES" value="true" />
+        <option name="STRIKETHROUGH" value="true" />
+        <option name="TABLES" value="true" />
+        <option name="TASKLISTITEMS" value="true" />
+      </PegdownExtensions>
+      <ParserOptions>
+        <option name="COMMONMARK_LISTS" value="true" />
+        <option name="EMOJI_SHORTCUTS" value="true" />
+        <option name="GFM_TABLE_RENDERING" value="true" />
+        <option name="PRODUCTION_SPEC_PARSER" value="true" />
+        <option name="SIM_TOC_BLANK_LINE_SPACER" value="true" />
+      </ParserOptions>
+    </ParserSettings>
+    <HtmlSettings headerTopEnabled="false" headerBottomEnabled="false" bodyTopEnabled="false" bodyBottomEnabled="false" addPageHeader="false" imageUriSerials="false" addDocTypeHtml="true" noParaTags="false" plantUmlConversion="0">
+      <GeneratorProvider>
+        <provider providerId="com.vladsch.md.nav.editor.javafx.html.generator" providerName="JavaFx HTML Generator" />
+      </GeneratorProvider>
+      <headerTop />
+      <headerBottom />
+      <bodyTop />
+      <bodyBottom />
+    </HtmlSettings>
+    <CssSettings previewScheme="UI_SCHEME" cssUri="" isCssUriEnabled="false" isCssUriSerial="true" isCssTextEnabled="true" isDynamicPageWidth="true">
+      <StylesheetProvider>
+        <provider providerId="com.vladsch.md.nav.editor.javafx.html.css" providerName="Default JavaFx Stylesheet" />
+      </StylesheetProvider>
+      <ScriptProviders>
+        <provider providerId="com.vladsch.md.nav.editor.hljs.html.script" providerName="HighlightJS Script" />
+        <provider providerId="com.vladsch.md.nav.editor.katex.html.script" providerName="Katex Script" />
+      </ScriptProviders>
+      <cssText>*{ font-family:&quot;OpenDyslexicMono Nerd Font&quot;;
+background-color: #282C34;
+
+}
+em { color: #98C379}
+strong { color: #E88388}
+ins { color: #DBAA79}
+s { text-decoration-line: underline; color: #C678DD}
+
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p,
+blockquote {
+    margin: 0;
+    padding: 0;
+}
+body {
+
+    font-size: 13px;
+    line-height: 18px;
+    color: #B9C0CB;
+    background-color: #282C34;
+    margin: 10px 13px 10px 13px;
+}
+table {
+	margin: 10px 0 15px 0;
+	border-collapse: collapse;
+}
+td,th {
+	border: 1px solid #4A515D;
+	padding: 3px 10px;
+}
+th {
+	padding: 5px 10px;
+}
+a {
+    color: #D291E4;
+}
+a:hover {
+    color: #6F7783;
+    text-decoration: none;
+}
+a img {
+    border: none;
+}
+p {
+    margin-bottom: 9px;
+}
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {color: #72BEF2;
+    line-height: 36px;}
+
+
+h1 {
+    margin-bottom: 18px;
+    font-size: 30px;
+}
+h2 {
+    font-size: 24px;
+}
+h3 {
+    font-size: 18px;
+}
+h4 {
+    font-size: 16px;
+}
+h5 {
+    font-size: 14px;
+}
+h6 {
+    font-size: 13px;
+}
+hr {
+    margin: 0 0 19px;
+    border: 0;
+    border-bottom: 1px solid #6F7783;
+}
+blockquote {
+    padding: 13px 13px 21px 15px;
+    margin-bottom: 18px;
+    font-style: italic;
+}
+blockquote:before {
+    content:&quot;\201C&quot;;
+    font-size:40px;
+    margin-left:-10px;
+    color:#6F7783;
+}
+blockquote p {
+    font-size: 14px;
+    font-weight: 300;
+    line-height: 18px;
+    margin-bottom: 0;
+    font-style: italic;
+}
+
+code {
+	color: #DBAA79;
+    padding: 1px 3px;
+    font-size: 12px;
+    -webkit-border-radius: 3px;
+    -moz-border-radius: 3px;
+    border-radius: 3px;
+}
+pre {
+    display: block;
+    padding: 14px;
+    margin: 0 0 18px;
+    line-height: 16px;
+    font-size: 11px;
+    border: 1px solid #4A515D;
+    white-space: pre;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+pre code {
+    background-color: #282C34;
+    color: #B9C0CB;
+    font-size: 11px;
+    padding: 0;
+}
+&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD
+=======
+sup {
+    font-size: 0.83em;
+    vertical-align: super;
+    line-height: 0;
+}
+* {
+	-webkit-print-color-adjust: exact;
+}
+&gt;&gt;&gt;&gt;&gt;&gt;&gt; e2f493b587415ef89da69a18e1f72684b7d09d5f
+@media screen and (min-width: 914px) {
+    body {
+        width: 854px;
+        margin:10px auto;
+    }
+}
+@media print {
+	body,code,pre code,h1,h2,h3,h4,h5,h6 {
+		color: black;
+	}
+	table, pre {
+		page-break-inside: avoid;
+	}
+}</cssText>
+      <cssUriHistory />
+    </CssSettings>
+  </component>
+</project>

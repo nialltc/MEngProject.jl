@@ -2,3 +2,7 @@
 *.jl.cov
 *.jl.mem
 /docs/build/
+/notebooks/.ipynb_checkpoints/
+/src/MEngProject.jl.48346.mem
+.ipynb_checkpoints/Untitled-checkpoint.ipynb
+.virtual_documents/

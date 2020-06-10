@@ -1,7 +1,11 @@
 module MEngProject
+include("./Laminart.jl")
+include("./LamKernels.jl")
+include("./Utils.jl")
+include("./Parameters.jl")
+export Laminart, LamKernels, Utils, Parameters, testa, kern_A
 
-include("Laminart.jl")
-include("LamKernals.jl")
-include("Utils.jl")
-include("Parameters.jl")
+function testa(x)
+    "yeah"
+    end
 end
