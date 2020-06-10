@@ -118,10 +118,6 @@ end
 # # T_P in V2 0.625x T_P in V1  ??
 #
 #
-# # todo
-# function fun_f(x::AbstractArray, μ::Real = Global μ,
-#     ν::Real = Global ν, n::Real = Global n)
-#     μ .* x .^n ./(ν^n .+ x.^n)
-# end
+
 
 end

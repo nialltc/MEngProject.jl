@@ -14,7 +14,7 @@ julia>
 module Laminart
 using NNlib, ImageFiltering, Images
 
-export I_u, fun_v_C
+export I_u, fun_v_C, fun_equ
 # retina
 
 function I_u(I::AbstractArray, σ_1=1)
@@ -139,5 +139,15 @@ end
 # ds_v2 = δ_s(    -s_v2 +
 #                 imfilter((max(z_v2,Γ)),H_v2) -
 #                 (s_v2 .* imfilter(s_v2, T_m)))  #?????
+
+# # todo
+# function fun_f(x::AbstractArray, μ::Real = Global μ,
+#     ν::Real = Global ν, n::Real = Global n)
+#     μ .* x .^n ./(ν^n .+ x.^n)
+# end
+
+
+# for equilabrium
+fun_equ(x) = x/(1+x)
 
 end
