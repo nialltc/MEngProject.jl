@@ -14,10 +14,10 @@ julia>
 
 
 module LamKernels
-    # lgn to l6/l4
+
 export kern_A, kern_B
 
-
+# lgn to l6/l4
 using NNlib, ImageFiltering, Images
 
 function kern_d_pv(σ::Real, θ::Real, l = 4*ceil(Int,σ)+1)

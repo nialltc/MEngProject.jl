@@ -12,7 +12,8 @@ julia>
 ```
 """
 module Laminart
-using NNlib, ImageFiltering, Images
+    include("./LamKernels.jl")
+using NNlib, ImageFiltering, Images, MEngProject.LamKernels
 
 export I_u, fun_v_C, fun_equ
 # retina
@@ -54,8 +55,8 @@ function fun_v_C(v_p::AbstractArray, v_m::AbstractArray, σ::Real, K::Int, γ=10
 # todo replace kern_A() and kern_B with premade kernels here
     for k in 1:K
         θ = π*(k-1)/K
-        A[:,:,k] = imfilter(V, kern_A(σ, θ), "circular")
-        B[:,:,k] = abs.(imfilter(V, kern_B(σ, θ), "circular"))
+        A[:,:,k] = imfilter(V, MEngProject.LamKernels.kern_A(σ, θ), "circular")
+        B[:,:,k] = abs.(imfilter(V, MEngProject.LamKernels.kern_B(σ, θ), "circular"))
     end
 
     γ .* (relu.(A .- B) .+ relu.(.- A .- B))
