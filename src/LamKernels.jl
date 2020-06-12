@@ -49,11 +49,11 @@ function kern_d_mv(σ::Real, θ::Real, l = 4*ceil(Int,σ)+1)
 end
 
 function kern_d_p(σ::Real, θ::Real, l = 4*ceil(Int,σ)+1)
-    kern_d_pv(σ, θ, l) .* transpose(kern_d_ph(σ, θ, l))
+    kern_d_ph(σ, θ, l) .* transpose(kern_d_pv(σ, θ, l))
 end
 
 function kern_d_m(σ::Real, θ::Real, l = 4*ceil(Int,σ)+1)
-    kern_d_mv(σ, θ, l) .* transpose(kern_d_mh(σ, θ, l))
+    kern_d_mh(σ, θ, l) .* transpose(kern_d_mv(σ, θ, l))
 end
 
 function kern_A(σ::Real, θ::Real, l = 4*ceil(Int,σ)+1)

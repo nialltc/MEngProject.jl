@@ -150,6 +150,6 @@ end
 
 
 # for equilabrium
-fun_equ(x) = x/(1+x)
+fun_equ(x) = relu.(x)/(1+relu.(x))
 
 end
