@@ -20,28 +20,28 @@ export kern_A, kern_B
 # lgn to l6/l4
 using NNlib, ImageFiltering, Images
 
-function kern_d_pv(σ::Real, θ::Real, l = 4*ceil(Int,σ)+1)
+function kern_d_ph(σ::Real, θ::Real, l = 4*ceil(Int,σ)+1)
     isodd(l) || throw(ArgumentError("length must be odd"))
     w = l>>1
     g = σ == 0 ? [1] : [exp(-x*cos(θ)/(2*σ)) for x=-w:w]
     centered(g/sum(g))
 end
 
-function kern_d_ph(σ::Real, θ::Real, l = 4*ceil(Int,σ)+1)
+function kern_d_pv(σ::Real, θ::Real, l = 4*ceil(Int,σ)+1)
     isodd(l) || throw(ArgumentError("length must be odd"))
     w = l>>1
     g = σ == 0 ? [1] : [exp(-x*sin(θ)/(2*σ)) for x=-w:w]
     centered(g/sum(g))
 end
 
-function kern_d_mv(σ::Real, θ::Real, l = 4*ceil(Int,σ)+1)
+function kern_d_mh(σ::Real, θ::Real, l = 4*ceil(Int,σ)+1)
     isodd(l) || throw(ArgumentError("length must be odd"))
     w = l>>1
     g = σ == 0 ? [1] : [exp(x*cos(θ)/(2*σ)) for x=-w:w]
     centered(g/sum(g))
 end
 
-function kern_d_mh(σ::Real, θ::Real, l = 4*ceil(Int,σ)+1)
+function kern_d_mv(σ::Real, θ::Real, l = 4*ceil(Int,σ)+1)
     isodd(l) || throw(ArgumentError("length must be odd"))
     w = l>>1
     g = σ == 0 ? [1] : [exp(x*sin(θ)/(2*σ)) for x=-w:w]
@@ -56,17 +56,17 @@ function kern_d_m(σ::Real, θ::Real, l = 4*ceil(Int,σ)+1)
     kern_d_mv(σ, θ, l) .* transpose(kern_d_mh(σ, θ, l))
 end
 
-function kern_d(σ::Real, θ::Real, l = 4*ceil(Int,σ)+1)
+function kern_A(σ::Real, θ::Real, l = 4*ceil(Int,σ)+1)
     kern_d_p(σ, θ, l).-kern_d_m(σ, θ, l)
 end
 
 
-function kern_A(σ::Real, θ::Real, l = 4*ceil(Int,σ)+1)
-    relu.(kern_d(σ, θ, l)) .- relu.(-1 .*(kern_d(σ, θ, l)))
-end
+# function kern_A(σ::Real, θ::Real, l = 4*ceil(Int,σ)+1)
+#     relu.(kern_d(σ, θ, l)) .- relu.(-1 .*(kern_d(σ, θ, l)))
+# end
 
 function kern_B(σ::Real, θ::Real, l = 4*ceil(Int,σ)+1)
-    relu.(kern_d(σ, θ, l)) .+ relu.(-1 .*(kern_d(σ, θ, l)))
+    relu.(kern_A(σ, θ, l)) .+ relu.(-1 .*(kern_A(σ, θ, l)))
 end
 
 #
