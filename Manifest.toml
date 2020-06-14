@@ -5,9 +5,9 @@ uuid = "2a0f44e3-6c83-55bd-87e4-b1978d98bd5f"
 
 [[CSTParser]]
 deps = ["Tokenize"]
-git-tree-sha1 = "a41ef38fa6fdffe5de91c38ac3e05337644a512d"
+git-tree-sha1 = "f91b4c10ddaad564e20daa0ec55994dc1302239e"
 uuid = "00ebfdb7-1f24-5e51-bd34-a7502290713f"
-version = "2.3.1"
+version = "2.4.0"
 
 [[Dates]]
 deps = ["Printf"]
@@ -19,9 +19,9 @@ uuid = "8ba89e20-285c-5b6f-9357-94700520ee1b"
 
 [[DocumentFormat]]
 deps = ["CSTParser", "FilePathsBase", "Tokenize"]
-git-tree-sha1 = "eb34aa08aad1bc1ed5641b8c1f7fa4f478a4045f"
+git-tree-sha1 = "f78f2ac4672b957818cf633b46f3bbee1e093620"
 uuid = "ffa9a821-9c82-50df-894e-fbcef3ed31cd"
-version = "2.2.0"
+version = "3.1.0"
 
 [[FilePathsBase]]
 deps = ["Dates", "Printf", "Test", "UUIDs"]
@@ -39,11 +39,17 @@ git-tree-sha1 = "b34d7cef7b337321e97d22242c3c2b91f476748e"
 uuid = "682c06a0-de6a-54ab-a142-c8b1cf79cde6"
 version = "0.21.0"
 
+[[JSONRPC]]
+deps = ["JSON", "UUIDs"]
+git-tree-sha1 = "af93d32c09cdb383f9e7928f863d18b085f942de"
+uuid = "b9b8584e-8fd3-41f9-ad0c-7255d428e418"
+version = "1.1.0"
+
 [[LanguageServer]]
-deps = ["CSTParser", "DocumentFormat", "JSON", "REPL", "StaticLint", "SymbolServer", "Tokenize", "URIParser", "UUIDs"]
-git-tree-sha1 = "7b427da55cec8c4690190e336139dee8a808016b"
+deps = ["CSTParser", "DocumentFormat", "JSON", "JSONRPC", "REPL", "StaticLint", "SymbolServer", "Tokenize", "URIParser", "UUIDs"]
+git-tree-sha1 = "b5c6de352d11c3f705171104f675f18472371670"
 uuid = "2b0e0bc5-e4fd-59b4-8912-456d1b03d8d7"
-version = "3.0.0"
+version = "3.1.0"
 
 [[LibGit2]]
 deps = ["Printf"]
@@ -95,15 +101,15 @@ uuid = "6462fe0b-24de-5631-8697-dd941f90decc"
 
 [[StaticLint]]
 deps = ["CSTParser", "Serialization", "SymbolServer"]
-git-tree-sha1 = "91efea7df8e15c588d2557a151ac3c6e1560069d"
+git-tree-sha1 = "b65d27912c1c47e8c8c13a2eec22aefcad13148b"
 uuid = "b3cc710f-9c33-5bdb-a03d-a94903873e97"
-version = "4.3.0"
+version = "4.4.0"
 
 [[SymbolServer]]
 deps = ["LibGit2", "Markdown", "Pkg", "REPL", "SHA", "Serialization", "Sockets", "UUIDs"]
-git-tree-sha1 = "43383798f7c4e78abc16eb741ee4656a4940bb38"
+git-tree-sha1 = "cc8a07e94b1e75aa8bc21a3003c5f4d8d834a9ee"
 uuid = "cf896787-08d5-524d-9de7-132aaa0cb996"
-version = "4.4.0"
+version = "4.5.0"
 
 [[Test]]
 deps = ["Distributed", "InteractiveUtils", "Logging", "Random"]
