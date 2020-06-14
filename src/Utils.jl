@@ -56,6 +56,35 @@ function plot_gs(img::AbstractArray,  name="img", save = true, axMin = 0, axMax 
     end
 end
 
+function colorbar_only(img::AbstractArray,  name="img", save = true, axMin = -1, axMax = 1, clmap = "gs", clbar=true,  loc=location, filetype=".png")
+    findmax(img)[1] > axMax && throw(ArgumentError(string("Image has max ", findmax(img)[1], ",outside range")))
+    findmin(img)[1] < axMin && throw(ArgumentError(string("Image has min ", findmin(img)[1], ",outside range")))
+
+    fig, ax = plt.subplots()
+
+    norm = matplotlib.colors.Normalize(vmin=axMin, vmax=axMax)
+
+    if clmap == "br"
+        cmap=matplotlib.cm.RdBu_r
+
+    elseif clmap == "gs"
+        cmap=matplotlib.cm.gray
+
+    else
+        throw(ArgumentError("Invalid colour map"))
+        end
+
+    cbar =  fig.colorbar(matplotlib.cm.ScalarMappable(norm=norm, cmap=cmap), ax=ax)
+
+    plt.axis("off")
+#     fig.tight_layout()
+    plt.show()
+    if save
+        plt.savefig(string(loc,name,filetype))
+    end
+end
+
+
 
 function save_orientations_rb(A::Array, name::String,  axMin=-1, axMax=1, clbar=false, loc=location, filetype=".png")
     for k in 1:size(A)[3]
