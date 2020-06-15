@@ -18,6 +18,13 @@ using NNlib, ImageFiltering, Images
 
 export I_u, fun_v_C, fun_equ
 
+# make resuable static kernels
+
+function kernels(parameters::Dict)
+    Kernel.gaussian(σ_1, l)
+    return para_dict
+    end
+
 # retina
 
 function I_u(I::AbstractArray, σ_1=1)
@@ -25,6 +32,8 @@ function I_u(I::AbstractArray, σ_1=1)
     return I - imfilter(I, Kernel.gaussian(σ_1))
 end
 
+
+# todo use saved static(?) of [u+] and [u-]???
 
 # LGN
 
@@ -47,6 +56,25 @@ end
 # lgn to l6 and l4
 
 #
+
+function fun_v_C(v_p::AbstractArray, v_m::AbstractArray, σ::Real, K::Int, γ=10, l = 4*ceil(Int,σ)+1)
+    # isodd(l) || throw(ArgumentError("length must be odd"))
+
+    V = exp(-1/8) .* (imfilter((relu.(v_p)-relu.(v_m)), Kernel.gaussian(σ), "circular"))
+
+    A = reshape(Array{eltype(V)}(undef, size(V)[1], size(V)[2]*K),size(V)[1],size(V)[2],K)
+    B = copy(A)
+
+# todo replace kern_A() and kern_B with premade kernels here
+    for k in 1:K
+        θ = π*(k-1)/K
+        A[:,:,k] = imfilter(V, LamKernels.kern_A(σ, θ), "circular")
+        B[:,:,k] = abs.(imfilter(V, LamKernels.kern_B(σ, θ), "circular"))
+    end
+
+    return γ .* (relu.(A .- B) .+ relu.(.- A .- B))
+end
+
 function fun_v_C(v_p::AbstractArray, v_m::AbstractArray, σ::Real, K::Int, γ=10, l = 4*ceil(Int,σ)+1)
     # isodd(l) || throw(ArgumentError("length must be odd"))
 
@@ -195,46 +223,44 @@ function fun_m_equ_noFb(C::AbstractArray, x::AbstractArray, η_p)
 end
 
 
-
-
-
-# todo
 #  l2/3 excit, needs initial condition of itself
-function fun_z_equ(y::AbstractArray, s::AbstractArray,  x_v2::AbstractArray, ϕ, Γ, V_21=0, att=0)
+function fun_z_equ(y::AbstractArray, s::AbstractArray,  z_init::AbstractArray, γ, H, T_p, Γ, ϕ, att=0, a_23_ex=3)
+    return (λ .* relu.(y)) .+ imfilter(max.(z_init, Γ), H) .+ (a_23_ex .* att) .- (ϕ .* imfilter(s, T_p)) ./
+    (1 .+ (λ .* relu.(y)) .+ imfilter(max.(z_init, Γ), H) .+ (a_23_ex .* att) .+ imfilter(s, T_p))
     return
 end
 
 
-# todo
 #  l2/3 excit - no feedback kernel
-function fun_z_equ_noFb(y::AbstractArray, s::AbstractArray,  x_v2::AbstractArray, ϕ, Γ, V_21=0, att=0)
+function fun_z_equ_noFb(y::AbstractArray, s::AbstractArray, γ, H, T_p, Γ, ϕ)
+    return (λ .* relu.(y)) .- (ϕ .* imfilter(s, T_p)) ./
+    (1 .+ (λ .* relu.(y)) .+ imfilter(s, T_p))
     return
 end
 
 
-# todo
 #  l2/3 inhib, needs initial condition of itself
-function fun_s_equ(y::AbstractArray, s::AbstractArray,  x_v2::AbstractArray, ϕ, Γ, V_21=0, att=0)
-    return
+function fun_s_equ(z::AbstractArray, s::AbstractArray,  s_init::AbstractArray, Γ, H, T_m, att=0, a_23_in)
+    return (imfilter(max.(z, Γ), H) + a_23_in .* att ) ./ (1 .+ imfilter(s_init, T_m))            #????????? is T right?
 end
 
 
-# todo
 #  l2/3 inhib - no feedback kernel
-function fun_s_equ_noFb(y::AbstractArray, s::AbstractArray,  x_v2::AbstractArray, ϕ, Γ, V_21=0, att=0)
-    return
+function fun_s_equ_noFb(z::AbstractArray, s::AbstractArray, Γ, H, T_m, att=0, a_23_in)
+    return (imfilter(max.(z, Γ), H))
 end
 
-# todo
+
 # V2 L6
-function fun_xV2_equ(y::AbstractArray, s::AbstractArray,  x_v2::AbstractArray, ϕ, Γ, V_21=0, att=0)
-    return
+function fun_xV2_equ(x_v2::AbstractArray, z::AbstractArray, z_v2::AbstractArray, ϕ, Γ, V_12_6, att=0)
+    return fun_equ.((V_12_6 .* max.(z, Γ) .+ (ϕ .* max.(z_v2, Γ))))
 end
 
-# todo
+
 #  V2 L4 excit
-function fun_yV2_equ(y::AbstractArray, s::AbstractArray,  x_v2::AbstractArray, ϕ, Γ, V_21=0, att=0)
-    return
+function fun_yV2_equ(z::AbstractArray, x::AbstractArray,  m::AbstractArray, W_p, η_p, Γ, V_12_4, att=0)
+    return (V_12_4 .* max.(z,Γ) .+ (η_p .* x) - fun_f.(imfilter(m, W_p)) ./
+   (1 .+ V_12_4 .* max.(z,Γ) .+ (η_p .* x) .+ fun_f.(imfilter(m, W_p))
 end
 
 end
