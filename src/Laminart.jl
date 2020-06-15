@@ -17,11 +17,12 @@ using NNlib, ImageFiltering, Images
 # , MEngProject.LamKernels
 
 export I_u, fun_v_C, fun_equ
+
 # retina
 
 function I_u(I::AbstractArray, σ_1=1)
     # todo change to DoG for speed and because it doesnt work
-    I - imfilter(I, Kernel.gaussian(σ_1))
+    return I - imfilter(I, Kernel.gaussian(σ_1))
 end
 
 
@@ -45,6 +46,7 @@ end
 
 # lgn to l6 and l4
 
+#
 function fun_v_C(v_p::AbstractArray, v_m::AbstractArray, σ::Real, K::Int, γ=10, l = 4*ceil(Int,σ)+1)
     # isodd(l) || throw(ArgumentError("length must be odd"))
 
@@ -60,7 +62,7 @@ function fun_v_C(v_p::AbstractArray, v_m::AbstractArray, σ::Real, K::Int, γ=10
         B[:,:,k] = abs.(imfilter(V, LamKernels.kern_B(σ, θ), "circular"))
     end
 
-    γ .* (relu.(A .- B) .+ relu.(.- A .- B))
+    return γ .* (relu.(A .- B) .+ relu.(.- A .- B))
 end
 
 #
@@ -142,14 +144,97 @@ end
 #                 imfilter((max(z_v2,Γ)),H_v2) -
 #                 (s_v2 .* imfilter(s_v2, T_m)))  #?????
 
-# # todo
-# function fun_f(x::AbstractArray, μ::Real = Global μ,
-#     ν::Real = Global ν, n::Real = Global n)
-#     μ .* x .^n ./(ν^n .+ x.^n)
-# end
+# todo check
+function fun_f(x::AbstractArray, μ, ν, n)
+    (μ .* x .^n) ./ (ν^n .+ x.^n)
+end
 
 
 # for equilabrium
 fun_equ(x) = x/(1+x)
+
+
+# lgn
+function fun_v_equ(u::AbstractArray, x::AbstractArray, lgn_para_u=1, lgn_para_A=0, lgn_para_B=0)
+    return fun_equ.(relu.(u) .* (lgn_para_u .+ (lgn_para_A .* fun_A.(x))) .- (lgn_para_B .* fun_B.(x)))
+end
+
+
+# lgn, no L6 feedback, light
+function fun_v_equ_noFb(u::AbstractArray, x::AbstractArray, lgn_para_u=1)
+    return fun_equ.(relu.(u) .* (lgn_para_u))
+end
+
+
+# l6
+function fun_x_equ(C::AbstractArray, z::AbstractArray,  x_v2::AbstractArray, ϕ, Γ, V_21=0, att=0)
+    return fun_equ.((α .* C) .+ (ϕ .* max.(z,Γ)) + (V_21 .* x_v2) .+ att)
+end
+
+
+# l6, no V2 feedback, light
+function fun_x_equ_noV2(C::AbstractArray, z::AbstractArray, ϕ, Γ)
+    return fun_equ.((α .* C) .+ (ϕ .* max.(z,Γ)))
+end
+
+
+# l4 excit
+function fun_y_equ(C::AbstractArray, x::AbstractArray,  m::AbstractArray, W_p, η_p)
+    return fun_equ.(C .+ (η_p .* x - fun_f.(imfilter(m, W_p))))
+end
+
+# l4 inhib, needs initial condition of itself
+function fun_m_equ(C::AbstractArray, x::AbstractArray, m_init::AbstractArray, W_p, η_p)
+    return (η_m .* x ./ (1 .+  fun_f.(imfilter(m_init, W_p))))
+end
+
+
+# l4 inhib - no feedback kernel
+function fun_m_equ_noFb(C::AbstractArray, x::AbstractArray, η_p)
+    return (η_m .* x)
+end
+
+
+
+
+
+# todo
+#  l2/3 excit, needs initial condition of itself
+function fun_z_equ(y::AbstractArray, s::AbstractArray,  x_v2::AbstractArray, ϕ, Γ, V_21=0, att=0)
+    return
+end
+
+
+# todo
+#  l2/3 excit - no feedback kernel
+function fun_z_equ_noFb(y::AbstractArray, s::AbstractArray,  x_v2::AbstractArray, ϕ, Γ, V_21=0, att=0)
+    return
+end
+
+
+# todo
+#  l2/3 inhib, needs initial condition of itself
+function fun_s_equ(y::AbstractArray, s::AbstractArray,  x_v2::AbstractArray, ϕ, Γ, V_21=0, att=0)
+    return
+end
+
+
+# todo
+#  l2/3 inhib - no feedback kernel
+function fun_s_equ_noFb(y::AbstractArray, s::AbstractArray,  x_v2::AbstractArray, ϕ, Γ, V_21=0, att=0)
+    return
+end
+
+# todo
+# V2 L6
+function fun_xV2_equ(y::AbstractArray, s::AbstractArray,  x_v2::AbstractArray, ϕ, Γ, V_21=0, att=0)
+    return
+end
+
+# todo
+#  V2 L4 excit
+function fun_yV2_equ(y::AbstractArray, s::AbstractArray,  x_v2::AbstractArray, ϕ, Γ, V_21=0, att=0)
+    return
+end
 
 end
