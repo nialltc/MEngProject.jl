@@ -53,18 +53,18 @@ function fun_lgn(x::AbstractArray)
     return x_lgn
 end
 
-# lgn_A
-# todo: test
-function x_lgn_A(x_lgn, C1)
-    return C_1 .* x_A
-end
-
-# lgn_B
-# todo: test
-function fun_lgn_B(x_lgn::AbstractArray, σ_1, C_2)
-#     todo: alocate kernel
-    return C_2 .* imfilter(x_A, Kernel.gaussian(σ_1))
-end
+# # lgn_A
+# # todo: test
+# function x_lgn_A(x_lgn, C1)
+#     return C_1 .* x_A
+# end
+#
+# # lgn_B
+# # todo: test
+# function fun_lgn_B(x_lgn::AbstractArray, σ_1, C_2)
+# #     todo: alocate kernel
+#     return C_2 .* imfilter(x_A, Kernel.gaussian(σ_1))
+# end
 
 
 # todo: check
@@ -75,10 +75,11 @@ end
 
 
 # LGN
-function fun_v(v::AbstractArray, u::AbstractArray, lgn_A::AbstractArray, lgn_B::AbstractArray, δ_v)
+function fun_v(v::AbstractArray, u::AbstractArray, x::AbstractArray, C1, C2, σ_1, δ_v)
+    x_lgn = fun_lgn(x)
     return δ_v .* ( -v +
-            ((1 - v) * relu(u) * (1 + lgn_A)) -
-            ((1 + v) * lgn_B))
+            ((1 - v) * relu(u) * (1 + C1 * x_lgn)) -
+            ((1 + v) * C2 * imfilter(x_lgn, Kernel.gaussian(σ_1), "circular")))
 end
 
 
