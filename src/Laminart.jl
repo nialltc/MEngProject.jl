@@ -18,36 +18,56 @@ using NNlib, ImageFiltering, Images
 
 export I_u, fun_v_C, fun_equ
 
-# make resuable static kernels
+# todo: make resuable static kernels
 
 # function kernels(parameters::Dict)
 #     Kernel.gaussian(σ_1, l)
+#     Kernel.gaussian(σ_2, l)
+#     kern_A()
+#     kern_B()
 #     return para_dict
 #     end
 
 # retina
 
 function I_u(I::AbstractArray, σ_1=1)
-    # todo change to DoG for speed and because it doesnt work
+    # todo: change to DoG for speed and because it doesnt work
     return I - imfilter(I, Kernel.gaussian(σ_1))
 end
 
 
-# todo use saved static(?) of [u+] and [u-]???
+# todo: use saved static(?) of [u+] and [u-]???
 
 # lgn feedback
-# todo lgn_A
-function fun_lgn_A(x::AbstractArray, kern_sumk, C_1)
-    return C_1 .* imfilter(x, kern_sumk(K))
+
+# todo: test
+# todo: should lgn_a be normalized, ie divide by k??
+
+function fun_lgn(x::AbstractArray)
+   # todo: change to abstract array? or is eltype doing that??
+    x_LGN =Array{eltype(V)}(undef, size(V)[1], size(V)[2])
+#     todo: change to map function?
+    for k in 1:size(x)[3]
+        x_lgn .+= x[:,:,k]
+    end
+    return x_lgn
 end
 
-# todo
-function fun_lgn_B(x::AbstractArray, σ_1, C_2)
-    return C_1 .* imfilter(x, kern_sumk(K))
+# lgn_A
+# todo: test
+function x_lgn_A(x_lgn, C1)
+    return C_1 .* x_A
+end
+
+# lgn_B
+# todo: test
+function fun_lgn_B(x_lgn::AbstractArray, σ_1, C_2)
+#     todo: alocate kernel
+    return C_2 .* imfilter(x_A, Kernel.gaussian(σ_1))
 end
 
 
-# todo check
+# todo: check
 function fun_f(x::AbstractArray, μ, ν, n)
     (μ .* x .^n) ./ (ν^n .+ x.^n)
 end
@@ -66,13 +86,14 @@ end
 function fun_v_C(v_p::AbstractArray, v_m::AbstractArray, σ::Real, K::Int, γ=10, l = 4*ceil(Int,σ)+1)
     # isodd(l) || throw(ArgumentError("length must be odd"))
 
-# todo replace gaussian kernel with static
+# todo: replace gaussian kernel with static
     V = exp(-1/8) .* (imfilter((relu.(v_p)-relu.(v_m)), Kernel.gaussian(σ), "circular"))
 
+# todo: change to abstract array? or is eltype doing that??
     A = reshape(Array{eltype(V)}(undef, size(V)[1], size(V)[2]*K),size(V)[1],size(V)[2],K)
     B = copy(A)
 
-# todo replace kern_A() and kern_B with premade kernels here
+# todo: replace kern_A() and kern_B with premade kernels here
     for k in 1:K
         θ = π*(k-1)/K
         A[:,:,k] = imfilter(V, LamKernels.kern_A(σ, θ), "circular")
@@ -245,7 +266,7 @@ end
 #             ((1 + v_m) * lgn_B))
 #
 # # feedback to lgn
-# # todo lgn_A
+# # todo: lgn_A
 # lgn_A = C_1 * imfilter(x, kern_sumk(K))
 #
 # lgn_B = C_2 * imfilter(x, Kernel.gaussian(σ_1), "circular")
@@ -283,7 +304,7 @@ end
 #             ((z + ψ) .* (imfilter(s, T_p))))
 #
 #
-# # todo sTs
+# # todo: sTs
 # ds = δ_s(   -s +
 #             imfilter((relu. (z - Γ)), H) + (a_23_in .* att) -
 #             (s .* imfilter(s, T_m)))  #?????
@@ -324,7 +345,7 @@ end
 #                 ((z_v2 + ψ) .* (imfilter(s_v2, T_p))))
 #
 #
-# # todo sTs
+# # todo: sTs
 # ds_v2 = δ_s(    -s_v2 +
 #                 imfilter((max(z_v2,Γ)),H_v2) -
 #                 (s_v2 .* imfilter(s_v2, T_m)))  #?????

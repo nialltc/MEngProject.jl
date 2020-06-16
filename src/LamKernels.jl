@@ -69,41 +69,37 @@ function kern_B(σ::Real, θ::Real, l = 4*ceil(Int,σ)+1)
     relu.(kern_A(σ, θ, l)) .+ relu.(-1 .*(kern_A(σ, θ, l)))
 end
 
-#
-# # feedback through lgn_A
-# function kern_sumK(K::Int=(Global K)
-#     # todo
-# end
+
 #
 #
 # function kern_H()
-#     # todo
+#     # todo:
 # end
 #
 #
 # function kern_H_v2()
-#     # todo
+#     # todo:
 # end
 #
 #
 # function W_p()
-#     # todo
+#     # todo:
 # end
 #
 #
 # function W_m()
-#     # todo
+#     # todo:
 # end
 #
 #
 # function T_m()
-#     # todo
+#     # todo:
 #
 # end
 #
 #
 # function T_P()
-#     # todo
+#     # todo:
 # end
 #
 # # T_P_11 = 0.9032
