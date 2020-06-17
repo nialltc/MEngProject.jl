@@ -43,7 +43,7 @@ end
 # todo: test
 # todo: should lgn_a be normalized, ie divide by k??
 
-function fun_lgn(x::AbstractArray)
+function fun_x_lgn(x::AbstractArray)
    # todo: change to abstract array? or is eltype doing that??
     x_LGN =Array{eltype(V)}(undef, size(V)[1], size(V)[2])
 #     todo: change to map function?
@@ -67,6 +67,12 @@ end
 # end
 
 
+# relu with threshold
+function fun_F(value::Real, Γ::Real)
+    value < Γ ? zero(value) : value
+end
+
+
 # todo: check
 function fun_f(x::AbstractArray, μ, ν, n)
     (μ .* x .^n) ./ (ν^n .+ x.^n)
@@ -76,7 +82,7 @@ end
 
 # LGN
 function fun_v(v::AbstractArray, u::AbstractArray, x::AbstractArray, C1, C2, σ_1, δ_v)
-    x_lgn = fun_lgn(x)
+    x_lgn = fun_x_lgn(x)
     return δ_v .* ( -v +
             ((1 - v) * relu(u) * (1 + C1 * x_lgn)) -
             ((1 + v) * C2 * imfilter(x_lgn, Kernel.gaussian(σ_1), "circular")))
@@ -188,13 +194,13 @@ end
 
 # l6
 function fun_x_equ(C::AbstractArray, z::AbstractArray,  x_v2::AbstractArray, ϕ, Γ, V_21=0, att=0)
-    return fun_equ.((α .* C) .+ (ϕ .* max.(z,Γ)) + (V_21 .* x_v2) .+ att)
+    return fun_equ.((α .* C) .+ (ϕ .* fun_F.(z,Γ)) + (V_21 .* x_v2) .+ att)
 end
 
 
 # l6, no V2 feedback, light
 function fun_x_equ_noV2(C::AbstractArray, z::AbstractArray, ϕ, Γ)
-    return fun_equ.((α .* C) .+ (ϕ .* max.(z,Γ)))
+    return fun_equ.((α .* C) .+ (ϕ .* fun_F.(z,Γ)))
 end
 
 
@@ -217,8 +223,8 @@ end
 
 #  l2/3 excit, needs initial condition of itself
 function fun_z_equ(y::AbstractArray, s::AbstractArray,  z_init::AbstractArray, γ, H, T_p, Γ, ϕ, att=0, a_23_ex=3)
-    return (λ .* relu.(y)) .+ imfilter(max.(z_init, Γ), H) .+ (a_23_ex .* att) .- (ϕ .* imfilter(s, T_p)) ./
-    (1 .+ (λ .* relu.(y)) .+ imfilter(max.(z_init, Γ), H) .+ (a_23_ex .* att) .+ imfilter(s, T_p))
+    return (λ .* relu.(y)) .+ imfilter(fun_F.(z_init, Γ), H) .+ (a_23_ex .* att) .- (ϕ .* imfilter(s, T_p)) ./
+    (1 .+ (λ .* relu.(y)) .+ imfilter(fun_F.(z_init, Γ), H) .+ (a_23_ex .* att) .+ imfilter(s, T_p))
     return
 end
 
@@ -233,26 +239,26 @@ end
 
 #  l2/3 inhib, needs initial condition of itself
 function fun_s_equ(z::AbstractArray, s::AbstractArray,  s_init::AbstractArray, Γ, H, T_m, att=0, a_23_in)
-    return (imfilter(max.(z, Γ), H) + a_23_in .* att ) ./ (1 .+ imfilter(s_init, T_m))            #????????? is T right?
+    return (imfilter(fun_F.(z, Γ), H) + a_23_in .* att ) ./ (1 .+ imfilter(s_init, T_m))            #????????? is T right?
 end
 
 
 #  l2/3 inhib - no feedback kernel
 function fun_s_equ_noFb(z::AbstractArray, s::AbstractArray, Γ, H, T_m, att=0, a_23_in)
-    return (imfilter(max.(z, Γ), H))
+    return (imfilter(fun_F.(z, Γ), H))
 end
 
 
 # V2 L6
 function fun_xV2_equ(x_v2::AbstractArray, z::AbstractArray, z_v2::AbstractArray, ϕ, Γ, V_12_6, att=0)
-    return fun_equ.((V_12_6 .* max.(z, Γ) .+ (ϕ .* max.(z_v2, Γ))))
+    return fun_equ.((V_12_6 .* fun_F.(z, Γ) .+ (ϕ .* fun_F.(z_v2, Γ))))
 end
 
 
 #  V2 L4 excit
 function fun_yV2_equ(z::AbstractArray, x::AbstractArray,  m::AbstractArray, W_p, η_p, Γ, μ, ν, n, V_12_4, att=0)
-    return (V_12_4 .* max.(z,Γ) .+ (η_p .* x) - fun_f.(imfilter(m, W_p), μ, ν, n) ./
-   (1 .+ V_12_4 .* max.(z,Γ) .+ (η_p .* x) .+ fun_f.(imfilter(m, W_p), μ, ν, n)
+    return (V_12_4 .* fun_F.(z,Γ) .+ (η_p .* x) - fun_f.(imfilter(m, W_p), μ, ν, n) ./
+   (1 .+ V_12_4 .* fun_F.(z,Γ) .+ (η_p .* x) .+ fun_f.(imfilter(m, W_p), μ, ν, n)
 end
 
 end
@@ -348,7 +354,7 @@ end
 #
 # # todo: sTs
 # ds_v2 = δ_s(    -s_v2 +
-#                 imfilter((max(z_v2,Γ)),H_v2) -
+#                 imfilter((fun_F(z_v2,Γ)),H_v2) -
 #                 (s_v2 .* imfilter(s_v2, T_m)))  #?????
 
 
