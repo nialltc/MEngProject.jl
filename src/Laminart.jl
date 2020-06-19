@@ -134,7 +134,7 @@ end
 function fun_dy(y::AbstractArray, C::AbstractArray, x::AbstractArray, m::AbstractArray, η_p, kern_W_p, μ, ν, n, δ_c)
     return  δ_c(   -y .+
             ((1 .- y) .* (C .+ (η_p .* x))) .-
-            ((1 .+ y) .* fun_f((m .* imfilter(m, kern_W_p), μ, ν, n))))
+            ((1 .+ y) .* fun_f((m .* imfilter(m, reflect(kern_W_p)), μ, ν, n))))
 end
 
 
@@ -143,7 +143,7 @@ end
 function fun_dm(m::AbstractArray, x::AbstractArray, kern_W_m, η_m, μ, ν, n, δ_m)
     return δ_m .* (  -m .+
                      (η_m .* x) -
-                     (m .* fun_f.(imfilter(m, kern_W_m), μ, ν, n)))
+                     (m .* fun_f.(imfilter(m, reflect(kern_W_m)), μ, ν, n)))
 end
 
 
@@ -152,8 +152,8 @@ end
 function fun_dz(z::AbstractArray, y::AbstractArray, kern_T_p, kern_H, λ, Γ, ψ, δ_z, a_ex_23, att)
     return δ_z .*   (-z .+
                     ((1 .- z) .*
-                        ((λ .* relu.(y)) .+ imfilter((relu.(z .- Γ)), kern_H) .+ (a_ex_23 .* att))) .-
-                    ((z .+ ψ) .* (imfilter(s, kern_T_p))))
+                        ((λ .* relu.(y)) .+ imfilter((relu.(z .- Γ)), reflect(kern_H)) .+ (a_ex_23 .* att))) .-
+                    ((z .+ ψ) .* (imfilter(s, reflect(kern_T_p)))))
 end
 
 
@@ -162,7 +162,7 @@ end
 function fun_ds(s::AbstractArray, z::AbstractArray, H, a_23_in, kern_T_m, δ_s, att)
     return δ_s .*   ( -s .+
                     imfilter((relu.(z .- Γ)), H) .+ (a_23_in .* att) .-
-                    (s .* imfilter(s, kern_T_m)))  #?????
+                    (s .* imfilter(s, reflect(kern_T_m))))  #?????
 end
 
 
@@ -179,7 +179,7 @@ end
 function fun_dy_v2(y_v2::AbstractArray, z::AbstractArray, x_v2::AbstractArray, m_v2::AbstractArray, kern_W_p, v_12_4, Γ, η_p, μ, ν, n, δ_c)
     return δ_c .*   (-y_v2 .+
                     ((1 .- y_v2) .* ((v_12_4 .* relu.(z .- Γ)) .+ (η_p .* x_v2))) .-
-                    ((1 .+ y_v2) .* fun_f.(imfilter(m_v2, kern_W_p), μ, ν, n)))
+                    ((1 .+ y_v2) .* fun_f.(imfilter(m_v2, reflect(kern_W_p)), μ, ν, n)))
 end
 
 
@@ -215,12 +215,12 @@ end
 
 # l4 excit
 function fun_y_equ(C::AbstractArray, x::AbstractArray,  m::AbstractArray, kern_W_p, η_p)
-    return fun_equ.(C .+ (η_p .* x - fun_f.(imfilter(m, kern_W_p), μ, ν, n)))
+    return fun_equ.(C .+ (η_p .* x - fun_f.(imfilter(m, reflect(kern_W_p)), μ, ν, n)))
 end
 
 # l4 inhib, needs initial condition of itself
 function fun_m_equ(C::AbstractArray, x::AbstractArray, m_init::AbstractArray, kern_W_m, η_p, μ, ν, n)
-    return (η_m .* x ./ (1 .+  fun_f.(imfilter(m_init, kern_W_m), μ, ν, n)))
+    return (η_m .* x ./ (1 .+  fun_f.(imfilter(m_init, reflect(kern_W_m)), μ, ν, n)))
 end
 
 
@@ -232,29 +232,29 @@ end
 
 #  l2/3 excit, needs initial condition of itself
 function fun_z_equ(y::AbstractArray, s::AbstractArray,  z_init::AbstractArray,  kern_H, kern_T_p, γ, Γ, ϕ, att=0, a_23_ex=3)
-    return (λ .* relu.(y)) .+ imfilter(fun_F.(z_init, Γ), kern_H) .+ (a_23_ex .* att) .- (ϕ .* imfilter(s, kern_T_p)) ./
-    (1 .+ (λ .* relu.(y)) .+ imfilter(fun_F.(z_init, Γ), kern_H) .+ (a_23_ex .* att) .+ imfilter(s, kern_T_p))
+    return (λ .* relu.(y)) .+ imfilter(fun_F.(z_init, Γ), reflect(kern_H)) .+ (a_23_ex .* att) .- (ϕ .* imfilter(s, reflect(kern_T_p))) ./
+    (1 .+ (λ .* relu.(y)) .+ imfilter(fun_F.(z_init, Γ), reflect(kern_H)) .+ (a_23_ex .* att) .+ imfilter(s, reflect(kern_T_p)))
     return
 end
 
 
 #  l2/3 excit - no feedback kernel
 function fun_z_equ_noFb(y::AbstractArray, s::AbstractArray, γ, kern_T_p, ϕ)
-    return (λ .* relu.(y)) .- (ϕ .* imfilter(s, kern_T_p)) ./
-    (1 .+ (λ .* relu.(y)) .+ imfilter(s, kern_T_p))
+    return (λ .* relu.(y)) .- (ϕ .* imfilter(s, reflect(kern_T_p))) ./
+    (1 .+ (λ .* relu.(y)) .+ imfilter(s, reflect(kern_T_p)))
     return
 end
 
 
 #  l2/3 inhib, needs initial condition of itself
 function fun_s_equ(z::AbstractArray, s::AbstractArray,  s_init::AbstractArray, Γ, kern_H, kern_T_m, a_23_in, att=0)
-    return ((imfilter(fun_F.(z, Γ), kern_H) + a_23_in .* att ) ./ (1 .+ imfilter(s_init, kern_T_m)))           #????????? is T right?
+    return ((imfilter(fun_F.(z, Γ), reflect(kern_H)) + a_23_in .* att ) ./ (1 .+ imfilter(s_init, reflect(kern_T_m))))           #????????? is T right?
 end
 
 
 #  l2/3 inhib - no feedback kernel
 function fun_s_equ_noFb(z::AbstractArray, s::AbstractArray, Γ, kern_H)
-    return (imfilter(fun_F.(z, Γ), kern_H))
+    return (imfilter(fun_F.(z, Γ), reflect(kern_H)))
 end
 
 
@@ -266,8 +266,8 @@ end
 
 #  V2 L4 excit
 function fun_yV2_equ(z::AbstractArray, x::AbstractArray,  m::AbstractArray, kern_W_p, η_p, Γ, μ, ν, n, V_12_4, att=0)
-    return (V_12_4 .* fun_F.(z,Γ) .+ (η_p .* x) - fun_f.(imfilter(m, kern_W_p), μ, ν, n) ./
-   (1 .+ V_12_4 .* fun_F.(z,Γ) .+ (η_p .* x) .+ fun_f.(imfilter(m, kern_W_p), μ, ν, n)))
+    return (V_12_4 .* fun_F.(z,Γ) .+ (η_p .* x) - fun_f.(imfilter(m, reflect(kern_W_p)), μ, ν, n) ./
+   (1 .+ V_12_4 .* fun_F.(z,Γ) .+ (η_p .* x) .+ fun_f.(imfilter(m, reflect(kern_W_p)), μ, ν, n)))
 end
 
 end
