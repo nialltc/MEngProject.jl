@@ -70,6 +70,11 @@ function kern_B(σ::Real, θ::Real, l = 4*ceil(Int,σ)+1)
 end
 
 
+
+# Rotating function
+function fun_R(x,y,θ)
+    x*cos(θ)-y*sin(θ), x*sin(θ)+y*cos(θ)
+end
 #
 #
 # function kern_H()
