@@ -49,7 +49,11 @@ H_σ_x = p_temp.H_σ_x,
 H_σ_y = p_temp.H_σ_y,
 H_fact = 5,
 # H_l =  4*ceil(Int, max(p_temp.H_σ_x, p_temp.H_σ_y))+1,
-H_l = 19)
+H_l = 19,
+# customn parameters for controling feedback, lgn equlibrum
+lgn_equ_u=1,
+lgn_equ_A = 0,
+lgn_equ_B =0)
 
 end
 
