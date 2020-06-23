@@ -38,10 +38,10 @@ function kernels(p::NamedTuple)
 #             W_temp[:,:,l,k] =
 #         end
     end
-    W_temp[:,:,1,1] = kern_W(p.W)
-    W_temp[:,:,2,2] =
-    W_temp[:,:,1,2] =
-    W_temp[:,:,2,1] =
+    W_temp[:,:,1,1] = 5 .* LamKernels.gaussian_rot(3,0.8,0,19) .+ LamKernels.gaussian_rot(0.4,1,0,19)
+    W_temp[:,:,2,2] = 5 .* LamKernels.gaussian_rot(3,0.8,0,19) .+ LamKernels.gaussian_rot(0.4,1,π/2,19)
+    W_temp[:,:,1,2] = relu.(0.2 .- LamKernels.gaussian_rot(2,0.6,0,19) .- LamKernels.gaussian_rot(0.3,1.2,0,19))
+    W_temp[:,:,2,1] = relu.(0.2 .- LamKernels.gaussian_rot(2,0.6,0,19) .- LamKernels.gaussian_rot(0.3,1.2,π/2,19))
     temp_out = (
     k_gauss_1 = reflect(Kernel.gaussian(p.σ_1)),
     k_gauss_2 = reflect(Kernel.gaussian(p.σ_2)),
@@ -51,17 +51,17 @@ function kernels(p::NamedTuple)
     k_W_m = K_W_p,
     k_H = H_temp,
     k_T_p = reflect(T_temp),
-    k_T_m = p.T_P_M .* reflect(T_temp)
+    k_T_m = p.T_P_M .* reflect(T_temp),
     k_T_p_v2 = p.T_v2_fact .* k_T_p,
     k_T_m_v2 = p.T_v2_fact .* k_T_m)
     return merge(p, temp_out)
-    end
+end
 
 
 # retina
 
 function I_u(I::AbstractArray, p::NamedTuple)
-    return I - imfilter(I, p.gauss_1, p.filling)
+    return I - imfilter(I, p.k_gauss_1, p.filling)
 end
 
 
@@ -134,7 +134,7 @@ function fun_dv(v::AbstractArray, u::AbstractArray, x::AbstractArray, p::NamedTu
     x_lgn = fun_x_lgn(x)
     return p.δ_v .* ( -p.v +
             ((1 - p.v) * relu(u) * (1 + p.C1 * x_lgn)) -
-            ((1 + p.v) * p.C2 * imfilter(x_lgn, p.gauss_1, p.filling)))
+            ((1 + p.v) * p.C2 * imfilter(x_lgn, p.k_gauss_1, p.filling)))
 end
 
 
@@ -142,7 +142,7 @@ end
 function fun_v_C(v_p::AbstractArray, v_m::AbstractArray, p::NamedTuple)
     # isodd(l) || throw(ArgumentError("length must be odd"))
 
-    V = exp(-1/8) .* (imfilter((relu.(v_p)-relu.(v_m)), p.gauss_2, p.filling))
+    V = exp(-1/8) .* (imfilter((relu.(v_p)-relu.(v_m)), p.k_gauss_2, p.filling))
 
 # todo: change to abstract array? or is eltype doing that??
     A = reshape(Array{eltype(V)}(undef, size(V)[1], size(V)[2]*p.K),size(V)[1],size(V)[2],p.K)
@@ -150,8 +150,8 @@ function fun_v_C(v_p::AbstractArray, v_m::AbstractArray, p::NamedTuple)
 
     for k in 1:p.K
         θ = π*(k-1)/p.K
-        A[:,:,k] = imfilter(V, p.C_A, p.filling)
-        B[:,:,k] = abs.(imfilter(V, p.C_B, p.filling))
+        A[:,:,k] = imfilter(V, p.k_C_A, p.filling)
+        B[:,:,k] = abs.(imfilter(V, p.k_C_B, p.filling))
     end
 
     return γ .* (relu.(A .- B) .+ relu.(.- A .- B))
@@ -172,7 +172,7 @@ end
 function fun_dy(y::AbstractArray, C::AbstractArray, x::AbstractArray, m::AbstractArray, p::NamedTuple)
     return  p.δ_c(   -y .+
             ((1 .- y) .* (C .+ (p.η_p .* x))) .-
-            ((1 .+ y) .* fun_f((m .* func_filter_W(m, p.W_p, p.filling), p.μ, p.ν, p.n))))
+            ((1 .+ y) .* fun_f((m .* func_filter_W(m, p.k_W_p, p), p.μ, p.ν, p.n))))
 end
 
 
@@ -181,7 +181,7 @@ end
 function fun_dm(m::AbstractArray, x::AbstractArray, p::NamedTuple)
     return p.δ_m .* (  -m .+
                      (p.η_m .* x) -
-                     (m .* fun_f.(func_filter_W(m, p.W_m, p.filling), p.μ, p.ν, p.n)))
+                     (m .* fun_f.(func_filter_W(m, p.k_W_m, p), p.μ, p.ν, p.n)))
 end
 
 
@@ -191,7 +191,7 @@ function fun_dz(z::AbstractArray, y::AbstractArray,  H_z::AbstractArray, p::Name
     return p.δ_z .*   (-z .+
                     ((1 .- z) .*
                         ((p.λ .* relu.(y)) .+ H_z .+ (a_ex_23 .* att))) .-
-                    ((z .+ ψ) .* (imfilter(s, p.T_p, p.filling))))
+                    ((z .+ ψ) .* (imfilter(s, p.k_T_p, p.filling))))
 end
 
 
@@ -200,13 +200,13 @@ end
 function fun_ds(s::AbstractArray, z::AbstractArray, H_z::AbstractArray, p::NamedTuple)
     return p.δ_s .*   ( -s .+
                     H_z .+ (a_23_in .* att) .-
-                    (s .* imfilter(s, p.T_m, p.filling)))  #?????
+                    (s .* imfilter(s, p.k_T_m, p.filling)))  #?????
 end
 
 function fun_H_z(z::AbstractArray, p::NamedTuple)
     H_z_out = copy(z)
     for k ∈ 1:p.K
-        H_z_out[:,:,k] = imfilter((relu.(z[:,:,k] .- p.Γ)), p.kern_H[:,:,k], p.filling)
+        H_z_out[:,:,k] = imfilter((relu.(z[:,:,k] .- p.Γ)), p.k_H[:,:,k], p.filling)
         end
         return H_z_out
 end
@@ -225,7 +225,7 @@ end
 function fun_dy_v2(y_v2::AbstractArray, z::AbstractArray, x_v2::AbstractArray, m_v2::AbstractArray, p::NamedTuple)
     return δ_c .*   (-y_v2 .+
                     ((1 .- y_v2) .* ((v_12_4 .* relu.(z .- p.Γ)) .+ (p.η_p .* x_v2))) .-
-                    ((1 .+ y_v2) .* fun_f.(imfilter(m_v2, p.W_p, p.filling)), p.μ, p.ν, p.n))
+                    ((1 .+ y_v2) .* fun_f.(imfilter(m_v2, p.k_W_p, p.filling)), p.μ, p.ν, p.n))
 end
 
 
@@ -243,77 +243,77 @@ end
 
 # lgn, no L6 feedback, light
 function fun_v_equ_noFb(u::AbstractArray, x::AbstractArray, lgn_para_u=1)
-    return fun_equ.(relu.(u) .* (lgn_para_u))
+    return fun_equ.(relu.(u) .* (p.lgn_para_u))
 end
 
 
 # l6
 function fun_x_equ(C::AbstractArray, z::AbstractArray,  p::NamedTuple)
-    return fun_equ.((α .* C) .+ (ϕ .* fun_F.(z,Γ)) + (V_21 .* x_v2) .+ att)
+    return fun_equ.((p.α .* C) .+ (p.ϕ .* fun_F.(z,p.Γ)) + (p.V_21 .* x_v2) .+ p.att)
 end
 
 
 # l6, no V2 feedback, light
 function fun_x_equ_noV2(C::AbstractArray, z::AbstractArray, p::NamedTuple)
-    return fun_equ.((α .* C) .+ (ϕ .* fun_F.(z,Γ)))
+    return fun_equ.((p.α .* C) .+ (p.ϕ .* fun_F.(z,p.Γ)))
 end
 
 
 # l4 excit
 function fun_y_equ(C::AbstractArray, x::AbstractArray,  m::AbstractArray, p::NamedTuple)
-    return fun_equ.(C .+ (η_p .* x - fun_f.(imfilter(m, reflect(kern_W_p)), μ, ν, n)))
+    return fun_equ.(C .+ (η_p .* x - fun_f.(imfilter(m, p.k_W_p), p.μ, p.ν, p.n)))
 end
 
 # l4 inhib, needs initial condition of itself
 function fun_m_equ(C::AbstractArray, x::AbstractArray, m_init::AbstractArray, p::NamedTuple)
-    return (η_m .* x ./ (1 .+  fun_f.(imfilter(m_init, reflect(kern_W_m)), μ, ν, n)))
+    return (p.η_m .* x ./ (1 .+  fun_f.(imfilter(m_init, p.k_W_m), p.μ, p.ν, p.n)))
 end
 
 
 # l4 inhib - no feedback kernel
 function fun_m_equ_noFb(C::AbstractArray, x::AbstractArray, p::NamedTuple)
-    return (η_m .* x)
+    return (p.η_m .* x)
 end
 
 
 #  l2/3 excit, needs initial condition of itself
 function fun_z_equ(y::AbstractArray, s::AbstractArray,  z_init::AbstractArray,  p::NamedTuple)
-    return (λ .* relu.(y)) .+ imfilter(fun_F.(z_init, Γ), reflect(kern_H)) .+ (a_23_ex .* att) .- (ϕ .* imfilter(s, reflect(kern_T_p))) ./
-    (1 .+ (λ .* relu.(y)) .+ imfilter(fun_F.(z_init, Γ), reflect(kern_H)) .+ (a_23_ex .* att) .+ imfilter(s, reflect(kern_T_p)))
+    return (p.λ .* relu.(y)) .+ imfilter(fun_F.(z_init, p.Γ), k_H) .+ (p.a_23_ex .* p.att) .- (p.ϕ .* imfilter(s, k_T_p)) ./
+    (1 .+ (p.λ .* relu.(y)) .+ imfilter(fun_F.(z_init, p.Γ), k_H) .+ (p.a_23_ex .* p.att) .+ imfilter(s, k_T_p))
     return
 end
 
 
 #  l2/3 excit - no feedback kernel
 function fun_z_equ_noFb(y::AbstractArray, s::AbstractArray, p::NamedTuple)
-    return (λ .* relu.(y)) .- (ϕ .* imfilter(s, reflect(kern_T_p))) ./
-    (1 .+ (λ .* relu.(y)) .+ imfilter(s, reflect(kern_T_p)))
+    return (p.λ .* relu.(y)) .- (p.ϕ .* imfilter(s, k_T_p)) ./
+    (1 .+ (p.λ .* relu.(y)) .+ imfilter(s, k_T_p))
     return
 end
 
 
 #  l2/3 inhib, needs initial condition of itself
 function fun_s_equ(z::AbstractArray, s::AbstractArray,  s_init::AbstractArray, p::NamedTuple)
-    return ((imfilter(fun_F.(z, Γ), reflect(kern_H)) + a_23_in .* att ) ./ (1 .+ imfilter(s_init, reflect(kern_T_m))))           #????????? is T right?
+    return ((imfilter(fun_F.(z, p.Γ), k_H) + p.a_23_in .* p.att ) ./ (1 .+ imfilter(s_init, k_T_m)))           #????????? is T right?
 end
 
 
 #  l2/3 inhib - no feedback kernel
 function fun_s_equ_noFb(z::AbstractArray, s::AbstractArray, p::NamedTuple)
-    return (imfilter(fun_F.(z, Γ), reflect(kern_H)))
+    return (imfilter(fun_F.(z, p.Γ), k_H))
 end
 
 
 # V2 L6
 function fun_xV2_equ(x_v2::AbstractArray, z::AbstractArray, z_v2::AbstractArray, p::NamedTuple)
-    return fun_equ.((V_12_6 .* fun_F.(z, Γ) .+ (ϕ .* fun_F.(z_v2, Γ))))
+    return fun_equ.((p.V_12_6 .* fun_F.(z, p.Γ) .+ (p.ϕ .* fun_F.(z_v2, p.Γ))))
 end
 
 
 #  V2 L4 excit
 function fun_yV2_equ(z::AbstractArray, x::AbstractArray,  m::AbstractArray, p::NamedTuple)
-    return (V_12_4 .* fun_F.(z,Γ) .+ (η_p .* x) - fun_f.(imfilter(m, reflect(kern_W_p)), μ, ν, n) ./
-   (1 .+ V_12_4 .* fun_F.(z,Γ) .+ (η_p .* x) .+ fun_f.(imfilter(m, reflect(kern_W_p)), μ, ν, n)))
+    return (p.V_12_4 .* fun_F.(z,p.Γ) .+ (p.η_p .* x) - fun_f.(imfilter(m, k_W_p), p.μ, p.ν, p.n) ./
+   (1 .+ p.V_12_4 .* fun_F.(z,p.Γ) .+ (p.η_p .* x) .+ fun_f.(imfilter(m, k_W_p), p.μ, p.ν, p.n)))
 end
 
 end
