@@ -18,7 +18,7 @@ module LamKernels
 export kern_A, kern_B
 
 # lgn to l6/l4
-using NNlib, ImageFiltering, Images
+using NNlib, ImageFiltering, Images, OffsetArrays
 
 function kern_d_ph(σ::Real, θ::Real, l = 4*ceil(Int,σ)+1)
     isodd(l) || throw(ArgumentError("length must be odd"))
@@ -69,6 +69,19 @@ function kern_B(σ::Real, θ::Real, l = 4*ceil(Int,σ)+1)
     relu.(kern_A(σ, θ, l)) .+ relu.(-1 .*(kern_A(σ, θ, l)))
 end
 
+
+
+
+function gaussian_rot(σ_x::Real, σ_y::Real, θ::Real, l = 4*ceil(Int, max(σ_a,σ_b))+1)
+    isodd(l) || throw(ArgumentError("length must be odd"))
+    w = l>>1
+    g = OffsetArray(fill(0.0, l, l), -w:w, -w:w)
+    #todo add when σ_x or/and σ_y == 0
+    for x ∈ -w:w, y ∈ -w:w
+        g[x,y] = exp(-1/2*((((x*cos(θ)-y*sin(θ))/σ_x)^2)+(((x*sin(θ)+y*cos(θ))/σ_y)^2)))
+    end
+    centered(g/sum(g))
+end
 
 
 # Rotating function

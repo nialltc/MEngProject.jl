@@ -1,0 +1,15 @@
+name = "MEngProject"
+uuid = "d0493a11-efc0-4c7c-9b66-d0bd5a04cc55"
+authors = ["nialltc <39237476+nialltc@users.noreply.github.com> and contributors"]
+version = "0.1.0"
+
+[deps]
+
+[compat]
+julia = "1"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]

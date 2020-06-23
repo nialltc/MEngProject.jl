@@ -21,13 +21,29 @@ export I_u, fun_v_C, fun_equ
 
 # todo: make resuable static kernels
 
-# function kernels(parameters::Dict)
-#     Kernel.gaussian(σ_1, l)
-#     Kernel.gaussian(σ_2, l)
-#     kern_A()
-#     kern_B()
-#     return para_dict
-#     end
+function kernels(p::NamedTuple)
+    C_A_temp = reshape(Array{Real}(undef, p.C_AB_l, p.C_AB_l * p.K),p.C_AB_l,p.C_AB_l,p.K)
+    C_B_temp = copy(C_A_temp)
+    H_temp = reshape(Array{Real}(undef, p.H_l, p.H_l * p.K),p.H_l,p.H_l,p.K)
+    for k ∈ 1:p.K
+        θ = π*(k-1)/p.K
+        C_A_temp[:,:,k] = LamKernels.kern_A(p.σ_2, θ)               #ij ijk ijk
+        C_B_temp[:,:,k] = LamKernels.kern_B(p.σ_2, θ)               #ij ijk ijk
+        H_temp[:,:,k] = p.H_fact .* LamKernels.gaussian_rot(p.H_σ_x, p.H_σ_y, θ, p.H_l)  #ijk, ij for each k; ijk
+#         W_temp[:,:,:,k] =
+    end
+    return(
+    gauss_1 = Kernel.gaussian(p.σ_1),
+    C_A = C_A_temp,
+    C_B = C_B_temp,
+#     W_p = kern_W_p(),
+#     W_m = kern_W(),
+    H = H_temp)
+#     T_p = kern_T_p(),
+#     T_m = kern_T_m())
+    end
+
+# todo union parameters and kernels?
 
 # retina
 
@@ -90,7 +106,7 @@ end
 
 
 # LGN
-function fun_v(v::AbstractArray, u::AbstractArray, x::AbstractArray, C1, C2, σ_1, δ_v)
+function fun_dv(v::AbstractArray, u::AbstractArray, x::AbstractArray, C1, C2, σ_1, δ_v)
     x_lgn = fun_x_lgn(x)
     return δ_v .* ( -v +
             ((1 - v) * relu(u) * (1 + C1 * x_lgn)) -
@@ -149,7 +165,7 @@ end
 
 
 #     L2/3 excit
-function fun_dz(z::AbstractArray, y::AbstractArray, kern_T_p, kern_H, λ, Γ, ψ, δ_z, a_ex_23, att)
+function fun_dz(z::AbstractArray, y::AbstractArray,  H_z::AbstractArray, kern_T_p, λ, Γ, ψ, δ_z, a_ex_23, att=0)
     return δ_z .*   (-z .+
                     ((1 .- z) .*
                         ((λ .* relu.(y)) .+ imfilter((relu.(z .- Γ)), reflect(kern_H)) .+ (a_ex_23 .* att))) .-
@@ -159,16 +175,24 @@ end
 
 
 #     L2/3 inhib
-function fun_ds(s::AbstractArray, z::AbstractArray, H, a_23_in, kern_T_m, δ_s, att)
+function fun_ds(s::AbstractArray, z::AbstractArray, H_z::AbstractArray,  kern_T_m, a_23_in, δ_s, att=0)
     return δ_s .*   ( -s .+
                     imfilter((relu.(z .- Γ)), H) .+ (a_23_in .* att) .-
                     (s .* imfilter(s, reflect(kern_T_m))))  #?????
 end
 
+function fun_H_z(z::AbstractArray, p::TupleΓ, kern_H)
+    H_z_out = copy(z)
+    for k ∈ 1:p.K
+        H_z_out[:,:,k] = imfilter((relu.(z[:,:,k] .- Γ)), reflect(p.kern_H[:,:,k]))
+        end
+        return H_z_out
+end
+
 
 
 #     V2 L6
-function fun_dx_v2(x_v2::AbstractArray, z_v2::AbstractArray, z::AbstractArray, v_12_6, Γ, ϕ, δ_c, att)
+function fun_dx_v2(x_v2::AbstractArray, z_v2::AbstractArray, z::AbstractArray, v_12_6, Γ, ϕ, δ_c, att=0)
     return δ_c .*   (  -x_v2 .+
                     ((1 .- x_v2) .*
                         ((v_12_6 .* relu.(z .- Γ)) + (ϕ .* relu.(z_v2 .- Γ)) .+ att)))
