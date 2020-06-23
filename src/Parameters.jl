@@ -50,12 +50,29 @@ H_σ_y = p_temp.H_σ_y,
 H_fact = 5,
 # H_l =  4*ceil(Int, max(p_temp.H_σ_x, p_temp.H_σ_y))+1,
 H_l = 19,
+T_fact = [0.87,0.13],       #avg TP same orient, other orient
+T_p_m = 0.302,    #avg TM/TP
+T_v2_fact = 0.625,     #T in V2 = T*
 # customn parameters for controling feedback, lgn equlibrum
 lgn_equ_u=1,
 lgn_equ_A = 0,
-lgn_equ_B =0)
+lgn_equ_B =0,
+filling="circular")
 
 end
+
+# # T_P_11 = 0.9032
+# # T_P_21 = 0.1384
+# # T_P_12 = 0.1282
+# # T_P_22 = 0.8443
+# # T_M_11 = 0.2719
+# # T_M_21 = 0.0428
+# # T_M_12 = 0.0388
+# # T_M_22 = 0.2506
+#
+# # T_P in V2 0.625x T_P in V1  ??
+
+# T_m ~ T_p /3.2 calculated..
 
 
 #

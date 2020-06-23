@@ -84,6 +84,7 @@ function gaussian_rot(σ_x::Real, σ_y::Real, θ::Real, l = 4*ceil(Int, max(σ_a
 end
 
 
+
 # Rotating function
 function fun_R(x,y,θ)
     x*cos(θ)-y*sin(θ), x*sin(θ)+y*cos(θ)
