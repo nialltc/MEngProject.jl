@@ -25,36 +25,57 @@ function kernels(p::NamedTuple)
     C_B_temp = copy(C_A_temp)
     H_temp = reshape(Array{Real}(undef, p.H_l, p.H_l * p.K), p.H_l, p.H_l, p.K)
     T_temp = reshape(Array{Real}(undef, 1, 1 * p.K), 1, 1, p.K)     #ijk,  1x1xk,   ijk
-    W_temp = reshape(Array{Real}(undef, 1, 1 * p.K * p.K), 1, 1, p.K, p.K)     #ijk,  1x1xk,   ijk
+    W_temp = reshape(Array{Real}(undef, 19, 19 * p.K * p.K), 19, 19, p.K, p.K)     #ijk,  1x1xk,   ijk
     for k ∈ 1:p.K
         θ = π*(k-1)/p.K
-        C_A_temp[:,:,k] = LamKernels.kern_A(p.σ_2, θ)               #ij ijk ijk
-        C_B_temp[:,:,k] = LamKernels.kern_B(p.σ_2, θ)               #ij ijk ijk
+        C_A_temp[:,:,k] = reflect(LamKernels.kern_A(p.σ_2, θ))           #ij ijk ijk
+        C_B_temp[:,:,k] = reflect(LamKernels.kern_B(p.σ_2, θ))               #ij ijk ijk
         H_temp[:,:,k] = reflect(p.H_fact .* LamKernels.gaussian_rot(p.H_σ_x, p.H_σ_y, θ, p.H_l))  #ijk, ij for each k; ijk
-        T_temp[:,:,k] = p.T_fact[k]
+        T_temp[:,:,k] = reshape([p.T_fact[k]],1,1)
 #todo: generalise T and W for higher K
 #         T_temp[:,:,k] = KernelFactors.gaussian(p.T_σ, p.K)
 #         for l ∈ 1:p.K
 #             W_temp[:,:,l,k] =
 #         end
     end
-    W_temp[:,:,1,1] = 5 .* LamKernels.gaussian_rot(3,0.8,0,19) .+ LamKernels.gaussian_rot(0.4,1,0,19)
-    W_temp[:,:,2,2] = 5 .* LamKernels.gaussian_rot(3,0.8,0,19) .+ LamKernels.gaussian_rot(0.4,1,π/2,19)
-    W_temp[:,:,1,2] = relu.(0.2 .- LamKernels.gaussian_rot(2,0.6,0,19) .- LamKernels.gaussian_rot(0.3,1.2,0,19))
-    W_temp[:,:,2,1] = relu.(0.2 .- LamKernels.gaussian_rot(2,0.6,0,19) .- LamKernels.gaussian_rot(0.3,1.2,π/2,19))
+    W_temp[:,:,1,1] = reflect(5 .* LamKernels.gaussian_rot(3,0.8,0,19) .+ LamKernels.gaussian_rot(0.4,1,0,19))
+    W_temp[:,:,2,2] = reflect(5 .* LamKernels.gaussian_rot(3,0.8,0,19) .+ LamKernels.gaussian_rot(0.4,1,π/2,19))
+    W_temp[:,:,1,2] = reflect(relu.(0.2 .- LamKernels.gaussian_rot(2,0.6,0,19) .- LamKernels.gaussian_rot(0.3,1.2,0,19)))
+    W_temp[:,:,2,1] = reflect(relu.(0.2 .- LamKernels.gaussian_rot(2,0.6,0,19) .- LamKernels.gaussian_rot(0.3,1.2,π/2,19)))
     temp_out = (
     k_gauss_1 = reflect(Kernel.gaussian(p.σ_1)),
     k_gauss_2 = reflect(Kernel.gaussian(p.σ_2)),
-    k_C_A = reflect(C_A_temp),
-    k_C_B = reflect(C_B_temp),
-    k_W_p = kern_W_p(),
-    k_W_m = K_W_p,
+    k_C_A = C_A_temp,
+    k_C_B = C_B_temp,
+    k_W_p = W_temp,
+    k_W_m = W_temp,
     k_H = H_temp,
-    k_T_p = reflect(T_temp),
-    k_T_m = p.T_P_M .* reflect(T_temp),
-    k_T_p_v2 = p.T_v2_fact .* k_T_p,
-    k_T_m_v2 = p.T_v2_fact .* k_T_m)
+    k_T_p = T_temp,
+    k_T_m = p.T_p_m .* T_temp,
+    k_T_p_v2 = p.T_v2_fact .* T_temp,
+    k_T_m_v2 = p.T_v2_fact .* p.T_p_m .* T_temp)
     return merge(p, temp_out)
+end
+
+
+function varables(I::AbstractArray, p::NamedTuple)
+   vₚ = zeros(typeof(I[1,1]), size(I)[1], size(I)[2])
+   vₘ = copy(vₚ)
+   x_lgn = copy(vₚ)
+   x = reshape(zeros(typeof(I[1,1]), size(I)[1], size(I)[2] * p.K), size(I)[1], size(I)[2], p.K)
+   y = copy(x)
+   m = copy(x)
+   z = copy(x)
+   s = copy(x)
+   C = copy(x)
+   H_z = copy(x)
+   x_V2 = copy(x)
+   y_V2 = copy(x)
+   m_V2 = copy(x)
+   z_V2 = copy(x)
+   s_V2 = copy(x)
+   H_z_V2 = copy(x)
+   return vₚ, vₘ, x_lgn, x, y, m, z, s, C, H_z, x_V2, y_V2, m_V2, z_V2, s_V2, H_z_V2
 end
 
 
@@ -130,8 +151,8 @@ end
 
 
 # LGN
-function fun_dv(v::AbstractArray, u::AbstractArray, x::AbstractArray, p::NamedTuple)
-    x_lgn = fun_x_lgn(x)
+function fun_dv(v::AbstractArray, u::AbstractArray, x_lgn::AbstractArray, p::NamedTuple)
+#     x_lgn = fun_x_lgn(x)
     return p.δ_v .* ( -p.v +
             ((1 - p.v) * relu(u) * (1 + p.C1 * x_lgn)) -
             ((1 + p.v) * p.C2 * imfilter(x_lgn, p.k_gauss_1, p.filling)))
@@ -149,12 +170,12 @@ function fun_v_C(v_p::AbstractArray, v_m::AbstractArray, p::NamedTuple)
     B = copy(A)
 
     for k in 1:p.K
-        θ = π*(k-1)/p.K
-        A[:,:,k] = imfilter(V, p.k_C_A, p.filling)
-        B[:,:,k] = abs.(imfilter(V, p.k_C_B, p.filling))
+#         θ = π*(k-1)/p.K
+        A[:,:,k] = imfilter(V, p.k_C_A[:,:,k], p.filling)
+        B[:,:,k] = abs.(imfilter(V, p.k_C_B[:,:,k], p.filling))
     end
 
-    return γ .* (relu.(A .- B) .+ relu.(.- A .- B))
+    return p.γ .* (relu.(A .- B) .+ relu.(.- A .- B))
 end
 
 
@@ -242,7 +263,7 @@ end
 
 
 # lgn, no L6 feedback, light
-function fun_v_equ_noFb(u::AbstractArray, x::AbstractArray, lgn_para_u=1)
+function fun_v_equ_noFb(u::AbstractArray, x::AbstractArray, p::NamedTuple)
     return fun_equ.(relu.(u) .* (p.lgn_para_u))
 end
 
