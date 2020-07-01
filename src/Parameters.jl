@@ -53,6 +53,9 @@ H_l = 19,
 T_fact = [0.87,0.13],       #avg TP same orient, other orient
 T_p_m = 0.302,    #avg TM/TP
 T_v2_fact = 0.625,     #T in V2 = T*
+# W, H sizes
+H_size = 19,
+W_size = 19,
 # customn parameters for controling feedback, lgn equlibrum
 lgn_equ_u = 1,
 lgn_equ_A = 0,

@@ -14,18 +14,18 @@ julia>
 module Laminart
     include("./LamKernels.jl")
 
-using NNlib, ImageFiltering, Images
+using NNlib, ImageFiltering, Images, OffsetArrays
 # , MEngProject.LamKernels
 
 export I_u, fun_v_C, fun_equ
 
 
-function kernels(p::NamedTuple)
-    C_A_temp = reshape(Array{Real}(undef, p.C_AB_l, p.C_AB_l * p.K), p.C_AB_l, p.C_AB_l, p.K)
+function kernels(img::AbstractArray, p::NamedTuple)
+    C_A_temp = reshape(Array{eltype(img)}(undef, p.C_AB_l, p.C_AB_l * p.K), p.C_AB_l, p.C_AB_l, p.K)
     C_B_temp = copy(C_A_temp)
-    H_temp = reshape(Array{Real}(undef, p.H_l, p.H_l * p.K), p.H_l, p.H_l, p.K)
-    T_temp = reshape(Array{Real}(undef, 1, 1 * p.K), 1, 1, p.K)     #ijk,  1x1xk,   ijk
-    W_temp = reshape(Array{Real}(undef, 19, 19 * p.K * p.K), 19, 19, p.K, p.K)     #ijk,  1x1xk,   ijk
+    H_temp = reshape(Array{eltype(img)}(undef, p.H_l, p.H_l * p.K), p.H_l, p.H_l, p.K)
+    T_temp = reshape(Array{eltype(img)}(undef, 1, 1 * p.K), 1, 1, p.K)     #ijk,  1x1xk,   ijk
+    W_temp = reshape(Array{eltype(img)}(undef, 19, 19 * p.K * p.K), 19, 19, p.K, p.K)     #ijk,  1x1xk,   ijk
     for k ∈ 1:p.K
         θ = π*(k-1)/p.K
         C_A_temp[:,:,k] = reflect(LamKernels.kern_A(p.σ_2, θ))           #ij ijk ijk
@@ -42,26 +42,33 @@ function kernels(p::NamedTuple)
     W_temp[:,:,2,2] = reflect(5 .* LamKernels.gaussian_rot(3,0.8,0,19) .+ LamKernels.gaussian_rot(0.4,1,π/2,19))
     W_temp[:,:,1,2] = reflect(relu.(0.2 .- LamKernels.gaussian_rot(2,0.6,0,19) .- LamKernels.gaussian_rot(0.3,1.2,0,19)))
     W_temp[:,:,2,1] = reflect(relu.(0.2 .- LamKernels.gaussian_rot(2,0.6,0,19) .- LamKernels.gaussian_rot(0.3,1.2,π/2,19)))
+
+# todo: fix range of W H
+#     W_range = -(p.W_size-1)/2:(p.W_size-1)/2
+#     H_range = -(p.H_size-1)/2:(p.H_size-1)/2
+    W_range = -9:9
+    H_range = -9:9
+
     temp_out = (
     k_gauss_1 = reflect(Kernel.gaussian(p.σ_1)),
     k_gauss_2 = reflect(Kernel.gaussian(p.σ_2)),
     k_C_A = C_A_temp,
     k_C_B = C_B_temp,
-    k_W_p = W_temp,
-    k_W_m = W_temp,
-    k_H = H_temp,
-    k_T_p = T_temp,
-    k_T_m = p.T_p_m .* T_temp,
-    k_T_p_v2 = p.T_v2_fact .* T_temp,
-    k_T_m_v2 = p.T_v2_fact .* p.T_p_m .* T_temp)
+    k_W_p = OffsetArray(W_temp, W_range, W_range, 1:p.K, 1:p.K),
+    k_W_m = OffsetArray(W_temp, W_range, W_range, 1:p.K, 1:p.K),
+    k_H = OffsetArray(H_temp, H_range, H_range, 1:p.K),
+    k_T_p = (T_temp),
+    k_T_m = (p.T_p_m .* T_temp),
+    k_T_p_v2 = (p.T_v2_fact .* T_temp),
+    k_T_m_v2 = (p.T_v2_fact .* p.T_p_m .* T_temp))
     return merge(p, temp_out)
 end
 
 
 function varables(I::AbstractArray, p::NamedTuple)
-   vₚ = zeros(typeof(I[1,1]), size(I)[1], size(I)[2])
-   vₘ = copy(vₚ)
-   x_lgn = copy(vₚ)
+   v_p = zeros(typeof(I[1,1]), size(I)[1], size(I)[2])
+   v_m = copy(v_p)
+   x_lgn = copy(v_p)
    x = reshape(zeros(typeof(I[1,1]), size(I)[1], size(I)[2] * p.K), size(I)[1], size(I)[2], p.K)
    y = copy(x)
    m = copy(x)
@@ -75,8 +82,30 @@ function varables(I::AbstractArray, p::NamedTuple)
    z_V2 = copy(x)
    s_V2 = copy(x)
    H_z_V2 = copy(x)
-   return vₚ, vₘ, x_lgn, x, y, m, z, s, C, H_z, x_V2, y_V2, m_V2, z_V2, s_V2, H_z_V2
+   return [v_p, v_m, x_lgn, x, y, m, z, s, C, H_z, x_V2, y_V2, m_V2, z_V2, s_V2, H_z_V2]
 end
+
+# function varables(I::AbstractArray, p::NamedTuple)
+#    ij = zeros(typeof(I[1,1]), size(I)[1], size(I)[2])
+#    ijk = reshape(zeros(typeof(I[1,1]), size(I)[1], size(I)[2] * p.K), size(I)[1], size(I)[2], p.K)
+#    temp_out = [v_p = copy(ij),
+#    v_m = copy(ij),
+#    x_lgn = copy(ij),
+#    x = copy(ijk),
+#    y = copy(ijk),
+#    m = copy(ijk),
+#    z = copy(ijk),
+#    s = copy(ijk),
+#    C = copy(ijk),
+#    H_z = copy(ijk),
+#    x_V2 = copy(ijk),
+#    y_V2 = copy(ijk),
+#    m_V2 = copy(ijk),
+#    z_V2 = copy(ijk),
+#    s_V2 = copy(ijk),
+#    H_z_V2 = copy(ijk)]
+#    return temp_out
+# end
 
 
 # retina
@@ -95,7 +124,7 @@ end
 
 function fun_x_lgn(x::AbstractArray)
    # todo: change to abstract array? or is eltype doing that??
-    x_LGN =Array{eltype(V)}(undef, size(V)[1], size(V)[2])
+    x_lgn =Array{eltype(x)}(undef, size(x)[1], size(x)[2])
 #     todo: change to map function?
     for k in 1:size(x)[3]
         x_lgn .+= x[:,:,k]
@@ -133,17 +162,20 @@ end
 
 # todo: check
 function fun_f(x::AbstractArray, p::NamedTuple)
-    (p.μ .* p.x .^p.n) ./ (p.ν^p.n .+ p.x.^p.n)
+    (p.μ .* x .^p.n) ./ (p.ν^p.n .+ x.^p.n)
 end
 
 
 function func_filter_W(img::AbstractArray, W::AbstractArray, p::NamedTuple)
 #     out = reshape(fill(0/img[1,1,1], size(img)[1], size(img)[2] * p.K * p.K), size(img)[1], size(img)[2], p.K, p.K)
-    out = reshape(Array{eltype(V)}(undef, size(img)[1], size(img)[2] * p.K * p.K), size(img)[1], size(img)[2], p.K, p.K)
+#     out = reshape(Array{eltype(img)}(undef, size(img)[1], size(img)[2] * p.K), size(img)[1], size(img)[2], p.K)
+    out = copy(img)
     for k ∈ 1:p.K
-    out[:,:,k] = imfilter(img[:,:,k], W[:,:,1,k], p.filling)
-        for l ∈ 2:K
-            out[:,:,k] .+= imfilter(img[:,:,(k % p.K) + 1], W[:,:,l,k], p.filling)
+        out[:,:,k] = imfilter(img[:,:,k], W[:,:,k,k], p.filling)
+        for l ∈ 1:p.K
+            if l ≠ k
+                out[:,:,k] .+= imfilter(img[:,:,l], W[:,:,k,l], p.filling)
+            end
         end
     end
     return out
@@ -151,11 +183,11 @@ end
 
 
 # LGN
-function fun_dv(v::AbstractArray, u::AbstractArray, x_lgn::AbstractArray, p::NamedTuple)
+function fun_dv(v, u, x_lgn, p)
 #     x_lgn = fun_x_lgn(x)
-    return p.δ_v .* ( -p.v +
-            ((1 - p.v) * relu(u) * (1 + p.C1 * x_lgn)) -
-            ((1 + p.v) * p.C2 * imfilter(x_lgn, p.k_gauss_1, p.filling)))
+    return p.δ_v .* ( .- v .+
+            ((1 .- v) * relu.(u) .* (1 .+ p.C_1 .* x_lgn)) .-
+            ((1 .+ v) .* p.C_2 .* imfilter(x_lgn, p.k_gauss_1, p.filling)))
 end
 
 
@@ -191,9 +223,9 @@ end
 
 #     L4 excit
 function fun_dy(y::AbstractArray, C::AbstractArray, x::AbstractArray, m::AbstractArray, p::NamedTuple)
-    return  p.δ_c(   -y .+
+    return  p.δ_c .* (   -y .+
             ((1 .- y) .* (C .+ (p.η_p .* x))) .-
-            ((1 .+ y) .* fun_f((m .* func_filter_W(m, p.k_W_p, p), p.μ, p.ν, p.n))))
+            ((1 .+ y) .* fun_f(m .* func_filter_W(m, p.k_W_p, p), p)))
 end
 
 
@@ -201,18 +233,18 @@ end
 #     l4 inhib
 function fun_dm(m::AbstractArray, x::AbstractArray, p::NamedTuple)
     return p.δ_m .* (  -m .+
-                     (p.η_m .* x) -
-                     (m .* fun_f.(func_filter_W(m, p.k_W_m, p), p.μ, p.ν, p.n)))
+                     (p.η_m .* x) .-
+                     (m .* fun_f(func_filter_W(m, p.k_W_m, p), p)))
 end
 
 
 
 #     L2/3 excit
-function fun_dz(z::AbstractArray, y::AbstractArray,  H_z::AbstractArray, p::NamedTuple)
+function fun_dz(z::AbstractArray, y::AbstractArray,  H_z::AbstractArray, s::AbstractArray, p::NamedTuple)
     return p.δ_z .*   (-z .+
                     ((1 .- z) .*
-                        ((p.λ .* relu.(y)) .+ H_z .+ (a_ex_23 .* att))) .-
-                    ((z .+ ψ) .* (imfilter(s, p.k_T_p, p.filling))))
+                        ((p.λ .* relu.(y)) .+ H_z .+ (p.a_23_ex .* p.att))) .-
+                    ((z .+ p.ψ) .* (imfilter(s, p.k_T_p, p.filling))))
 end
 
 
@@ -220,7 +252,7 @@ end
 #     L2/3 inhib
 function fun_ds(s::AbstractArray, z::AbstractArray, H_z::AbstractArray, p::NamedTuple)
     return p.δ_s .*   ( -s .+
-                    H_z .+ (a_23_in .* att) .-
+                    H_z .+ (p.a_23_in .* p.att) .-
                     (s .* imfilter(s, p.k_T_m, p.filling)))  #?????
 end
 
@@ -248,7 +280,6 @@ function fun_dy_v2(y_v2::AbstractArray, z::AbstractArray, x_v2::AbstractArray, m
                     ((1 .- y_v2) .* ((v_12_4 .* relu.(z .- p.Γ)) .+ (p.η_p .* x_v2))) .-
                     ((1 .+ y_v2) .* fun_f.(imfilter(m_v2, p.k_W_p, p.filling)), p.μ, p.ν, p.n))
 end
-
 
 
 
