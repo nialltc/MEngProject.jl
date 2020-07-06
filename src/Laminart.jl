@@ -19,7 +19,9 @@ using NNlib, ImageFiltering, Images, OffsetArrays
 
 export I_u, fun_v_C, fun_equ
 
+function f!(duu, uu, p, t)
 
+end
 function kernels(img::AbstractArray, p::NamedTuple)
     C_A_temp = reshape(Array{eltype(img)}(undef, p.C_AB_l, p.C_AB_l * p.K), p.C_AB_l, p.C_AB_l, p.K)
     C_B_temp = copy(C_A_temp)
@@ -85,6 +87,28 @@ function varables(I::AbstractArray, p::NamedTuple)
    return [v_p, v_m, x_lgn, x, y, m, z, s, C, H_z, x_V2, y_V2, m_V2, z_V2, s_V2, H_z_V2]
 end
 
+
+function variables_sep(I::AbstractArray, p::NamedTuple)
+   v_p = zeros(typeof(I[1,1]), size(I)[1], size(I)[2])
+   v_m = copy(v_p)
+   x_lgn = copy(v_p)
+   x = reshape(zeros(typeof(I[1,1]), size(I)[1], size(I)[2] * p.K), size(I)[1], size(I)[2], p.K)
+   y = copy(x)
+   m = copy(x)
+   z = copy(x)
+   s = copy(x)
+   C = copy(x)
+   H_z = copy(x)
+   x_V2 = copy(x)
+   y_V2 = copy(x)
+   m_V2 = copy(x)
+   z_V2 = copy(x)
+   s_V2 = copy(x)
+   H_z_V2 = copy(x)
+   return v_p, v_m, x_lgn, x, y, m, z, s, C, H_z, x_V2, y_V2, m_V2, z_V2, s_V2, H_z_V2
+end
+
+
 # function varables(I::AbstractArray, p::NamedTuple)
 #    ij = zeros(typeof(I[1,1]), size(I)[1], size(I)[2])
 #    ijk = reshape(zeros(typeof(I[1,1]), size(I)[1], size(I)[2] * p.K), size(I)[1], size(I)[2], p.K)
@@ -107,12 +131,18 @@ end
 #    return temp_out
 # end
 
+function add_I_u_p(I::AbstractArray, p::NamedTuple)
+    temp_out = (I = I, u = I_u(I, p))
+    return merge(p, temp_out)
+end
+
 
 # retina
 
 function I_u(I::AbstractArray, p::NamedTuple)
     return I - imfilter(I, p.k_gauss_1, p.filling)
 end
+
 
 
 # todo: use saved static(?) of [u+] and [u-]???
@@ -122,7 +152,7 @@ end
 # todo: test
 # todo: should lgn_a be normalized, ie divide by k??
 
-function fun_x_lgn(x::AbstractArray)
+function fun_x_lgn(x, img, p)
    # todo: change to abstract array? or is eltype doing that??
     x_lgn =Array{eltype(x)}(undef, size(x)[1], size(x)[2])
 #     todo: change to map function?
