@@ -20,8 +20,42 @@ using NNlib, ImageFiltering, Images, OffsetArrays
 export I_u, fun_v_C, fun_equ
 
 function f!(duu, uu, p, t)
+   x = @view uu[:, :, 1:p.K]
+   y = @view uu[:, :, p.K+1:2*p.K]
+   m = @view uu[:, :, 2*p.K+1:3*p.K]
+   z = @view uu[:, :, 3*p.K+1:4*p.K]
+   s = @view uu[:, :, 4*p.K+1:5*p.K]
 
+#    C = @view uu[:, :, 5*p.K+1:6*p.K]
+#    H_z = @view uu[:, :, 6*p.K+1:7*p.K]
+
+   v_p = @view uu[:, :, 5*p.K+1]
+   v_m = @view uu[:, :, 5*p.K+2]
+#    x_lgn = @view uu[:, :, 7*p.K+3]
+
+   dx = @view duu[:, :, 1:p.K]
+   dy = @view duu[:, :, p.K+1:2*p.K]
+   dm = @view duu[:, :, 2*p.K+1:3*p.K]
+   dz = @view duu[:, :, 3*p.K+1:4*p.K]
+   ds = @view duu[:, :, 4*p.K+1:5*p.K]
+
+   dv_p = @view duu[:, :, 5*p.K+1]
+   dv_m = @view duu[:, :, 5*p.K+2]
+
+   x_lgn = fun_x_lgn(x, p)
+   C = fun_v_C(v_p, v_m, p)
+   H_z = fun_H_z(z, p)
+
+   dv_p = fun_dv(v_p, p.u, x_lgn, p)
+   dv_m = fun_dv(v_m, .-p.u, x_lgn, p)
+   dx = fun_dx_V1(x, C, z, p.x_V2, p)
+   dy = fun_dy(y, C, x, m, p)
+   dm = fun_dm(m, x, p)
+   dz = fun_dz(z, y, H_z, p)
+   ds = fun_ds(s, z, H_z, p)
 end
+
+
 function kernels(img::AbstractArray, p::NamedTuple)
     C_A_temp = reshape(Array{eltype(img)}(undef, p.C_AB_l, p.C_AB_l * p.K), p.C_AB_l, p.C_AB_l, p.K)
     C_B_temp = copy(C_A_temp)
@@ -62,7 +96,10 @@ function kernels(img::AbstractArray, p::NamedTuple)
     k_T_p = (T_temp),
     k_T_m = (p.T_p_m .* T_temp),
     k_T_p_v2 = (p.T_v2_fact .* T_temp),
-    k_T_m_v2 = (p.T_v2_fact .* p.T_p_m .* T_temp))
+    k_T_m_v2 = (p.T_v2_fact .* p.T_p_m .* T_temp),
+    dim_i = size(img)[1],
+    dim_j = size(img)[2],
+    x_V2 = reshape(zeros(typeof(img[1,1]), size(img)[1], size(img)[2] * p.K), size(img)[1], size(img)[2], p.K))
     return merge(p, temp_out)
 end
 
@@ -152,12 +189,13 @@ end
 # todo: test
 # todo: should lgn_a be normalized, ie divide by k??
 
-function fun_x_lgn(x::AbstractArray)
+function fun_x_lgn(x::AbstractArray, p::NamedTuple)
    # todo: change to abstract array? or is eltype doing that??
-    x_lgn =Array{eltype(x)}(undef, size(x)[1], size(x)[2])
+#     x_lgn = Array{eltype(x)}(0, p.dim_i, p.dim_j)
+    x_lgn = zeros(p.dim_i, p.dim_j)
 #     todo: change to map function?
-    for k in 1:size(x)[3]
-        x_lgn .+= x[:,:,k]
+    for k in 1:p.K
+        x_lgn += x[:,:,k]
     end
     return x_lgn
 end
@@ -213,10 +251,10 @@ end
 
 
 # LGN
-function fun_dv(v, u, x_lgn, p)
+function fun_dv(v::AbstractArray, u::AbstractArray, x_lgn::AbstractArray, p::NamedTuple)
 #     x_lgn = fun_x_lgn(x)
     return p.δ_v .* ( .- v .+
-            ((1 .- v) * relu.(u) .* (1 .+ p.C_1 .* x_lgn)) .-
+            ((1 .- v) .* max.(u,0) .* (1 .+ p.C_1 .* x_lgn)) .-
             ((1 .+ v) .* p.C_2 .* imfilter(x_lgn, p.k_gauss_1, p.filling)))
 end
 
@@ -225,7 +263,7 @@ end
 function fun_v_C(v_p::AbstractArray, v_m::AbstractArray, p::NamedTuple)
     # isodd(l) || throw(ArgumentError("length must be odd"))
 
-    V = exp(-1/8) .* (imfilter((relu.(v_p)-relu.(v_m)), p.k_gauss_2, p.filling))
+    V = exp(-1/8) .* (imfilter((max.(v_p,0)-max.(v_m,0)), p.k_gauss_2, p.filling))
 
 # todo: change to abstract array? or is eltype doing that??
     A = reshape(Array{eltype(V)}(undef, size(V)[1], size(V)[2]*p.K),size(V)[1],size(V)[2],p.K)
@@ -237,7 +275,7 @@ function fun_v_C(v_p::AbstractArray, v_m::AbstractArray, p::NamedTuple)
         B[:,:,k] = abs.(imfilter(V, p.k_C_B[:,:,k], p.filling))
     end
 
-    return p.γ .* (relu.(A .- B) .+ relu.(.- A .- B))
+    return p.γ .* (max.(A .- B, 0) .+ max.(.- A .- B, 0))
 end
 
 
@@ -246,17 +284,18 @@ end
 function fun_dx_V1(x::AbstractArray, C::AbstractArray, z::AbstractArray, x_v2::AbstractArray, p::NamedTuple)
     return p.δ_c .* (-x .+
             ((1 .- x) .*
-                ((p.α*C) .+ (p.ϕ .* relu.(z .- p.Γ)) .+ (p.V_21 .* x_v2) .+ p.att)))
+                ((p.α*C) .+ (p.ϕ .* max.(z .- p.Γ,0)) .+ (p.V_21 .* x_v2) .+ p.att)))
 end
 
 
 
 #     L4 excit
 function fun_dy(y::AbstractArray, C::AbstractArray, x::AbstractArray, m::AbstractArray, p::NamedTuple)
-    return  p.δ_c .* (   -y .+
+    return  p.δ_c .* (   .-y .+
             ((1 .- y) .* (C .+ (p.η_p .* x))) .-
-            ((1 .+ y) .* fun_f(m .* func_filter_W(m, p.k_W_p, p), p)))
+            ((1 .+ y) .* fun_f.(m .* func_filter_W(m, p.k_W_p, p), p)))
 end
+
 
 
 
@@ -264,7 +303,7 @@ end
 function fun_dm(m::AbstractArray, x::AbstractArray, p::NamedTuple)
     return p.δ_m .* (  -m .+
                      (p.η_m .* x) .-
-                     (m .* fun_f(func_filter_W(m, p.k_W_m, p), p)))
+                     (m .* fun_f.(func_filter_W(m, p.k_W_m, p), p)))
 end
 
 
@@ -273,7 +312,7 @@ end
 function fun_dz(z::AbstractArray, y::AbstractArray,  H_z::AbstractArray, s::AbstractArray, p::NamedTuple)
     return p.δ_z .*   (-z .+
                     ((1 .- z) .*
-                        ((p.λ .* relu.(y)) .+ H_z .+ (p.a_23_ex .* p.att))) .-
+                        ((p.λ .* max.(y,0)) .+ H_z .+ (p.a_23_ex .* p.att))) .-
                     ((z .+ p.ψ) .* (imfilter(s, p.k_T_p, p.filling))))
 end
 
@@ -289,7 +328,7 @@ end
 function fun_H_z(z::AbstractArray, p::NamedTuple)
     H_z_out = copy(z)
     for k ∈ 1:p.K
-        H_z_out[:,:,k] = imfilter((relu.(z[:,:,k] .- p.Γ)), p.k_H[:,:,k], p.filling)
+        H_z_out[:,:,k] = imfilter((max.(z[:,:,k] .- p.Γ,0)), p.k_H[:,:,k], p.filling)
         end
         return H_z_out
 end
@@ -300,14 +339,14 @@ end
 function fun_dx_v2(x_v2::AbstractArray, z_v2::AbstractArray, z::AbstractArray, p::NamedTuple)
     return p.δ_c .*   (  -x_v2 .+
                     ((1 .- x_v2) .*
-                        ((p.v_12_6 .* relu.(z .- p.Γ)) + (p.ϕ .* relu.(z_v2 .- p.Γ)) .+ p.att)))
+                        ((p.v_12_6 .* max.(z .- p.Γ, 0)) + (p.ϕ .* max.(z_v2 .- p.Γ, 0)) .+ p.att)))
 end
 
 
 # V2 L4 excit
 function fun_dy_v2(y_v2::AbstractArray, z::AbstractArray, x_v2::AbstractArray, m_v2::AbstractArray, p::NamedTuple)
     return δ_c .*   (-y_v2 .+
-                    ((1 .- y_v2) .* ((v_12_4 .* relu.(z .- p.Γ)) .+ (p.η_p .* x_v2))) .-
+                    ((1 .- y_v2) .* ((v_12_4 .* max.(z .- p.Γ, 0)) .+ (p.η_p .* x_v2))) .-
                     ((1 .+ y_v2) .* fun_f.(imfilter(m_v2, p.k_W_p, p.filling)), p.μ, p.ν, p.n))
 end
 
