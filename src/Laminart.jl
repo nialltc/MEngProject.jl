@@ -152,7 +152,7 @@ end
 # todo: test
 # todo: should lgn_a be normalized, ie divide by k??
 
-function fun_x_lgn(x, img, p)
+function fun_x_lgn(x::AbstractArray)
    # todo: change to abstract array? or is eltype doing that??
     x_lgn =Array{eltype(x)}(undef, size(x)[1], size(x)[2])
 #     todo: change to map function?
