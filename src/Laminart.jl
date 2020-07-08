@@ -46,12 +46,12 @@ function f!(duu, uu, p, t)
    C = fun_v_C(v_p, v_m, p)
    H_z = fun_H_z(z, p)
 
-   dv_p = fun_dv(v_p, p.u, x_lgn, p)
-   dv_m = fun_dv(v_m, .-p.u, x_lgn, p)
+   dv_p = fun_dv(v_p, p.r, x_lgn, p)
+   dv_m = fun_dv(v_m, .-p.r, x_lgn, p)
    dx = fun_dx_V1(x, C, z, p.x_V2, p)
    dy = fun_dy(y, C, x, m, p)
    dm = fun_dm(m, x, p)
-   dz = fun_dz(z, y, H_z, p)
+   dz = fun_dz(z, y, H_z, s, p)
    ds = fun_ds(s, z, H_z, p)
 end
 
@@ -74,10 +74,16 @@ function kernels(img::AbstractArray, p::NamedTuple)
 #             W_temp[:,:,l,k] =
 #         end
     end
-    W_temp[:,:,1,1] = reflect(5 .* LamKernels.gaussian_rot(3,0.8,0,19) .+ LamKernels.gaussian_rot(0.4,1,0,19))
-    W_temp[:,:,2,2] = reflect(5 .* LamKernels.gaussian_rot(3,0.8,0,19) .+ LamKernels.gaussian_rot(0.4,1,π/2,19))
-    W_temp[:,:,1,2] = reflect(relu.(0.2 .- LamKernels.gaussian_rot(2,0.6,0,19) .- LamKernels.gaussian_rot(0.3,1.2,0,19)))
-    W_temp[:,:,2,1] = reflect(relu.(0.2 .- LamKernels.gaussian_rot(2,0.6,0,19) .- LamKernels.gaussian_rot(0.3,1.2,π/2,19)))
+#     W_temp[:,:,1,1] = reflect(5 .* LamKernels.gaussian_rot(3,0.8,0,19) .+ LamKernels.gaussian_rot(0.4,1,0,19))
+#     W_temp[:,:,2,2] = reflect(5 .* LamKernels.gaussian_rot(3,0.8,0,19) .+ LamKernels.gaussian_rot(0.4,1,π/2,19))
+#     W_temp[:,:,1,2] = reflect(relu.(0.2 .- LamKernels.gaussian_rot(2,0.6,0,19) .- LamKernels.gaussian_rot(0.3,1.2,0,19)))
+#     W_temp[:,:,2,1] = reflect(relu.(0.2 .- LamKernels.gaussian_rot(2,0.6,0,19) .- LamKernels.gaussian_rot(0.3,1.2,π/2,19)))
+
+# todo fix W kernel
+ W_temp[:,:,1,1] = reflect(LamKernels.gaussian_rot(3,0.8,0,19))
+    W_temp[:,:,2,2] = reflect(LamKernels.gaussian_rot(3,0.8,0,19))
+    W_temp[:,:,1,2] = reflect(LamKernels.gaussian_rot(3,0.8,0,19))
+    W_temp[:,:,2,1] = reflect(LamKernels.gaussian_rot(3,0.8,0,19))
 
 # todo: fix range of W H
 #     W_range = -(p.W_size-1)/2:(p.W_size-1)/2
@@ -169,7 +175,7 @@ end
 # end
 
 function add_I_u_p(I::AbstractArray, p::NamedTuple)
-    temp_out = (I = I, u = I_u(I, p))
+    temp_out = (I = I, r = I_u(I, p))
     return merge(p, temp_out)
 end
 
@@ -181,8 +187,6 @@ function I_u(I::AbstractArray, p::NamedTuple)
 end
 
 
-
-# todo: use saved static(?) of [u+] and [u-]???
 
 # lgn feedback
 
@@ -230,7 +234,7 @@ end
 
 # todo: check
 function fun_f(x::AbstractArray, p::NamedTuple)
-    (p.μ .* x .^p.n) ./ (p.ν^p.n .+ x.^p.n)
+    return (p.μ .* x .^p.n) ./ (p.ν^p.n .+ x.^p.n)
 end
 
 
@@ -239,10 +243,12 @@ function func_filter_W(img::AbstractArray, W::AbstractArray, p::NamedTuple)
 #     out = reshape(Array{eltype(img)}(undef, size(img)[1], size(img)[2] * p.K), size(img)[1], size(img)[2], p.K)
     out = copy(img)
     for k ∈ 1:p.K
-        out[:,:,k] = imfilter(img[:,:,k], W[:,:,k,k], p.filling)
+        out[:,:,k] = imfilter(img[:,:,k], centered(W[:,:,k,k]), p.filling)
+#         out[:,:,k] = conv(img[:,:,k], W[:,:,k,k])
         for l ∈ 1:p.K
             if l ≠ k
-                out[:,:,k] .+= imfilter(img[:,:,l], W[:,:,k,l], p.filling)
+                out[:,:,k] += imfilter(img[:,:,l], centered(W[:,:,k,l]), p.filling)
+#                 out[:,:,k] .+= conv(img[:,:,l], W[:,:,k,l])
             end
         end
     end
@@ -256,6 +262,7 @@ function fun_dv(v::AbstractArray, u::AbstractArray, x_lgn::AbstractArray, p::Nam
     return p.δ_v .* ( .- v .+
             ((1 .- v) .* max.(u,0) .* (1 .+ p.C_1 .* x_lgn)) .-
             ((1 .+ v) .* p.C_2 .* imfilter(x_lgn, p.k_gauss_1, p.filling)))
+#             ((1 .+ v) .* p.C_2 .* conv(x_lgn, p.k_gauss_1)))
 end
 
 
@@ -264,6 +271,7 @@ function fun_v_C(v_p::AbstractArray, v_m::AbstractArray, p::NamedTuple)
     # isodd(l) || throw(ArgumentError("length must be odd"))
 
     V = exp(-1/8) .* (imfilter((max.(v_p,0)-max.(v_m,0)), p.k_gauss_2, p.filling))
+#     V = exp(-1/8) .* (conv((max.(v_p,0) .- max.(v_m,0)), p.k_gauss_2))
 
 # todo: change to abstract array? or is eltype doing that??
     A = reshape(Array{eltype(V)}(undef, size(V)[1], size(V)[2]*p.K),size(V)[1],size(V)[2],p.K)
@@ -273,6 +281,8 @@ function fun_v_C(v_p::AbstractArray, v_m::AbstractArray, p::NamedTuple)
 #         θ = π*(k-1)/p.K
         A[:,:,k] = imfilter(V, p.k_C_A[:,:,k], p.filling)
         B[:,:,k] = abs.(imfilter(V, p.k_C_B[:,:,k], p.filling))
+#         A[:,:,k] = conv(V, p.k_C_A[:,:,k])
+#         B[:,:,k] = abs.(conv(V, p.k_C_B[:,:,k]))
     end
 
     return p.γ .* (max.(A .- B, 0) .+ max.(.- A .- B, 0))
@@ -293,27 +303,38 @@ end
 function fun_dy(y::AbstractArray, C::AbstractArray, x::AbstractArray, m::AbstractArray, p::NamedTuple)
     return  p.δ_c .* (   .-y .+
             ((1 .- y) .* (C .+ (p.η_p .* x))) .-
-            ((1 .+ y) .* fun_f.(m .* func_filter_W(m, p.k_W_p, p), p)))
+            ((1 .+ y) .* fun_f(m .* func_filter_W(m, p.k_W_p, p), p)))
 end
 
-
+# function fun_dy(y::AbstractArray, C::AbstractArray, x::AbstractArray, m::AbstractArray, p::NamedTuple)
+#     return  p.δ_c .* (   .-y .+
+#             ((1 .- y) .* (C .+ (p.η_p .* x))) .-
+#             ((1 .+ y) .* fun_f(m , p)))
+# end
 
 
 #     l4 inhib
 function fun_dm(m::AbstractArray, x::AbstractArray, p::NamedTuple)
     return p.δ_m .* (  -m .+
                      (p.η_m .* x) .-
-                     (m .* fun_f.(func_filter_W(m, p.k_W_m, p), p)))
+                     (m .* fun_f(func_filter_W(m, p.k_W_m, p), p)))
 end
 
+# function fun_dm(m::AbstractArray, x::AbstractArray, p::NamedTuple)
+#     return p.δ_m .* (  -m .+
+#                      (p.η_m .* x) .-
+#                      (m .* fun_f(m, p)))
+# end
 
 
 #     L2/3 excit
 function fun_dz(z::AbstractArray, y::AbstractArray,  H_z::AbstractArray, s::AbstractArray, p::NamedTuple)
     return p.δ_z .*   (-z .+
                     ((1 .- z) .*
+#                         ((p.λ .* max.(y,0)) .+ H_z )) .-
                         ((p.λ .* max.(y,0)) .+ H_z .+ (p.a_23_ex .* p.att))) .-
                     ((z .+ p.ψ) .* (imfilter(s, p.k_T_p, p.filling))))
+#                     ((z .+ p.ψ) .* (conv(s, p.k_T_p))))
 end
 
 
@@ -323,12 +344,14 @@ function fun_ds(s::AbstractArray, z::AbstractArray, H_z::AbstractArray, p::Named
     return p.δ_s .*   ( -s .+
                     H_z .+ (p.a_23_in .* p.att) .-
                     (s .* imfilter(s, p.k_T_m, p.filling)))  #?????
+#                     (s .* conv(s, p.k_T_m)))  #?????
 end
 
 function fun_H_z(z::AbstractArray, p::NamedTuple)
     H_z_out = copy(z)
     for k ∈ 1:p.K
         H_z_out[:,:,k] = imfilter((max.(z[:,:,k] .- p.Γ,0)), p.k_H[:,:,k], p.filling)
+#         H_z_out[:,:,k] = conv((max.(z[:,:,k] .- p.Γ,0)), p.k_H[:,:,k])
         end
         return H_z_out
 end
@@ -348,6 +371,7 @@ function fun_dy_v2(y_v2::AbstractArray, z::AbstractArray, x_v2::AbstractArray, m
     return δ_c .*   (-y_v2 .+
                     ((1 .- y_v2) .* ((v_12_4 .* max.(z .- p.Γ, 0)) .+ (p.η_p .* x_v2))) .-
                     ((1 .+ y_v2) .* fun_f.(imfilter(m_v2, p.k_W_p, p.filling)), p.μ, p.ν, p.n))
+#                     ((1 .+ y_v2) .* fun_f.(conv(m_v2, p.k_W_p)), p.μ, p.ν, p.n))
 end
 
 
