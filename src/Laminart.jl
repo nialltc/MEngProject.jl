@@ -46,13 +46,21 @@ function f!(du, u, p, t)
    C = fun_v_C(v_p, v_m, p)
    H_z = fun_H_z(z, p)
 
-   dv_p = fun_dv(v_p, p.r, x_lgn, p)
-   dv_m = fun_dv(v_m, .-p.r, x_lgn, p)
-   dx = fun_dx_V1(x, C, z, p.x_V2, p)
-   dy = fun_dy(y, C, x, m, p)
-   dm = fun_dm(m, x, p)
-   dz = fun_dz(z, y, H_z, s, p)
-   ds = fun_ds(s, z, H_z, p)
+   temp_dv_p = fun_dv(v_p, p.r, x_lgn, p)
+   temp_dv_m = fun_dv(v_m, .-p.r, x_lgn, p)
+   temp_dx = fun_dx_V1(x, C, z, p.x_V2, p)
+   temp_dy = fun_dy(y, C, x, m, p)
+   temp_dm = fun_dm(m, x, p)
+   temp_dz = fun_dz(z, y, H_z, s, p)
+   temp_ds = fun_ds(s, z, H_z, p)
+
+   @. dv_p = temp_dv_p
+   @. dv_m = temp_dv_m
+   @. dx = temp_dx
+   @. dy = temp_dy
+   @. dm = temp_dm
+   @. dz = temp_dz
+   @. ds = temp_ds
 end
 
 
@@ -74,16 +82,16 @@ function kernels(img::AbstractArray, p::NamedTuple)
 #             W_temp[:,:,l,k] =
 #         end
     end
-#     W_temp[:,:,1,1] = reflect(5 .* LamKernels.gaussian_rot(3,0.8,0,19) .+ LamKernels.gaussian_rot(0.4,1,0,19))
-#     W_temp[:,:,2,2] = reflect(5 .* LamKernels.gaussian_rot(3,0.8,0,19) .+ LamKernels.gaussian_rot(0.4,1,π/2,19))
-#     W_temp[:,:,1,2] = reflect(relu.(0.2 .- LamKernels.gaussian_rot(2,0.6,0,19) .- LamKernels.gaussian_rot(0.3,1.2,0,19)))
-#     W_temp[:,:,2,1] = reflect(relu.(0.2 .- LamKernels.gaussian_rot(2,0.6,0,19) .- LamKernels.gaussian_rot(0.3,1.2,π/2,19)))
+    W_temp[:,:,1,1] = reflect(5 .* LamKernels.gaussian_rot(3,0.8,0,19) .+ LamKernels.gaussian_rot(0.4,1,0,19))
+    W_temp[:,:,2,2] = reflect(5 .* LamKernels.gaussian_rot(3,0.8,0,19) .+ LamKernels.gaussian_rot(0.4,1,π/2,19))
+    W_temp[:,:,1,2] = reflect(relu.(0.2 .- LamKernels.gaussian_rot(2,0.6,0,19) .- LamKernels.gaussian_rot(0.3,1.2,0,19)))
+    W_temp[:,:,2,1] = reflect(relu.(0.2 .- LamKernels.gaussian_rot(2,0.6,0,19) .- LamKernels.gaussian_rot(0.3,1.2,π/2,19)))
 
 # todo fix W kernel
- W_temp[:,:,1,1] = reflect(LamKernels.gaussian_rot(3,0.8,0,19))
-    W_temp[:,:,2,2] = reflect(LamKernels.gaussian_rot(3,0.8,0,19))
-    W_temp[:,:,1,2] = reflect(LamKernels.gaussian_rot(3,0.8,0,19))
-    W_temp[:,:,2,1] = reflect(LamKernels.gaussian_rot(3,0.8,0,19))
+#  W_temp[:,:,1,1] = reflect(LamKernels.gaussian_rot(3,0.8,0,19))
+#     W_temp[:,:,2,2] = reflect(LamKernels.gaussian_rot(3,0.8,0,19))
+#     W_temp[:,:,1,2] = reflect(LamKernels.gaussian_rot(3,0.8,0,19))
+#     W_temp[:,:,2,1] = reflect(LamKernels.gaussian_rot(3,0.8,0,19))
 
 # todo: fix range of W H
 #     W_range = -(p.W_size-1)/2:(p.W_size-1)/2
@@ -263,16 +271,16 @@ function func_filter_W(img::AbstractArray, W::AbstractArray, p::NamedTuple)
     out = copy(img)
     for k ∈ 1:p.K
 #     todo fix W
-#         out[:,:,k] = imfilter(img[:,:,k], (centered(W[:,:,k,k]),), p.filling)
-        out[:,:,k] = img[:,:,k]
+        out[:,:,k] = imfilter(img[:,:,k], (centered(W[:,:,k,k]),), p.filling)
+#         out[:,:,k] = img[:,:,k]
 #         out[:,:,k] = conv(img[:,:,k], W[:,:,k,k])
-#         for l ∈ 1:p.K
-#             if l ≠ k
+        for l ∈ 1:p.K
+            if l ≠ k
 #                 out[:,:,k] += img[:,:,l]
-# #                 out[:,:,k] += imfilter(img[:,:,l], (centered(W[:,:,k,l]),), p.filling)
-# #                 out[:,:,k] .+= conv(img[:,:,l], W[:,:,k,l])
-#             end
-#         end
+                out[:,:,k] += imfilter(img[:,:,l], (centered(W[:,:,k,l]),), p.filling)
+#                 out[:,:,k] .+= conv(img[:,:,l], W[:,:,k,l])
+            end
+        end
     end
     return out
 end
