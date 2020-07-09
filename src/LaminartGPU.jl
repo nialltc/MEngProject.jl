@@ -14,7 +14,7 @@ julia>
 module LaminartGPU
     include("./LamKernels.jl")
 
-using NNlib, ImageFiltering, Images, OffsetArrays
+using NNlib, ImageFiltering, Images, OffsetArrays, CUDA
 # , MEngProject.LamKernels
 
 export I_u, fun_v_C, fun_equ
