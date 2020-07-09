@@ -49,7 +49,7 @@ H_σ_x = p_temp.H_σ_x,
 H_σ_y = p_temp.H_σ_y,
 H_fact = 5.0f0,
 # H_l =  4*ceil(Int, max(p_temp.H_σ_x, p_temp.H_σ_y))+1,
-H_l = 19.0f0,
+H_l = 19,
 T_fact = [0.87f0,0.13f0],       #avg TP same orient, other orient
 T_p_m = 0.302f0,    #avg TM/TP
 T_v2_fact = 0.625f0,     #T in V2 = T*
