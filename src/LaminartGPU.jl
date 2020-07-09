@@ -11,7 +11,7 @@
 julia>
 ```
 """
-module Laminart
+module LaminartGPU
     include("./LamKernels.jl")
 
 using NNlib, ImageFiltering, Images, OffsetArrays
