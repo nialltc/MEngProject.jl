@@ -20,47 +20,50 @@ using NNlib, ImageFiltering, Images, OffsetArrays
 export I_u, fun_v_C, fun_equ
 
 function f!(du, u, p, t)
-   x = @view u[:, :, 1:p.K]
-   y = @view u[:, :, p.K+1:2*p.K]
-   m = @view u[:, :, 2*p.K+1:3*p.K]
-   z = @view u[:, :, 3*p.K+1:4*p.K]
-   s = @view u[:, :, 4*p.K+1:5*p.K]
+    @inbounds begin
+        x = @view u[:, :, 1:p.K]
+        y = @view u[:, :, p.K+1:2*p.K]
+        m = @view u[:, :, 2*p.K+1:3*p.K]
+        z = @view u[:, :, 3*p.K+1:4*p.K]
+        s = @view u[:, :, 4*p.K+1:5*p.K]
 
 #    C = @view uu[:, :, 5*p.K+1:6*p.K]
 #    H_z = @view uu[:, :, 6*p.K+1:7*p.K]
 
-   v_p = @view u[:, :, 5*p.K+1]
-   v_m = @view u[:, :, 5*p.K+2]
+        v_p = @view u[:, :, 5*p.K+1]
+        v_m = @view u[:, :, 5*p.K+2]
 #    x_lgn = @view uu[:, :, 7*p.K+3]
 
-   dx = @view du[:, :, 1:p.K]
-   dy = @view du[:, :, p.K+1:2*p.K]
-   dm = @view du[:, :, 2*p.K+1:3*p.K]
-   dz = @view du[:, :, 3*p.K+1:4*p.K]
-   ds = @view du[:, :, 4*p.K+1:5*p.K]
+        dx = @view du[:, :, 1:p.K]
+        dy = @view du[:, :, p.K+1:2*p.K]
+        dm = @view du[:, :, 2*p.K+1:3*p.K]
+        dz = @view du[:, :, 3*p.K+1:4*p.K]
+        ds = @view du[:, :, 4*p.K+1:5*p.K]
 
-   dv_p = @view du[:, :, 5*p.K+1]
-   dv_m = @view du[:, :, 5*p.K+2]
+        dv_p = @view du[:, :, 5*p.K+1]
+        dv_m = @view du[:, :, 5*p.K+2]
 
-   x_lgn = fun_x_lgn(x, p)
-   C = fun_v_C(v_p, v_m, p)
-   H_z = fun_H_z(z, p)
+        x_lgn = fun_x_lgn(x, p)
+        C = fun_v_C(v_p, v_m, p)
+        H_z = fun_H_z(z, p)
 
-   temp_dv_p = fun_dv(v_p, p.r, x_lgn, p)
-   temp_dv_m = fun_dv(v_m, .-p.r, x_lgn, p)
-   temp_dx = fun_dx_V1(x, C, z, p.x_V2, p)
-   temp_dy = fun_dy(y, C, x, m, p)
-   temp_dm = fun_dm(m, x, p)
-   temp_dz = fun_dz(z, y, H_z, s, p)
-   temp_ds = fun_ds(s, z, H_z, p)
+        temp_dv_p = fun_dv(v_p, p.r, x_lgn, p)
+        temp_dv_m = fun_dv(v_m, .-p.r, x_lgn, p)
+        temp_dx = fun_dx_V1(x, C, z, p.x_V2, p)
+        temp_dy = fun_dy(y, C, x, m, p)
+        temp_dm = fun_dm(m, x, p)
+        temp_dz = fun_dz(z, y, H_z, s, p)
+        temp_ds = fun_ds(s, z, H_z, p)
 
-   @. dv_p = temp_dv_p
-   @. dv_m = temp_dv_m
-   @. dx = temp_dx
-   @. dy = temp_dy
-   @. dm = temp_dm
-   @. dz = temp_dz
-   @. ds = temp_ds
+        @. dv_p = temp_dv_p
+        @. dv_m = temp_dv_m
+        @. dx = temp_dx
+        @. dy = temp_dy
+        @. dm = temp_dm
+        @. dz = temp_dz
+        @. ds = temp_ds
+   end
+   nothing
 end
 
 
