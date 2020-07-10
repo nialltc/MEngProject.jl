@@ -225,8 +225,8 @@ end
 
 function fun_x_lgn(x::AbstractArray, p::NamedTuple)
    # todo: change to abstract array? or is eltype doing that??
-    x_lgn = CuArray{eltype(x)}(0, p.dim_i, p.dim_j)
-#     x_lgn = CUDA.zeros(p.dim_i, p.dim_j)
+#     x_lgn = CuArray{eltype(x)}(0, p.dim_i, p.dim_j)
+    x_lgn = CUDA.zeros(p.dim_i, p.dim_j)
 #     todo: change to map function?
     for k in 1:p.K
         x_lgn += x[:,:,k]
