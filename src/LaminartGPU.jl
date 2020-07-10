@@ -322,14 +322,18 @@ function fun_v_C(v_p::AbstractArray, v_m::AbstractArray, p::NamedTuple)
 end
 
 
-
+# todo revert to full L6 function
 # L6
+# function fun_dx_V1(x::AbstractArray, C::AbstractArray, z::AbstractArray, x_v2::AbstractArray, p::NamedTuple)
+#     return p.δ_c .* (-x .+
+#             ((1 .- x) .*
+#                 ((p.α*C) .+ (p.ϕ .* max.(z .- p.Γ,0)) .+ (p.V_21 .* x_v2) .+ p.att)))
+# end
 function fun_dx_V1(x::AbstractArray, C::AbstractArray, z::AbstractArray, x_v2::AbstractArray, p::NamedTuple)
     return p.δ_c .* (-x .+
             ((1 .- x) .*
-                ((p.α*C) .+ (p.ϕ .* max.(z .- p.Γ,0)) .+ (p.V_21 .* x_v2) .+ p.att)))
+                ((p.α.*C) .+ (p.ϕ .* max.(z .- p.Γ,0)) .+ (p.V_21 .* x_v2) .+ p.att)))
 end
-
 
 
 #     L4 excit
