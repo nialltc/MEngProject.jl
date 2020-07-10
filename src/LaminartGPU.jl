@@ -45,7 +45,7 @@ function f!(du, u, p, t)
 
         x_lgn = CuArray(fun_x_lgn(x, p))
         C = CuArray(fun_v_C(v_p, v_m, p))
-        H_z = CuArray((fun_H_z(z, p))
+        H_z = CuArray(fun_H_z(z, p))
 
         temp_dv_p = fun_dv(v_p, p.r, x_lgn, p)
         temp_dv_m = fun_dv(v_m, .-p.r, x_lgn, p)
