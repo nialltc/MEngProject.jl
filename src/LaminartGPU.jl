@@ -43,9 +43,9 @@ function f!(du, u, p, t)
         dv_p = @view du[:, :, 5*p.K+1]
         dv_m = @view du[:, :, 5*p.K+2]
 
-        x_lgn = fun_x_lgn(x, p)
-        C = fun_v_C(v_p, v_m, p)
-        H_z = fun_H_z(z, p)
+        x_lgn = CuArray(fun_x_lgn(x, p))
+        C = CuArray(fun_v_C(v_p, v_m, p))
+        H_z = CuArray((fun_H_z(z, p))
 
         temp_dv_p = fun_dv(v_p, p.r, x_lgn, p)
         temp_dv_m = fun_dv(v_m, .-p.r, x_lgn, p)
@@ -85,10 +85,10 @@ function kernels(img::AbstractArray, p::NamedTuple)
 #             W_temp[:,:,l,k] =
 #         end
     end
-    W_temp[:,:,1,1] = reflect(5 .* LamKernels.gaussian_rot(3,0.8,0,19) .+ LamKernels.gaussian_rot(0.4,1,0,19))
-    W_temp[:,:,2,2] = reflect(5 .* LamKernels.gaussian_rot(3,0.8,0,19) .+ LamKernels.gaussian_rot(0.4,1,π/2,19))
-    W_temp[:,:,1,2] = reflect(relu.(0.2 .- LamKernels.gaussian_rot(2,0.6,0,19) .- LamKernels.gaussian_rot(0.3,1.2,0,19)))
-    W_temp[:,:,2,1] = reflect(relu.(0.2 .- LamKernels.gaussian_rot(2,0.6,0,19) .- LamKernels.gaussian_rot(0.3,1.2,π/2,19)))
+    W_temp[:,:,1,1] = reflect(5 .* LamKernels.gaussian_rot(3.0f0,0.8f0,0,19) .+ LamKernels.gaussian_rot(0.4f0,1,0,19))
+    W_temp[:,:,2,2] = reflect(5 .* LamKernels.gaussian_rot(3.0f0,0.8f0,0,19) .+ LamKernels.gaussian_rot(0.4f0,1,π/2,19))
+    W_temp[:,:,1,2] = reflect(relu.(0.2 .- LamKernels.gaussian_rot(2.0f0,0.6f0,0,19) .- LamKernels.gaussian_rot(0.3f0,1.2f0,0,19)))
+    W_temp[:,:,2,1] = reflect(relu.(0.2 .- LamKernels.gaussian_rot(2.0f0,0.6f0,0,19) .- LamKernels.gaussian_rot(0.3f0,1.2f0,π/2,19)))
 
 # todo fix W kernel
 #  W_temp[:,:,1,1] = reflect(LamKernels.gaussian_rot(3,0.8,0,19))
@@ -307,7 +307,7 @@ function fun_v_C(v_p::AbstractArray, v_m::AbstractArray, p::NamedTuple)
 #     V = exp(-1/8) .* (conv((max.(v_p,0) .- max.(v_m,0)), p.k_gauss_2))
 
 # todo: change to abstract array? or is eltype doing that??
-    A = reshape(CuArray{eltype(V)}(undef, size(V)[1], size(V)[2]*p.K),size(V)[1],size(V)[2],p.K)
+    A = reshape(CuArray{eltype(v_p)}(undef, size(V)[1], size(V)[2]*p.K),size(V)[1],size(V)[2],p.K)
     B = copy(A)
 
     for k in 1:p.K
