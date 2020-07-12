@@ -227,7 +227,7 @@ function fun_x_lgn(x::AbstractArray, p::NamedTuple)
 #     x_lgn = Array{eltype(x)}(0, p.dim_i, p.dim_j)
     x_lgn = zeros(p.dim_i, p.dim_j)
 #     todo: change to map function?
-    for k in 1:p.K
+    for k ∈  1:p.K
         x_lgn += x[:,:,k]
     end
     return x_lgn
@@ -316,7 +316,7 @@ function fun_v_C(v_p::AbstractArray, v_m::AbstractArray, p::NamedTuple)
     A = reshape(Array{eltype(V)}(undef, size(V)[1], size(V)[2]*p.K),size(V)[1],size(V)[2],p.K)
     B = copy(A)
 
-    for k in 1:p.K
+    for k ∈ 1:p.K
 #         θ = π*(k-1)/p.K
         A[:,:,k] = imfilter(V, (centered(p.k_C_A[:,:,k]),), p.filling)
         B[:,:,k] = abs.(imfilter(V, (centered(p.k_C_B[:,:,k]),), p.filling))
@@ -333,7 +333,7 @@ end
 function fun_dx_V1(x::AbstractArray, C::AbstractArray, z::AbstractArray, x_v2::AbstractArray, p::NamedTuple)
     return p.δ_c .* (-x .+
             ((1 .- x) .*
-                ((p.α*C) .+ (p.ϕ .* max.(z .- p.Γ,0)) .+ (p.V_21 .* x_v2) .+ p.att)))
+                ((p.α*C) .+ (p.ϕ .* max.(z .- p.Γ,0)) .+ (p.v_21 .* x_v2) .+ p.att)))
 end
 
 
@@ -435,7 +435,7 @@ end
 
 # l6
 function fun_x_equ(C::AbstractArray, z::AbstractArray,  p::NamedTuple)
-    return fun_equ.((p.α .* C) .+ (p.ϕ .* fun_F.(z,p.Γ)) + (p.V_21 .* x_v2) .+ p.att)
+    return fun_equ.((p.α .* C) .+ (p.ϕ .* fun_F.(z,p.Γ)) + (p.v_21 .* x_v2) .+ p.att)
 end
 
 
@@ -492,14 +492,14 @@ end
 
 # V2 L6
 function fun_xV2_equ(x_v2::AbstractArray, z::AbstractArray, z_v2::AbstractArray, p::NamedTuple)
-    return fun_equ.((p.V_12_6 .* fun_F.(z, p.Γ) .+ (p.ϕ .* fun_F.(z_v2, p.Γ))))
+    return fun_equ.((p.v_12_6 .* fun_F.(z, p.Γ) .+ (p.ϕ .* fun_F.(z_v2, p.Γ))))
 end
 
 
 #  V2 L4 excit
 function fun_yV2_equ(z::AbstractArray, x::AbstractArray,  m::AbstractArray, p::NamedTuple)
-    return (p.V_12_4 .* fun_F.(z,p.Γ) .+ (p.η_p .* x) - fun_f.(imfilter(m, k_W_p), p.μ, p.ν, p.n) ./
-   (1 .+ p.V_12_4 .* fun_F.(z,p.Γ) .+ (p.η_p .* x) .+ fun_f.(imfilter(m, k_W_p), p.μ, p.ν, p.n)))
+    return (p.v_12_4 .* fun_F.(z,p.Γ) .+ (p.η_p .* x) - fun_f.(imfilter(m, k_W_p), p.μ, p.ν, p.n) ./
+   (1 .+ p.v_12_4 .* fun_F.(z,p.Γ) .+ (p.η_p .* x) .+ fun_f.(imfilter(m, k_W_p), p.μ, p.ν, p.n)))
 end
 
 end

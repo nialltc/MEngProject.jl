@@ -43,9 +43,13 @@ function f!(du, u, p, t)
         dv_p = @view du[:, :, 5*p.K+1]
         dv_m = @view du[:, :, 5*p.K+2]
 
-        x_lgn = similar(v_p)
-        C = similar(x)
-        H_z = similar(x)
+#         C = similar(x)
+#         H_z = similar(x)
+#         x_lgn = similar(v_p)
+#         x_lgn = Array{eltype(u)}(undef, p.dim_i, p.dim_j)
+#         C = reshape(Array{eltype(u)}(undef, p.dim_i, p.dim_j*p.K),p.dim_i,p.dim_j, p.K)
+#         H_z = copy(C)
+
         fun_x_lgn!(x_lgn, x, p)
         fun_v_C!(C, v_p, v_m, p)
         fun_H_z!(H_z, z, p)
@@ -218,11 +222,13 @@ end
 
 
 function fun_x_lgn!(x_lgn::AbstractArray, x::AbstractArray, p::NamedTuple)
-    @. x_lgn = 0
-    for k in 1:p.K
-        @. x_lgn += @view x[:,:,k]
+    @. x_lgn = 0.0
+    @inbounds begin
+        for k ∈ 1:p.K
+            @. x_lgn += @view x[:,:,k]
+        end
     end
-    return x_lgn
+    return nothing
 end
 
 
@@ -289,7 +295,7 @@ function fun_v_C!(v_C::AbstractArray, v_p::AbstractArray, v_m::AbstractArray, p:
     A = similar(v_C)
 #     allocate B to v_C
     @inbounds begin
-        for k in 1:p.K
+        for k ∈ 1:p.K
             a = @view A[:,:,k]
             b = @view v_C[:,:,k]
             imfilter!(a, V, (centered(p.k_C_A[:,:,k]),), p.filling)
@@ -306,7 +312,7 @@ end
 function fun_dx_v1!(dx::AbstractArray, x::AbstractArray, C::AbstractArray, z::AbstractArray, x_v2::AbstractArray, p::NamedTuple)
     @. dx = p.δ_c * (-x +
             ((1.0f0 - x) *
-                ((p.α*C) + (p.ϕ * max(z - p.Γ,0)) .+ (p.V_21 * x_v2) + p.att)))
+                ((p.α*C) + (p.ϕ * max(z - p.Γ,0)) .+ (p.v_21 * x_v2) + p.att)))
     return nothing
 end
 
@@ -357,11 +363,13 @@ end
 
 
 function fun_H_z!(H_z::AbstractArray, z::AbstractArray, p::NamedTuple)
-    for k ∈ 1:p.K
-        H_z_k = @view H_z[:,:,k]
-        z_k = @view z[:,:,k]
-        imfilter!(H_z_k, (max.(z_k .- p.Γ,0)), (centered(p.k_H[:,:,k]),), p.filling)
+    @inbounds begin
+        for k ∈ 1:p.K
+            H_z_k = @view H_z[:,:,k]
+            z_k = @view z[:,:,k]
+            imfilter!(H_z_k, (max.(z_k .- p.Γ,0)), (centered(p.k_H[:,:,k]),), p.filling)
         end
+    end
     return nothing
 end
 
