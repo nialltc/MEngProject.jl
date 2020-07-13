@@ -27,7 +27,7 @@ end
 
 function (ff::MyFunction)(du, u, p, t)
 # function f!(du, u, p, t)
-    # @inbounds begin
+    @inbounds begin
         x = @view u[:, :, 1:p.K]
         y = @view u[:, :, p.K+1:2*p.K]
         m = @view u[:, :, 2*p.K+1:3*p.K]
@@ -72,7 +72,7 @@ function (ff::MyFunction)(du, u, p, t)
         fun_dz!(dz, z, y, ff.H_z, s, p)
         fun_ds!(ds, s, ff.H_z, p)
 
-    # end
+    end
     nothing
 end
 
