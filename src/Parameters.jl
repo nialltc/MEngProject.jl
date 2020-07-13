@@ -60,7 +60,8 @@ W_size = 19,
 lgn_equ_u = 1.0f0,
 lgn_equ_A = 0.0f0,
 lgn_equ_B = 0.0f0,
-filling = "circular")
+filling = "circular",
+W_l = 19)
 
 
 end
