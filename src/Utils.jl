@@ -37,7 +37,7 @@ function plot_rb(img::AbstractArray;  name="img", save = true, axMin = -1, axMax
     end
 end
 
-function plot_gs(img::AbstractArray,  name="img", save = true, axMin = 0, axMax = 2, clbar=false,  loc=location, filetype=".png")
+function plot_gs(img::AbstractArray;  name="img", save = true, axMin = 0, axMax = 2, clbar=false,  loc=location, filetype=".png")
     findmax(img)[1] > axMax && throw(ArgumentError(string("Image has max ", findmax(img)[1], ",outside range")))
     findmin(img)[1] < axMin && throw(ArgumentError(string("Image has min ", findmin(img)[1], ",outside range")))
     fig, ax = plt.subplots()
