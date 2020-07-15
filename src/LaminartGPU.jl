@@ -139,8 +139,8 @@ merge(p, temp_out)
 end
 
 
-function reshape2d_4d(out::AbstractArray, img::AbstractArray)
-    out = reshape(img, size(img)[1], size(img)[2], 1, 1)
+function reshape2d_4d(img::AbstractArray)
+    reshape(img, size(img)[1], size(img)[2], 1, 1)
 end
 
 
