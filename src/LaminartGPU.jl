@@ -84,9 +84,16 @@ function kernels(img::AbstractArray, p::NamedTuple)
         p.C_AB_l,
         p.K, 1,1
     )
-
+C_B_temp = similar(C_A_temp)
+	    H_temp = reshape(
+        Array{eltype(img)}(undef, p.H_l, p.H_l * p.K),
+        p.H_l,
+        p.H_l,
+        p.K,
+    1,1)
  T_temp = reshape(Array{eltype(img)}(undef, 1, 1 * p.K), 1, 1, p.K,1,1)     #ijk,  1x1xk,   ijk
-
+ W_temp =
+        reshape(Array{eltype(img)}(undef, p.W_l, p.W_l * p.K * p.K), p.W_l, p.W_l, p.K, p.K,1,1)
     for k ∈ 1:p.K
         θ = π * (k - 1.0f0) / p.K
         C_A_temp[:, :, k,1,1] = LamKernels.kern_A(p.σ_2, θ)           #ij ijk ijk
