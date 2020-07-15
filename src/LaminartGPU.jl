@@ -78,89 +78,62 @@ end
 
 
 function kernels(img::AbstractArray, p::NamedTuple)
-    C_A_temp = reshape(
-        CuArray{eltype(img)}(undef, p.C_AB_l, p.C_AB_l * p.K),
+       C_A_temp = reshape(
+        Array{eltype(img)}(undef, p.C_AB_l, p.C_AB_l * p.K),
         p.C_AB_l,
         p.C_AB_l,
-        p.K,
+        p.K, 1,1
     )
-    C_B_temp = copy(C_A_temp)
-    H_temp = reshape(
-        CuArray{eltype(img)}(undef, p.H_l, p.H_l * p.K),
-        p.H_l,
-        p.H_l,
-        p.K,
-    )
-    T_temp = reshape(CuArray{eltype(img)}(undef, 1, 1 * p.K), 1, 1, p.K)     #ijk,  1x1xk,   ijk
-    W_temp =
-        reshape(CuArray{eltype(img)}(undef, p.W_l, p.W_l * p.K * p.K), p.W_l, p.W_l, p.K, p.K)     #ijk,  1x1xk,   ijk
+
+ T_temp = reshape(Array{eltype(img)}(undef, 1, 1 * p.K), 1, 1, p.K,1,1)     #ijk,  1x1xk,   ijk
+
     for k ∈ 1:p.K
-        θ = π * (k - 1) / p.K
-        C_A_temp[:, :, k] = CuArray(reflect(centered(LamKernels.kern_A(p.σ_2, θ))))           #ij ijk ijk
-        C_B_temp[:, :, k] = Creflect(centered(LamKernels.kern_B(p.σ_2, θ)))               #ij ijk ijk
-        H_temp[:, :, k] = reflect(
-            p.H_fact .* LamKernels.gaussian_rot(p.H_σ_x, p.H_σ_y, θ, p.H_l),
-        )  #ijk, ij for each k; ijk
-        T_temp[:, :, k] = reshape([p.T_fact[k]], 1, 1)
+        θ = π * (k - 1.0f0) / p.K
+        C_A_temp[:, :, k,1,1] = LamKernels.kern_A(p.σ_2, θ)           #ij ijk ijk
+        C_B_temp[:, :, k,1,1] = LamKernels.kern_B(p.σ_2, θ)               #ij ijk ijk
+        H_temp[:, :, k,1,1] = p.H_fact .* LamKernels.gaussian_rot(p.H_σ_x, p.H_σ_y, θ, p.H_l)  #ijk, ij for each k; ijk
+        T_temp[1, 1, k,1,1] = p.T_fact[k]
         #todo: generalise T and W for higher K
         #         T_temp[:,:,k] = KernelFactors.gaussian(p.T_σ, p.K)
         #         for l ∈ 1:p.K
         #             W_temp[:,:,l,k] =
         #         end
     end
-    W_temp[:, :, 1, 1] = reflect(
-        5 .* LamKernels.gaussian_rot(3, 0.8, 0, p.W_l) .+
-        LamKernels.gaussian_rot(0.4, 1, 0, p.W_l),
-    )
-    W_temp[:, :, 2, 2] = reflect(
-        5 .* LamKernels.gaussian_rot(3, 0.8, 0, p.W_l) .+
-        LamKernels.gaussian_rot(0.4, 1, π / 2, p.W_l),
-    )
-    W_temp[:, :, 1, 2] = reflect(relu.(
-        0.2 .- LamKernels.gaussian_rot(2, 0.6, 0, p.W_l) .-
-        LamKernels.gaussian_rot(0.3, 1.2, 0, p.W_l),
-    ))
-    W_temp[:, :, 2, 1] = reflect(relu.(
-        0.2 .- LamKernels.gaussian_rot(2, 0.6, 0, p.W_l) .-
-        LamKernels.gaussian_rot(0.3, 1.2, π / 2, p.W_l),
-    ))
 
-    # todo fix W kernel
-    #  W_temp[:,:,1,1] = reflect(LamKernels.gaussian_rot(3,0.8,0,19))
-    #     W_temp[:,:,2,2] = reflect(LamKernels.gaussian_rot(3,0.8,0,19))
-    #     W_temp[:,:,1,2] = reflect(LamKernels.gaussian_rot(3,0.8,0,19))
-    #     W_temp[:,:,2,1] = reflect(LamKernels.gaussian_rot(3,0.8,0,19))
+    W_temp[:, :, 1, 1, 1, 1] =
+        5f0 .* LamKernels.gaussian_rot(3f0, 0.8f0, 0f0, p.W_l) .+
+        LamKernels.gaussian_rot(0.4f0, 1f0, 0f0, p.W_l)
+    W_temp[:, :, 2, 2, 1, 1] =
+        5f0 .* LamKernels.gaussian_rot(3f0, 0.8f0, 0f0, p.W_l) .+
+        LamKernels.gaussian_rot(0.4f0, 1f0, π / 2f0, p.W_l)
+    W_temp[:, :, 1, 2, 1, 1] = relu.(
+        0.2f0 .- LamKernels.gaussian_rot(2f0, 0.6f0, 0f0, p.W_l) .-
+        LamKernels.gaussian_rot(0.3f0, 1.2f0, 0f0, p.W_l))
+    W_temp[:, :, 2, 1, 1, 1] = relu.(
+        0.2f0 .- LamKernels.gaussian_rot(2f0, 0.6f0, 0f0, p.W_l) .-
+        LamKernels.gaussian_rot(0.3f0, 1.2f0, π / 2f0, p.W_l))
 
-    # todo: fix range of W H
-    #     W_range = -(p.W_size-1)/2:(p.W_size-1)/2
-    #     H_range = -(p.H_size-1)/2:(p.H_size-1)/2
-    W_range = -9:9
-    H_range = -9:9
-
-    temp_out = (
-        k_gauss_1 = reflect(Kernel.gaussian(p.σ_1)),
-        k_gauss_2 = reflect(Kernel.gaussian(p.σ_2)),
-        k_C_A = C_A_temp,
-        k_C_B = C_B_temp,
-        k_W_p = W_temp,
-        k_W_m = W_temp,
-        # k_W_m = OffsetArray(W_temp, W_range, W_range, 1:p.K, 1:p.K),
-        k_H = H_temp,
-        # k_H = OffsetArray(H_temp, H_range, H_range, 1:p.K),
-        k_T_p = T_temp,
-        k_T_m = (p.T_p_m .* T_temp),
-        k_T_p_v2 = (p.T_v2_fact .* T_temp),
-        k_T_m_v2 = (p.T_v2_fact .* p.T_p_m .* T_temp),
+temp_out = (
+        k_gauss_1 = CuArray(reshape2d_4d(Kernel.gaussian(p.σ_1))),
+        k_gauss_2 = CuArray(reshape2d_4d(Kernel.gaussian(p.σ_2))),
+        k_C_A = CuArray(C_A_temp),
+        k_C_B = CuArray(C_B_temp),
+        k_W_p = CuArray(W_temp),
+        k_W_m = CuArray(W_temp),
+        k_H = CuArray(H_temp),
+        k_T_p = CuArray(T_temp),
+        k_T_m = CuArray((p.T_p_m .* T_temp)),
+        k_T_p_v2 = CuArray((p.T_v2_fact .* T_temp)),
+        k_T_m_v2 = CuArray((p.T_v2_fact .* p.T_p_m .* T_temp)),
         dim_i = size(img)[1],
         dim_j = size(img)[2],
-        x_V2 = reshape(
-            zeros(typeof(img[1, 1]), size(img)[1], size(img)[2] * p.K),
-            size(img)[1],
-            size(img)[2],
-            p.K,
-        ),
-    )
-    return merge(p, temp_out)
+        x_V2 = reshape(CUDA.zeros(typeof(img[1, 1]), size(img)[1], size(img)[2] * p.K), size(img)[1], size(img)[2],p.K,1,1),)
+merge(p, temp_out)
+end
+
+
+function reshape2d_4d(out::AbstractArray, img::AbstractArray)
+    out = reshape(img, size(img)[1], size(img)[2], 1, 1)
 end
 
 
