@@ -139,7 +139,8 @@ temp_out = (
         k_T_m_v2 = CuArray(p.T_v2_fact .* p.T_p_m .* T_temp),
         dim_i = size(img)[1],
         dim_j = size(img)[2],
-        x_V2 = CuArray(reshape(zeros(Float32, size(img)[1], size(img)[2] * p.K), size(img)[1], size(img)[2],p.K,1)),)
+        x_V2 = CuArray(reshape(zeros(Float32, size(img)[1], size(img)[2] * p.K), size(img)[1], size(img)[2],p.K,1)),
+ν_pw_n= p.ν^p.n, )
 merge(p, temp_out)
 end
 
@@ -289,7 +290,7 @@ end
 
 
 function fun_f!(f_out::AbstractArray, x::AbstractArray, p::NamedTuple)
-    @. f_out = (p.μ * x^p.n) / (p.ν^p.n + x^p.n)
+    @. f_out = (p.μ * x^p.n) / (p.ν_pw_n + x^p.n)
     return nothing
 end
 
