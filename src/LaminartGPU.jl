@@ -125,9 +125,10 @@ temp_out = (
         k_gauss_2 = CuArray(reshape2d_4d(Kernel.gaussian(p.σ_2))),
         k_C_A = CuArray(C_A_temp),
         k_C_B = CuArray(C_B_temp),
-# 		k_x_lgn = reshape(CUDA.ones(1,p.K),1,1,p.K,1),
+		
 # 		todo use mean of x_lgn?
-		k_x_lgn = (reshape(CUDA.ones(1,p.K),1,1,p.K,1))./p.K,
+# 		k_x_lgn = CuArray((reshape(ones(1,p.K),1,1,p.K,1))),
+		k_x_lgn = CuArray((reshape(ones(1,p.K),1,1,p.K,1))./p.K),
         k_W_p = CuArray(W_temp),
         k_W_m = CuArray(W_temp),
         k_H = CuArray(H_temp),
@@ -137,7 +138,7 @@ temp_out = (
         k_T_m_v2 = CuArray((p.T_v2_fact .* p.T_p_m .* T_temp)),
         dim_i = size(img)[1],
         dim_j = size(img)[2],
-        x_V2 = reshape(CUDA.zeros(typeof(img[1, 1]), size(img)[1], size(img)[2] * p.K), size(img)[1], size(img)[2],p.K,1,1),)
+        x_V2 = CuArray(reshape(zeros(typeof(img[1, 1]), size(img)[1], size(img)[2] * p.K), size(img)[1], size(img)[2],p.K,1,1)),)
 merge(p, temp_out)
 end
 
@@ -241,7 +242,7 @@ end
 # end
 
 function add_I_u_p(I::AbstractArray, p::NamedTuple)
-	I_4d = reshape2d_4d(I)
+	I_4d = CuArray(reshape2d_4d(I))
 	r = similar(I_4d)
 	I_u!(r, I_4d, p)
     temp_out = (I = I_4d, r = r)
