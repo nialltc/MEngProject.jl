@@ -82,7 +82,8 @@ function kernels(img::AbstractArray, p::NamedTuple)
         Array{eltype(img)}(undef, p.C_AB_l, p.C_AB_l * p.K),
         p.C_AB_l,
         p.C_AB_l,
-        p.K, 1
+        1,
+		p.K
     )
 C_B_temp = similar(C_A_temp)
 	    H_temp = reshape(
@@ -96,8 +97,8 @@ C_B_temp = similar(C_A_temp)
         reshape(Array{eltype(img)}(undef, p.W_l, p.W_l * p.K * p.K), p.W_l, p.W_l, p.K, p.K)
     for k ∈ 1:p.K
         θ = π * (k - 1.0f0) / p.K
-        C_A_temp[:, :, k,1] = LamKernels.kern_A(p.σ_2, θ)           #ij ijk ijk
-        C_B_temp[:, :, k,1] = LamKernels.kern_B(p.σ_2, θ)               #ij ijk ijk
+        C_A_temp[:, :, 1,k] = LamKernels.kern_A(p.σ_2, θ)           #ij ijk ijk
+        C_B_temp[:, :, 1,k] = LamKernels.kern_B(p.σ_2, θ)               #ij ijk ijk
         H_temp[:, :, k,1] = p.H_fact .* LamKernels.gaussian_rot(p.H_σ_x, p.H_σ_y, θ, p.H_l)  #ijk, ij for each k; ijk
         T_temp[1, 1, k,1] = p.T_fact[k]
         #todo: generalise T and W for higher K
@@ -147,13 +148,18 @@ function reshape2d_4d(img::AbstractArray)
     reshape(img, size(img)[1], size(img)[2], 1, 1)
 end
 
+# function reshape_ijk_ij1k(img::AbstractArray, p::NamedTuple)
+#     reshape(img, size(img)[1], size(img)[2], 1, p.K)
+# end
+	
+	
 function conv!(out::AbstractArray, img::AbstractArray, kern::AbstractArray, p::NamedTuple)
-    out = NNlib.conv(img, kern, pad=(size(kern)[1]>>1, size(kern)[2]>>1), flipped=true)
+    out = NNlib.conv(img, kern, pad=(size(kern)[1]>>1, size(kern)[1]>>1, size(kern)[2]>>1, size(kern)[2]>>1), flipped=true)
     return nothing
 end
 
 function conv_dw!(out::AbstractArray, img::AbstractArray, kern::AbstractArray, p::NamedTuple)
-    out = NNlib.depthwiseconv(img, kern, pad=(size(kern)[1]>>1, size(kern)[2]>>1), flipped=true)
+     out = NNlib.depthwiseconv(img, kern, pad=(size(kern)[1]>>1, size(kern)[2]>>1, size(kern)[3]>>1, size(kern)[4]>>1), flipped=true)
     return nothing
 end
 
