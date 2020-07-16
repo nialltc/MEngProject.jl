@@ -50,7 +50,7 @@ function (ff::MyFunction)(du, u, p, t)
         dv_p = CuArray(@view du[:, :, 5*p.K+1:5*p.K+1,:])
         dv_m = CuArray(@view du[:, :, 5*p.K+2:5*p.K+2,:])
 
-#         x_lgn = @view ff.x_lgn[:,:,1,:]
+#         x_lgn = @view ff.x_lgn[:,:,1:1,:]
         #         x_lgn = similar(v_p)
         #         C = similar(x)
         #         H_z = similar(x)
@@ -60,12 +60,12 @@ function (ff::MyFunction)(du, u, p, t)
         # C = copy(u[:, :, 1:p.K])
         # H_z = copy(u[:, :, 1:p.K])
 
-        fun_x_lgn!(ff.x_lgn, x, p)
+        fun_x_lgn!(x_lgn, x, p)
         fun_v_C!(ff.C, v_p, v_m, p)
         fun_H_z!(ff.H_z, z, p)
 
-        fun_dv!(dv_p, v_p, p.r, ff.x_lgn, p)
-        fun_dv!(dv_m, v_m, .-p.r, ff.x_lgn, p)
+        fun_dv!(dv_p, v_p, p.r, x_lgn, p)
+        fun_dv!(dv_m, v_m, .-p.r, x_lgn, p)
         fun_dx_v1!(dx, x, ff.C, z, p.x_V2, p)
         fun_dy!(dy, y, ff.C, x, m, p)
         fun_dm!(dm, m, x, p)
@@ -139,7 +139,7 @@ temp_out = (
         k_T_m_v2 = CuArray(p.T_v2_fact .* p.T_p_m .* T_temp),
         dim_i = size(img)[1],
         dim_j = size(img)[2],
-        x_V2 = CuArray(reshape(zeros(Float32, size(img)[1], size(img)[2] * p.K), size(img)[1], size(img)[2],p.K,1,1)),)
+        x_V2 = CuArray(reshape(zeros(Float32, size(img)[1], size(img)[2] * p.K), size(img)[1], size(img)[2],p.K,1)),)
 merge(p, temp_out)
 end
 
@@ -335,7 +335,7 @@ function fun_dv!(
     x_lgn::AbstractArray,
     p::NamedTuple,
 )
-	conv_dw!(dv, x_lgn, p.k_gauss_1, p)
+	conv!(dv, x_lgn, p.k_gauss_1, p)
     @. dv =
         p.δ_v * (
             -v + ((1 - v) * max(u, 0) * (1 + p.C_1 * x_lgn)) -
