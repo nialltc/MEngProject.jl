@@ -28,27 +28,27 @@ end
 function (ff::MyFunction)(du, u, p, t)
 # function f!(du, u, p, t)
     @inbounds begin
-        x = @view u[:, :, 1:p.K,:]
-        y = @view u[:, :, p.K+1:2*p.K,:]
-        m = @view u[:, :, 2*p.K+1:3*p.K,:]
-        z = @view u[:, :, 3*p.K+1:4*p.K,:]
-        s = @view u[:, :, 4*p.K+1:5*p.K,:]
+        x = CuArray(@view u[:, :, 1:p.K,:])
+        y = CuArray(@view u[:, :, p.K+1:2*p.K,:])
+        m = CuArray(@view u[:, :, 2*p.K+1:3*p.K,:])
+        z = CuArray(@view u[:, :, 3*p.K+1:4*p.K,:])
+        s = CuArray(@view u[:, :, 4*p.K+1:5*p.K,:])
 
         #    C = @view u[:, :, 5*p.K+1:6*p.K]
         #    H_z = @view u[:, :, 6*p.K+1:7*p.K]
 
-        v_p = @view u[:, :, 5*p.K+1:5*p.K+1,:]
-        v_m = @view u[:, :, 5*p.K+2:5*p.K+2,:]
+        v_p = CuArray(@view u[:, :, 5*p.K+1:5*p.K+1,:])
+        v_m = CuArray(@view u[:, :, 5*p.K+2:5*p.K+2,:])
         #    x_lgn = @view u[:, :, 7*p.K+3]
 
-        dx = @view du[:, :, 1:p.K,:]
-        dy = @view du[:, :, p.K+1:2*p.K,:]
-        dm = @view du[:, :, 2*p.K+1:3*p.K,:]
-        dz = @view du[:, :, 3*p.K+1:4*p.K,:]
-        ds = @view du[:, :, 4*p.K+1:5*p.K,:]
+        dx = CuArray(@view du[:, :, 1:p.K,:])
+        dy = CuArray(@view du[:, :, p.K+1:2*p.K,:])
+        dm = CuArray(@view du[:, :, 2*p.K+1:3*p.K,:])
+        dz = CuArray(@view du[:, :, 3*p.K+1:4*p.K,:])
+        ds = CuArray(@view du[:, :, 4*p.K+1:5*p.K,:])
 
-        dv_p = @view du[:, :, 5*p.K+1:5*p.K+1,:]
-        dv_m = @view du[:, :, 5*p.K+2:5*p.K+2,:]
+        dv_p = CuArray(@view du[:, :, 5*p.K+1:5*p.K+1,:])
+        dv_m = CuArray(@view du[:, :, 5*p.K+2:5*p.K+2,:])
 
 #         x_lgn = @view ff.x_lgn[:,:,1,:]
         #         x_lgn = similar(v_p)
@@ -127,8 +127,8 @@ temp_out = (
         k_C_B = CuArray(C_B_temp),
 		
 # 		todo use mean of x_lgn?
-# 		k_x_lgn = CuArray((reshape(ones(1,p.K),1,1,p.K,1))),
-		k_x_lgn = CuArray((reshape(ones(1,p.K),1,1,p.K,1))./p.K),
+# 		k_x_lgn = CuArray((reshape(ones(Float32,1,p.K),1,1,p.K,1))),
+		k_x_lgn = CuArray((reshape(ones(Float32,1,p.K),1,1,p.K,1))./p.K),
         k_W_p = CuArray(W_temp),
         k_W_m = CuArray(W_temp),
         k_H = CuArray(H_temp),
@@ -138,7 +138,7 @@ temp_out = (
         k_T_m_v2 = CuArray((p.T_v2_fact .* p.T_p_m .* T_temp)),
         dim_i = size(img)[1],
         dim_j = size(img)[2],
-        x_V2 = CuArray(reshape(zeros(typeof(img[1, 1]), size(img)[1], size(img)[2] * p.K), size(img)[1], size(img)[2],p.K,1,1)),)
+        x_V2 = CuArray(reshape(zeros(Float32, size(img)[1], size(img)[2] * p.K), size(img)[1], size(img)[2],p.K,1,1)),)
 merge(p, temp_out)
 end
 
@@ -242,6 +242,7 @@ end
 # end
 
 function add_I_u_p(I::AbstractArray, p::NamedTuple)
+# 	todo fix
 	I_4d = CuArray(reshape2d_4d(I))
 	r = similar(I_4d)
 	I_u!(r, I_4d, p)
