@@ -87,19 +87,19 @@ function kernels(img::AbstractArray, p::NamedTuple)
     )
 C_B_temp = similar(C_A_temp)
 	    H_temp = reshape(
-        Array{eltype(img)}(undef, p.H_l, p.H_l * p.K),
+        zeros(eltype(img), p.H_l, p.H_l * p.K * p.K),
         p.H_l,
         p.H_l,
         p.K,
-    1)
- T_temp = reshape(Array{eltype(img)}(undef, 1, 1 * p.K), 1, 1, p.K,1)     #ijk,  1x1xk,   ijk
+    p.K)
+ T_temp = reshape(Array{eltype(img)}(undef, 1, 1 * p.K), 1, 1, p.K,1)     
  W_temp =
         reshape(Array{eltype(img)}(undef, p.W_l, p.W_l * p.K * p.K), p.W_l, p.W_l, p.K, p.K)
     for k ∈ 1:p.K
         θ = π * (k - 1.0f0) / p.K
-        C_A_temp[:, :, 1,k] = LamKernels.kern_A(p.σ_2, θ)           #ij ijk ijk
-        C_B_temp[:, :, 1,k] = LamKernels.kern_B(p.σ_2, θ)               #ij ijk ijk
-        H_temp[:, :, k,1] = p.H_fact .* LamKernels.gaussian_rot(p.H_σ_x, p.H_σ_y, θ, p.H_l)  #ijk, ij for each k; ijk
+        C_A_temp[:, :, 1,k] = LamKernels.kern_A(p.σ_2, θ)          
+        C_B_temp[:, :, 1,k] = LamKernels.kern_B(p.σ_2, θ)               
+        H_temp[:, :, k,k] = p.H_fact .* LamKernels.gaussian_rot(p.H_σ_x, p.H_σ_y, θ, p.H_l)  
         T_temp[1, 1, k,1] = p.T_fact[k]
         #todo: generalise T and W for higher K
         #         T_temp[:,:,k] = KernelFactors.gaussian(p.T_σ, p.K)
@@ -134,9 +134,9 @@ temp_out = (
         k_W_m = CuArray(W_temp),
         k_H = CuArray(H_temp),
         k_T_p = CuArray(T_temp),
-        k_T_m = CuArray((p.T_p_m .* T_temp)),
-        k_T_p_v2 = CuArray((p.T_v2_fact .* T_temp)),
-        k_T_m_v2 = CuArray((p.T_v2_fact .* p.T_p_m .* T_temp)),
+        k_T_m = CuArray(p.T_p_m .* T_temp),
+        k_T_p_v2 = CuArray(p.T_v2_fact .* T_temp),
+        k_T_m_v2 = CuArray(p.T_v2_fact .* p.T_p_m .* T_temp),
         dim_i = size(img)[1],
         dim_j = size(img)[2],
         x_V2 = CuArray(reshape(zeros(Float32, size(img)[1], size(img)[2] * p.K), size(img)[1], size(img)[2],p.K,1,1)),)
@@ -457,7 +457,7 @@ end
 
 
 function fun_H_z!(H_z::AbstractArray, z::AbstractArray, p::NamedTuple)
-	conv!(H_z, max.(z - p.Γ, 0), p.k_H)
+	conv!(H_z, max.(z .- p.Γ, 0f0), p.k_H, p)
     return nothing
 end
 
