@@ -128,8 +128,8 @@ temp_out = (
         k_C_B = CuArray(C_B_temp),
 		
 # 		todo use mean of x_lgn?
-# 		k_x_lgn = CuArray((reshape(ones(Float32,1,p.K),1,1,p.K,1))),
-		k_x_lgn = CuArray((reshape(ones(Float32,1,p.K),1,1,p.K,1))./p.K),
+		k_x_lgn = CuArray((reshape(ones(Float32,1,p.K),1,1,p.K,1))),
+# 		k_x_lgn = CuArray((reshape(ones(Float32,1,p.K),1,1,p.K,1))./p.K),
         k_W_p = CuArray(W_temp),
         k_W_m = CuArray(W_temp),
         k_H = CuArray(H_temp),
@@ -156,6 +156,13 @@ end
 	
 function conv!(out::AbstractArray, img::AbstractArray, kern::AbstractArray, p::NamedTuple)
     out = NNlib.conv(img, kern, pad=(size(kern)[1]>>1, size(kern)[1]>>1, size(kern)[2]>>1, size(kern)[2]>>1), flipped=true)
+    return nothing
+end
+
+function conv_x_lgn!(out::AbstractArray, img::AbstractArray, kern::AbstractArray, p::NamedTuple)
+# 	todo replace with non-alocating conv
+    out_ = NNlib.conv(img, kern, pad=0,flipped=true)
+	@. out = out_
     return nothing
 end
 
@@ -271,7 +278,10 @@ end
 
 
 function fun_x_lgn!(x_lgn::AbstractArray, x::AbstractArray, p::NamedTuple)
-    x_lgn = NNlib.conv(x, p.k_x_lgn, pad=0,flipped=true)
+	conv_x_lgn!(x_lgn, x, p.k_x_lgn, p)
+# 	x_lgn_ = similar(x_lgn)
+#     x_lgn_ = NNlib.conv(x, p.k_x_lgn, pad=0,flipped=true)
+# 	@. x_lgn = x_lgn_
     return nothing
 end
 
