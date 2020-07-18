@@ -92,7 +92,7 @@ C_B_temp = similar(C_A_temp)
         p.H_l,
         p.K,
     p.K)
- T_temp = reshape(Array{eltype(img)}(undef, 1, 1 * p.K), 1, 1, p.K,1)     
+ T_temp = reshape(Array{eltype(img)}(undef, p.K * p.K), 1, 1, p.K, p.K)     
  W_temp =
         reshape(Array{eltype(img)}(undef, p.W_l, p.W_l * p.K * p.K), p.W_l, p.W_l, p.K, p.K)
     for k ∈ 1:p.K
@@ -100,7 +100,10 @@ C_B_temp = similar(C_A_temp)
         C_A_temp[:, :, 1,k] = LamKernels.kern_A(p.σ_2, θ)          
         C_B_temp[:, :, 1,k] = LamKernels.kern_B(p.σ_2, θ)               
         H_temp[:, :, k,k] = p.H_fact .* LamKernels.gaussian_rot(p.H_σ_x, p.H_σ_y, θ, p.H_l)  
+# 		todo make T kernel more general for higher K
         T_temp[1, 1, k,1] = p.T_fact[k]
+        T_temp[1, 1, 2,2] = p.T_fact[1]
+        T_temp[1, 1, 1,2] = p.T_fact[2]
         #todo: generalise T and W for higher K
         #         T_temp[:,:,k] = KernelFactors.gaussian(p.T_σ, p.K)
         #         for l ∈ 1:p.K
@@ -120,7 +123,20 @@ C_B_temp = similar(C_A_temp)
     W_temp[:, :, 2, 1] = relu.(
         0.2f0 .- LamKernels.gaussian_rot(2f0, 0.6f0, 0f0, p.W_l) .-
         LamKernels.gaussian_rot(0.3f0, 1.2f0, π / 2f0, p.W_l))
-
+	
+#     W_temp[:, :, 1, 1] =
+#         5f0 .* LamKernels.gaussian_rot(3f0, 0.8f0, 0f0, p.W_l) .+
+#         LamKernels.gaussian_rot(0.4f0, 1f0, 0f0, p.W_l)
+#     W_temp[:, :, 2, 2] =
+#         5f0 .* LamKernels.gaussian_rot(3f0, 0.8f0, 0f0, p.W_l) .+
+#         LamKernels.gaussian_rot(0.4f0, 1f0, π / 2f0, p.W_l)
+#     W_temp[:, :, 1, 2] = relu.(
+#         0.2f0 .- LamKernels.gaussian_rot(2f0, 0.6f0, 0f0, p.W_l) .-
+#         LamKernels.gaussian_rot(0.3f0, 1.2f0, 0f0, p.W_l))
+#     W_temp[:, :, 2, 1] = relu.(
+#         0.2f0 .- LamKernels.gaussian_rot(2f0, 0.6f0, 0f0, p.W_l) .-
+#         LamKernels.gaussian_rot(0.3f0, 1.2f0, π / 2f0, p.W_l))
+	
 temp_out = (
         k_gauss_1 = CuArray(reshape2d_4d(Kernel.gaussian(p.σ_1))),
         k_gauss_2 = CuArray(reshape2d_4d(Kernel.gaussian(p.σ_2))),
@@ -155,16 +171,12 @@ end
 	
 	
 function conv!(out::AbstractArray, img::AbstractArray, kern::AbstractArray, p::NamedTuple)
-    out = NNlib.conv(img, kern, pad=(size(kern)[1]>>1, size(kern)[1]>>1, size(kern)[2]>>1, size(kern)[2]>>1), flipped=true)
+	out_ = @view out[:,:,:,:]
+    out_ .= NNlib.conv(img, kern, pad=(size(kern)[1]>>1, size(kern)[1]>>1, size(kern)[2]>>1, size(kern)[2]>>1), flipped=true)
+# 	@. out_ = out
     return nothing
 end
 
-function conv_x_lgn!(out::AbstractArray, img::AbstractArray, kern::AbstractArray, p::NamedTuple)
-# 	todo replace with non-alocating conv
-    out_ = NNlib.conv(img, kern, pad=0,flipped=true)
-	@. out = out_
-    return nothing
-end
 
 function conv_dw!(out::AbstractArray, img::AbstractArray, kern::AbstractArray, p::NamedTuple)
      out = NNlib.depthwiseconv(img, kern, pad=(size(kern)[1]>>1, size(kern)[2]>>1, size(kern)[3]>>1, size(kern)[4]>>1), flipped=true)
@@ -268,7 +280,8 @@ end
 # retina
 
 function I_u!(r::AbstractArray, I::AbstractArray, p::NamedTuple)
-    conv!(r, I, p.k_gauss_1, p)
+    
+	conv!(r, I, p.k_gauss_1, p)
     @. r = I - r
 end
 
@@ -279,7 +292,7 @@ end
 
 function fun_x_lgn!(x_lgn::AbstractArray, x::AbstractArray, p::NamedTuple)
 	out_ = @view x_lgn[:,:,:,:]
-	    out_ = NNlib.conv(x, p.k_x_lgn, pad=0,flipped=true)
+	    out_ .= NNlib.conv(x, p.k_x_lgn, pad=0,flipped=true)
     return nothing
 end
 
@@ -347,8 +360,8 @@ function fun_dv!(
 	conv!(dv, x_lgn, p.k_gauss_1, p)
     @. dv =
         p.δ_v * (
-            -v + ((1 - v) * max(u, 0) * (1 + p.C_1 * x_lgn)) -
-            ((1 + v) * p.C_2 * dv)
+            -v + ((1f0 - v) * max(u, 0f0) * (1f0 + p.C_1 * x_lgn)) -
+            ((1f0 + v) * p.C_2 * dv)
         )
     return nothing
 end
