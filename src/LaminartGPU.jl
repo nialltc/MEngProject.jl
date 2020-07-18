@@ -114,14 +114,17 @@ C_B_temp = similar(C_A_temp)
     W_temp[:, :, 1, 1] =
         5f0 .* LamKernels.gaussian_rot(3f0, 0.8f0, 0f0, p.W_l) .+
         LamKernels.gaussian_rot(0.4f0, 1f0, 0f0, p.W_l)
-    W_temp[:, :, 2, 2] =
-        5f0 .* LamKernels.gaussian_rot(3f0, 0.8f0, 0f0, p.W_l) .+
+    
+	W_temp[:, :, 2, 2] =
+        5f0 .* LamKernels.gaussian_rot(3f0, 0.8f0,  π / 2f0, p.W_l) .+
         LamKernels.gaussian_rot(0.4f0, 1f0, π / 2f0, p.W_l)
-    W_temp[:, :, 1, 2] = relu.(
+    
+	W_temp[:, :, 1, 2] = relu.(
         0.2f0 .- LamKernels.gaussian_rot(2f0, 0.6f0, 0f0, p.W_l) .-
         LamKernels.gaussian_rot(0.3f0, 1.2f0, 0f0, p.W_l))
-    W_temp[:, :, 2, 1] = relu.(
-        0.2f0 .- LamKernels.gaussian_rot(2f0, 0.6f0, 0f0, p.W_l) .-
+    
+	W_temp[:, :, 2, 1] = relu.(
+        0.2f0 .- LamKernels.gaussian_rot(2f0, 0.6f0, π / 2f0, p.W_l) .-
         LamKernels.gaussian_rot(0.3f0, 1.2f0, π / 2f0, p.W_l))
 	
 #     W_temp[:, :, 1, 1] =

@@ -113,7 +113,7 @@ function kernels(img::AbstractArray, p::NamedTuple)
         LamKernels.gaussian_rot(0.4, 1, 0, p.W_l),
     )
     W_temp[:, :, 2, 2] = reflect(
-        5 .* LamKernels.gaussian_rot(3, 0.8, 0, p.W_l) .+
+        5 .* LamKernels.gaussian_rot(3, 0.8, π / 2, p.W_l) .+
         LamKernels.gaussian_rot(0.4, 1, π / 2, p.W_l),
     )
     W_temp[:, :, 1, 2] = reflect(relu.(
@@ -121,7 +121,7 @@ function kernels(img::AbstractArray, p::NamedTuple)
         LamKernels.gaussian_rot(0.3, 1.2, 0, p.W_l),
     ))
     W_temp[:, :, 2, 1] = reflect(relu.(
-        0.2 .- LamKernels.gaussian_rot(2, 0.6, 0, p.W_l) .-
+        0.2 .- LamKernels.gaussian_rot(2, 0.6, π / 2, p.W_l) .-
         LamKernels.gaussian_rot(0.3, 1.2, π / 2, p.W_l),
     ))
 
@@ -338,8 +338,8 @@ function fun_dv!(
     imfilter!(dv, x_lgn, centered(p.k_gauss_1), p.filling)
     @. dv =
         p.δ_v * (
-            -v + ((1 - v) * max(u, 0) * (1 + p.C_1 * x_lgn)) -
-            ((1 + v) * p.C_2 * dv)
+            -v + ((1f0 - v) * max(u, 0f0) * (1f0 + p.C_1 * x_lgn)) -
+            ((1f0 + v) * p.C_2 * dv)
         )
     return nothing
 end
