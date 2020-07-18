@@ -278,10 +278,8 @@ end
 
 
 function fun_x_lgn!(x_lgn::AbstractArray, x::AbstractArray, p::NamedTuple)
-	conv_x_lgn!(x_lgn, x, p.k_x_lgn, p)
-# 	x_lgn_ = similar(x_lgn)
-#     x_lgn_ = NNlib.conv(x, p.k_x_lgn, pad=0,flipped=true)
-# 	@. x_lgn = x_lgn_
+	out_ = @view x_lgn[:,:,:,:]
+	    out_ = NNlib.conv(x, p.k_x_lgn, pad=0,flipped=true)
     return nothing
 end
 
