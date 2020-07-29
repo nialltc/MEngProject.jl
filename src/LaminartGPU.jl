@@ -19,6 +19,99 @@ using NNlib, ImageFiltering, Images, OffsetArrays, CUDA
 
 export I_u, fun_v_C, fun_equ
 
+
+mutable struct LamFunction{T} <: Function
+	x::T
+	y::T
+	m::T
+	z::T
+	s::T
+	v_p::T
+	v_m::T
+	
+	dx::T
+	dy::T
+	dm::T
+	dz::T
+	ds::T
+	dv_p::T
+	dv_m::T
+	
+	x_lgn::T
+	C::T
+	H_z::T
+	V_temp_1::T
+	V_temp_2::T
+	A_temp::T
+	B_temp::T
+end
+
+function (ff::LamFunction)(du, u, p, t)
+
+    @inbounds begin
+        @. ff.x = @view u[:, :, 1:p.K,:]
+        @. ff.y = @view u[:, :, p.K+1:2*p.K,:]
+        @. ff.m = @view u[:, :, 2*p.K+1:3*p.K,:]
+        @. ff.z = @view u[:, :, 3*p.K+1:4*p.K,:]
+        @. ff.s = @view u[:, :, 4*p.K+1:5*p.K,:]
+
+        @. ff.v_p = @view u[:, :, 5*p.K+1:5*p.K+1,:]
+		@. ff.v_m = @view u[:, :, 5*p.K+2:5*p.K+2,:]
+
+        fun_x_lgn!(ff.x_lgn, ff.x, p)
+        fun_v_C!(ff.C, ff.v_p, ff.v_m, ff.V_temp_1, ff.V_temp_2, ff.A_temp, ff.B_temp, p)
+        fun_H_z!(ff.H_z, ff.z, p)
+
+        fun_dv!(ff.dv_p, ff.v_p, p.r, ff.x_lgn, p)
+        fun_dv!(ff.dv_m, ff.v_m, .-p.r, ff.x_lgn, p)
+        fun_dx_v1!(ff.dx, ff.x, ff.C, ff.z, p.x_V2, p)
+        fun_dy!(ff.dy, ff.y, ff.C, ff.x, ff.m, p)
+        fun_dm!(ff.dm, ff.m, ff.x, p)
+        fun_dz!(ff.dz, ff.z, ff.y, ff.H_z, ff.s, p)
+        fun_ds!(ff.ds, ff.s, ff.H_z, p)
+		
+		@. du[:, :, 1:p.K,:] = ff.dx
+		@. du[:, :, p.K+1:2*p.K,:] = ff.dy
+		@. du[:, :, 2*p.K+1:3*p.K,:] = ff.dm
+		@. du[:, :, 3*p.K+1:4*p.K,:] = ff.dz
+		@. du[:, :, 4*p.K+1:5*p.K,:] = ff.ds
+
+        @. du[:, :, 5*p.K+1:5*p.K+1,:] = ff.dv_p
+		@. du[:, :, 5*p.K+2:5*p.K+2,:] = ff.dv_m
+
+    end
+    return nothing
+end
+
+
+
+# struct MyFunction_nm{T} <: Function
+# 	x::T
+# 	y::T
+# 	m::T
+# 	z::T
+# 	s::T
+# 	v_p::T
+# 	v_m::T
+	
+# 	dx::T
+# 	dy::T
+# 	dm::T
+# 	dz::T
+# 	ds::T
+# 	dv_p::T
+# 	dv_m::T
+	
+# 	x_lgn::T
+# 	C::T
+# 	H_z::T
+# 	V_temp_1::T
+# 	V_temp_2::T
+# 	A_temp::T
+# 	B_temp::T
+# end
+
+
 # struct MyFunction{T} <: Function
 # 	x_lgn::T
 # 	C::T
@@ -97,273 +190,67 @@ export I_u, fun_v_C, fun_equ
 # 	B_temp::CuArray{Float32,4,Nothing}
 # end
 
-mutable struct MyFunction{T} <: Function
-	x::T
-	y::T
-	m::T
-	z::T
-	s::T
-	v_p::T
-	v_m::T
-	
-	dx::T
-	dy::T
-	dm::T
-	dz::T
-	ds::T
-	dv_p::T
-	dv_m::T
-	
-	x_lgn::T
-	C::T
-	H_z::T
-	V_temp_1::T
-	V_temp_2::T
-	A_temp::T
-	B_temp::T
-end
 
-struct MyFunction_nm{T} <: Function
-	x::T
-	y::T
-	m::T
-	z::T
-	s::T
-	v_p::T
-	v_m::T
-	
-	dx::T
-	dy::T
-	dm::T
-	dz::T
-	ds::T
-	dv_p::T
-	dv_m::T
-	
-	x_lgn::T
-	C::T
-	H_z::T
-	V_temp_1::T
-	V_temp_2::T
-	A_temp::T
-	B_temp::T
-end
+# function (ff::MyFunction)(du, u, p, t)
+# # function f!(du, u, p, t)
+#     @inbounds begin
+# #         ff.x_ = @view u[:, :, 1:p.K,:]
+# #         ff.y_ = @view u[:, :, p.K+1:2*p.K,:]
+# #         ff.m_ = @view u[:, :, 2*p.K+1:3*p.K,:]
+# #         ff.z_ = @view u[:, :, 3*p.K+1:4*p.K,:]
+# #         ff.s_ = @view u[:, :, 4*p.K+1:5*p.K,:]
 
-function (ff::MyFunction)(du, u, p, t)
-# function f!(du, u, p, t)
-    @inbounds begin
-#         ff.x_ = @view u[:, :, 1:p.K,:]
-#         ff.y_ = @view u[:, :, p.K+1:2*p.K,:]
-#         ff.m_ = @view u[:, :, 2*p.K+1:3*p.K,:]
-#         ff.z_ = @view u[:, :, 3*p.K+1:4*p.K,:]
-#         ff.s_ = @view u[:, :, 4*p.K+1:5*p.K,:]
+# #         ff.v_p_ = @view u[:, :, 5*p.K+1:5*p.K+1,:]
+# #         ff.v_m_ = @view u[:, :, 5*p.K+2:5*p.K+2,:]
 
-#         ff.v_p_ = @view u[:, :, 5*p.K+1:5*p.K+1,:]
-#         ff.v_m_ = @view u[:, :, 5*p.K+2:5*p.K+2,:]
+# #         ff.dx_ = @view du[:, :, 1:p.K,:]
+# #         ff.dy_ = @view du[:, :, p.K+1:2*p.K,:]
+# #         ff.dm_ = @view du[:, :, 2*p.K+1:3*p.K,:]
+# #         ff.dz_ = @view du[:, :, 3*p.K+1:4*p.K,:]
+# #         ff.ds_ = @view du[:, :, 4*p.K+1:5*p.K,:]
 
-#         ff.dx_ = @view du[:, :, 1:p.K,:]
-#         ff.dy_ = @view du[:, :, p.K+1:2*p.K,:]
-#         ff.dm_ = @view du[:, :, 2*p.K+1:3*p.K,:]
-#         ff.dz_ = @view du[:, :, 3*p.K+1:4*p.K,:]
-#         ff.ds_ = @view du[:, :, 4*p.K+1:5*p.K,:]
-
-#         ff.dv_p_ = @view du[:, :, 5*p.K+1:5*p.K+1,:]
-#         ff.dv_m_ = @view du[:, :, 5*p.K+2:5*p.K+2,:]
+# #         ff.dv_p_ = @view du[:, :, 5*p.K+1:5*p.K+1,:]
+# #         ff.dv_m_ = @view du[:, :, 5*p.K+2:5*p.K+2,:]
 
 		
 		
-		x_ = @view u[:, :, 1:p.K,:]
-        y_ = @view u[:, :, p.K+1:2*p.K,:]
-        m_ = @view u[:, :, 2*p.K+1:3*p.K,:]
-        z_ = @view u[:, :, 3*p.K+1:4*p.K,:]
-        s_ = @view u[:, :, 4*p.K+1:5*p.K,:]
+# 		x_ = @view u[:, :, 1:p.K,:]
+#         y_ = @view u[:, :, p.K+1:2*p.K,:]
+#         m_ = @view u[:, :, 2*p.K+1:3*p.K,:]
+#         z_ = @view u[:, :, 3*p.K+1:4*p.K,:]
+#         s_ = @view u[:, :, 4*p.K+1:5*p.K,:]
 
-        v_p_ = @view u[:, :, 5*p.K+1:5*p.K+1,:]
-        v_m_ = @view u[:, :, 5*p.K+2:5*p.K+2,:]
+#         v_p_ = @view u[:, :, 5*p.K+1:5*p.K+1,:]
+#         v_m_ = @view u[:, :, 5*p.K+2:5*p.K+2,:]
 
-        dx_ = @view du[:, :, 1:p.K,:]
-        dy_ = @view du[:, :, p.K+1:2*p.K,:]
-        dm_ = @view du[:, :, 2*p.K+1:3*p.K,:]
-        dz_ = @view du[:, :, 3*p.K+1:4*p.K,:]
-        ds_ = @view du[:, :, 4*p.K+1:5*p.K,:]
+#         dx_ = @view du[:, :, 1:p.K,:]
+#         dy_ = @view du[:, :, p.K+1:2*p.K,:]
+#         dm_ = @view du[:, :, 2*p.K+1:3*p.K,:]
+#         dz_ = @view du[:, :, 3*p.K+1:4*p.K,:]
+#         ds_ = @view du[:, :, 4*p.K+1:5*p.K,:]
 
-        dv_p_ = @view du[:, :, 5*p.K+1:5*p.K+1,:]
-        dv_m_ = @view du[:, :, 5*p.K+2:5*p.K+2,:]
+#         dv_p_ = @view du[:, :, 5*p.K+1:5*p.K+1,:]
+#         dv_m_ = @view du[:, :, 5*p.K+2:5*p.K+2,:]
 		
 		
 		
-# 		ff.x = CuArray(ff.x_)
-#         ff.y = CuArray(ff.y_)
-#         ff.m =  CuArray(ff.m_)
-#         ff.z =  CuArray(ff.z_)
-#         ff.s = CuArray(ff.s_)
+# # 		ff.x = CuArray(ff.x_)
+# #         ff.y = CuArray(ff.y_)
+# #         ff.m =  CuArray(ff.m_)
+# #         ff.z =  CuArray(ff.z_)
+# #         ff.s = CuArray(ff.s_)
 
-#         ff.v_p =  CuArray(ff.v_p_)
-#         ff.v_m =  CuArray(ff.x_)
+# #         ff.v_p =  CuArray(ff.v_p_)
+# #         ff.v_m =  CuArray(ff.x_)
 
-#         ff.dx =  CuArray(ff.dx_)
-#         ff.dy =  CuArray(ff.dy_)
-#         ff.dm =  CuArray(ff.dm_)
-#         ff.dz =  CuArray(ff.dz_)
-#         ff.ds =  CuArray(ff.ds_)
+# #         ff.dx =  CuArray(ff.dx_)
+# #         ff.dy =  CuArray(ff.dy_)
+# #         ff.dm =  CuArray(ff.dm_)
+# #         ff.dz =  CuArray(ff.dz_)
+# #         ff.ds =  CuArray(ff.ds_)
 
-#         ff.dv_p =  CuArray(ff.dv_p_)
-#         ff.dv_m =  CuArray(ff.dv_m_)
-		
-		
-		
-		
-		@. ff.x = x_
-		@. ff.y = y_
-		@. ff.m = m_
-		@. ff.z = z_
-		@. ff.s = s_
-
-		@. ff.v_p = v_p_
-		@. ff.v_m = v_m_
-
-		@. ff.dx = dx_
-		@. ff.dy = dy_
-		@. ff.dm = dm_
-		@. ff.dz = dz_
-		@. ff.ds = ds_
-
-		@. ff.dv_p = dv_p_
-		@. ff.dv_m = dv_m_
-		
-		
-# 		x_lgn = @view ff.x_lgn[:,:,:,:]
-# 		H_z = @view ff.H_z[:,:,:,:]
-# 		C = @view ff.C[:,:,:,:]
-		
-# 		V_temp_1 = @view ff.V_temp_1[:,:,:,:]
-# 		V_temp_2 = @view ff.V_temp_2[:,:,:,:]
-# 		A_temp = @view ff.A_temp[:,:,:,:]
-# 		B_temp = @view ff.B_temp[:,:,:,:]
-		
-        fun_x_lgn!(ff.x_lgn, ff.x, p)
-        fun_v_C!(ff.C, ff.v_p, ff.v_m, ff.V_temp_1, ff.V_temp_2, ff.A_temp, ff.B_temp, p)
-        fun_H_z!(ff.H_z, ff.z, p)
-
-        fun_dv!(ff.dv_p, ff.v_p, p.r, ff.x_lgn, p)
-        fun_dv!(ff.dv_m, ff.v_m, .-p.r, ff.x_lgn, p)
-        fun_dx_v1!(ff.dx, ff.x, ff.C, ff.z, p.x_V2, p)
-        fun_dy!(ff.dy, ff.y, ff.C, ff.x, ff.m, p)
-        fun_dm!(ff.dm, ff.m, ff.x, p)
-        fun_dz!(ff.dz, ff.z, ff.y, ff.H_z, ff.s, p)
-        fun_ds!(ff.ds, ff.s, ff.H_z, p)
-		
-		
-		
-		@. x_ = ff.x
-        @. y_ =ff.y
-        @. m_ =ff.m
-        @. z_ = ff.z
-        @. s_ = ff.s
-
-        @. v_p_ = ff.v_p
-        @. v_m_ = ff.v_m
-
-        @. dx_ = ff.dx
-        @. dy_ = ff.dy
-        @. dm_ = ff.dm
-        @. dz_ = ff.dz
-        @. ds_ = ff.ds
-
-		@. dv_p_ = ff.dv_p
-        @. dv_m_ = ff.dv_m
-
-    end
-    return nothing
-end
-	
-
-mutable struct MyFunction_1{T} <: Function
-	x::T
-	y::T
-	m::T
-	z::T
-	s::T
-	v_p::T
-	v_m::T
-	
-	dx::T
-	dy::T
-	dm::T
-	dz::T
-	ds::T
-	dv_p::T
-	dv_m::T
-	
-	x_lgn::T
-	C::T
-	H_z::T
-	V_temp_1::T
-	V_temp_2::T
-	A_temp::T
-	B_temp::T
-end
-
-function (ff::MyFunction_1)(du, u, p, t)
-# function f!(du, u, p, t)
-    @inbounds begin
-        @. ff.x = @view u[:, :, 1:p.K,:]
-        @. ff.y = @view u[:, :, p.K+1:2*p.K,:]
-        @. ff.m = @view u[:, :, 2*p.K+1:3*p.K,:]
-        @. ff.z = @view u[:, :, 3*p.K+1:4*p.K,:]
-        @. ff.s = @view u[:, :, 4*p.K+1:5*p.K,:]
-
-        @. ff.v_p = @view u[:, :, 5*p.K+1:5*p.K+1,:]
-        @. ff.v_m = @view u[:, :, 5*p.K+2:5*p.K+2,:]
-
-        @. ff.dx = @view du[:, :, 1:p.K,:]
-        @. ff.dy = @view du[:, :, p.K+1:2*p.K,:]
-        @. ff.dm = @view du[:, :, 2*p.K+1:3*p.K,:]
-        @. ff.dz = @view du[:, :, 3*p.K+1:4*p.K,:]
-        @. ff.ds = @view du[:, :, 4*p.K+1:5*p.K,:]
-
-        @. ff.dv_p = @view du[:, :, 5*p.K+1:5*p.K+1,:]
-        @. ff.dv_m = @view du[:, :, 5*p.K+2:5*p.K+2,:]
-
-		
-		
-		x_ = @view u[:, :, 1:p.K,:]
-        y_ = @view u[:, :, p.K+1:2*p.K,:]
-        m_ = @view u[:, :, 2*p.K+1:3*p.K,:]
-        z_ = @view u[:, :, 3*p.K+1:4*p.K,:]
-        s_ = @view u[:, :, 4*p.K+1:5*p.K,:]
-
-        v_p_ = @view u[:, :, 5*p.K+1:5*p.K+1,:]
-        v_m_ = @view u[:, :, 5*p.K+2:5*p.K+2,:]
-
-        dx_ = @view du[:, :, 1:p.K,:]
-        dy_ = @view du[:, :, p.K+1:2*p.K,:]
-        dm_ = @view du[:, :, 2*p.K+1:3*p.K,:]
-        dz_ = @view du[:, :, 3*p.K+1:4*p.K,:]
-        ds_ = @view du[:, :, 4*p.K+1:5*p.K,:]
-
-        dv_p_ = @view du[:, :, 5*p.K+1:5*p.K+1,:]
-        dv_m_ = @view du[:, :, 5*p.K+2:5*p.K+2,:]
-		
-		
-		
-# 		ff.x = CuArray(ff.x_)
-#         ff.y = CuArray(ff.y_)
-#         ff.m =  CuArray(ff.m_)
-#         ff.z =  CuArray(ff.z_)
-#         ff.s = CuArray(ff.s_)
-
-#         ff.v_p =  CuArray(ff.v_p_)
-#         ff.v_m =  CuArray(ff.x_)
-
-#         ff.dx =  CuArray(ff.dx_)
-#         ff.dy =  CuArray(ff.dy_)
-#         ff.dm =  CuArray(ff.dm_)
-#         ff.dz =  CuArray(ff.dz_)
-#         ff.ds =  CuArray(ff.ds_)
-
-#         ff.dv_p =  CuArray(ff.dv_p_)
-#         ff.dv_m =  CuArray(ff.dv_m_)
+# #         ff.dv_p =  CuArray(ff.dv_p_)
+# #         ff.dv_m =  CuArray(ff.dv_m_)
 		
 		
 		
@@ -387,51 +274,317 @@ function (ff::MyFunction_1)(du, u, p, t)
 # 		@. ff.dv_m = dv_m_
 		
 		
+# # 		x_lgn = @view ff.x_lgn[:,:,:,:]
+# # 		H_z = @view ff.H_z[:,:,:,:]
+# # 		C = @view ff.C[:,:,:,:]
 		
-# 		x_lgn = @view ff.x_lgn[:,:,:,:]
-# 		H_z = @view ff.H_z[:,:,:,:]
-# 		C = @view ff.C[:,:,:,:]
+# # 		V_temp_1 = @view ff.V_temp_1[:,:,:,:]
+# # 		V_temp_2 = @view ff.V_temp_2[:,:,:,:]
+# # 		A_temp = @view ff.A_temp[:,:,:,:]
+# # 		B_temp = @view ff.B_temp[:,:,:,:]
 		
-# 		V_temp_1 = @view ff.V_temp_1[:,:,:,:]
-# 		V_temp_2 = @view ff.V_temp_2[:,:,:,:]
-# 		A_temp = @view ff.A_temp[:,:,:,:]
-# 		B_temp = @view ff.B_temp[:,:,:,:]
-		
-        fun_x_lgn!(ff.x_lgn, ff.x, p)
-        fun_v_C!(ff.C, ff.v_p, ff.v_m, ff.V_temp_1, ff.V_temp_2, ff.A_temp, ff.B_temp, p)
-        fun_H_z!(ff.H_z, ff.z, p)
+#         fun_x_lgn!(ff.x_lgn, ff.x, p)
+#         fun_v_C!(ff.C, ff.v_p, ff.v_m, ff.V_temp_1, ff.V_temp_2, ff.A_temp, ff.B_temp, p)
+#         fun_H_z!(ff.H_z, ff.z, p)
 
-        fun_dv!(ff.dv_p, ff.v_p, p.r, ff.x_lgn, p)
-        fun_dv!(ff.dv_m, ff.v_m, .-p.r, ff.x_lgn, p)
-        fun_dx_v1!(ff.dx, ff.x, ff.C, ff.z, p.x_V2, p)
-        fun_dy!(ff.dy, ff.y, ff.C, ff.x, ff.m, p)
-        fun_dm!(ff.dm, ff.m, ff.x, p)
-        fun_dz!(ff.dz, ff.z, ff.y, ff.H_z, ff.s, p)
-        fun_ds!(ff.ds, ff.s, ff.H_z, p)
+#         fun_dv!(ff.dv_p, ff.v_p, p.r, ff.x_lgn, p)
+#         fun_dv!(ff.dv_m, ff.v_m, .-p.r, ff.x_lgn, p)
+#         fun_dx_v1!(ff.dx, ff.x, ff.C, ff.z, p.x_V2, p)
+#         fun_dy!(ff.dy, ff.y, ff.C, ff.x, ff.m, p)
+#         fun_dm!(ff.dm, ff.m, ff.x, p)
+#         fun_dz!(ff.dz, ff.z, ff.y, ff.H_z, ff.s, p)
+#         fun_ds!(ff.ds, ff.s, ff.H_z, p)
 		
 		
 		
-		@. x_ = ff.x
-        @. y_ =ff.y
-        @. m_ =ff.m
-        @. z_ = ff.z
-        @. s_ = ff.s
+# 		@. x_ = ff.x
+#         @. y_ =ff.y
+#         @. m_ =ff.m
+#         @. z_ = ff.z
+#         @. s_ = ff.s
 
-        @. v_p_ = ff.v_p
-        @. v_m_ = ff.v_m
+#         @. v_p_ = ff.v_p
+#         @. v_m_ = ff.v_m
 
-        @. dx_ = ff.dx
-        @. dy_ = ff.dy
-        @. dm_ = ff.dm
-        @. dz_ = ff.dz
-        @. ds_ = ff.ds
+#         @. dx_ = ff.dx
+#         @. dy_ = ff.dy
+#         @. dm_ = ff.dm
+#         @. dz_ = ff.dz
+#         @. ds_ = ff.ds
 
-		@. dv_p_ = ff.dv_p
-        @. dv_m_ = ff.dv_m
+# 		@. dv_p_ = ff.dv_p
+#         @. dv_m_ = ff.dv_m
 
-    end
-    return nothing
-end
+#     end
+#     return nothing
+# end
+	
+
+# mutable struct MyFunction_1{T} <: Function
+# 	x::T
+# 	y::T
+# 	m::T
+# 	z::T
+# 	s::T
+# 	v_p::T
+# 	v_m::T
+	
+# 	dx::T
+# 	dy::T
+# 	dm::T
+# 	dz::T
+# 	ds::T
+# 	dv_p::T
+# 	dv_m::T
+	
+# 	x_lgn::T
+# 	C::T
+# 	H_z::T
+# 	V_temp_1::T
+# 	V_temp_2::T
+# 	A_temp::T
+# 	B_temp::T
+# end
+
+# function (ff::MyFunction_1)(du, u, p, t)
+# # function f!(du, u, p, t)
+#     @inbounds begin
+#         @. ff.x = @view u[:, :, 1:p.K,:]
+#         @. ff.y = @view u[:, :, p.K+1:2*p.K,:]
+#         @. ff.m = @view u[:, :, 2*p.K+1:3*p.K,:]
+#         @. ff.z = @view u[:, :, 3*p.K+1:4*p.K,:]
+#         @. ff.s = @view u[:, :, 4*p.K+1:5*p.K,:]
+
+#         @. ff.v_p = @view u[:, :, 5*p.K+1:5*p.K+1,:]
+#         @. ff.v_m = @view u[:, :, 5*p.K+2:5*p.K+2,:]
+
+#         @. ff.dx = @view du[:, :, 1:p.K,:]
+#         @. ff.dy = @view du[:, :, p.K+1:2*p.K,:]
+#         @. ff.dm = @view du[:, :, 2*p.K+1:3*p.K,:]
+#         @. ff.dz = @view du[:, :, 3*p.K+1:4*p.K,:]
+#         @. ff.ds = @view du[:, :, 4*p.K+1:5*p.K,:]
+
+#         @. ff.dv_p = @view du[:, :, 5*p.K+1:5*p.K+1,:]
+#         @. ff.dv_m = @view du[:, :, 5*p.K+2:5*p.K+2,:]
+
+		
+		
+# 		x_ = @view u[:, :, 1:p.K,:]
+#         y_ = @view u[:, :, p.K+1:2*p.K,:]
+#         m_ = @view u[:, :, 2*p.K+1:3*p.K,:]
+#         z_ = @view u[:, :, 3*p.K+1:4*p.K,:]
+#         s_ = @view u[:, :, 4*p.K+1:5*p.K,:]
+
+#         v_p_ = @view u[:, :, 5*p.K+1:5*p.K+1,:]
+#         v_m_ = @view u[:, :, 5*p.K+2:5*p.K+2,:]
+
+#         dx_ = @view du[:, :, 1:p.K,:]
+#         dy_ = @view du[:, :, p.K+1:2*p.K,:]
+#         dm_ = @view du[:, :, 2*p.K+1:3*p.K,:]
+#         dz_ = @view du[:, :, 3*p.K+1:4*p.K,:]
+#         ds_ = @view du[:, :, 4*p.K+1:5*p.K,:]
+
+#         dv_p_ = @view du[:, :, 5*p.K+1:5*p.K+1,:]
+#         dv_m_ = @view du[:, :, 5*p.K+2:5*p.K+2,:]
+		
+		
+		
+# # 		ff.x = CuArray(ff.x_)
+# #         ff.y = CuArray(ff.y_)
+# #         ff.m =  CuArray(ff.m_)
+# #         ff.z =  CuArray(ff.z_)
+# #         ff.s = CuArray(ff.s_)
+
+# #         ff.v_p =  CuArray(ff.v_p_)
+# #         ff.v_m =  CuArray(ff.x_)
+
+# #         ff.dx =  CuArray(ff.dx_)
+# #         ff.dy =  CuArray(ff.dy_)
+# #         ff.dm =  CuArray(ff.dm_)
+# #         ff.dz =  CuArray(ff.dz_)
+# #         ff.ds =  CuArray(ff.ds_)
+
+# #         ff.dv_p =  CuArray(ff.dv_p_)
+# #         ff.dv_m =  CuArray(ff.dv_m_)
+		
+		
+		
+		
+# # 		@. ff.x = x_
+# # 		@. ff.y = y_
+# # 		@. ff.m = m_
+# # 		@. ff.z = z_
+# # 		@. ff.s = s_
+
+# # 		@. ff.v_p = v_p_
+# # 		@. ff.v_m = v_m_
+
+# # 		@. ff.dx = dx_
+# # 		@. ff.dy = dy_
+# # 		@. ff.dm = dm_
+# # 		@. ff.dz = dz_
+# # 		@. ff.ds = ds_
+
+# # 		@. ff.dv_p = dv_p_
+# # 		@. ff.dv_m = dv_m_
+		
+		
+		
+# # 		x_lgn = @view ff.x_lgn[:,:,:,:]
+# # 		H_z = @view ff.H_z[:,:,:,:]
+# # 		C = @view ff.C[:,:,:,:]
+		
+# # 		V_temp_1 = @view ff.V_temp_1[:,:,:,:]
+# # 		V_temp_2 = @view ff.V_temp_2[:,:,:,:]
+# # 		A_temp = @view ff.A_temp[:,:,:,:]
+# # 		B_temp = @view ff.B_temp[:,:,:,:]
+		
+#         fun_x_lgn!(ff.x_lgn, ff.x, p)
+#         fun_v_C!(ff.C, ff.v_p, ff.v_m, ff.V_temp_1, ff.V_temp_2, ff.A_temp, ff.B_temp, p)
+#         fun_H_z!(ff.H_z, ff.z, p)
+
+#         fun_dv!(ff.dv_p, ff.v_p, p.r, ff.x_lgn, p)
+#         fun_dv!(ff.dv_m, ff.v_m, .-p.r, ff.x_lgn, p)
+#         fun_dx_v1!(ff.dx, ff.x, ff.C, ff.z, p.x_V2, p)
+#         fun_dy!(ff.dy, ff.y, ff.C, ff.x, ff.m, p)
+#         fun_dm!(ff.dm, ff.m, ff.x, p)
+#         fun_dz!(ff.dz, ff.z, ff.y, ff.H_z, ff.s, p)
+#         fun_ds!(ff.ds, ff.s, ff.H_z, p)
+		
+		
+		
+# 		@. x_ = ff.x
+#         @. y_ =ff.y
+#         @. m_ =ff.m
+#         @. z_ = ff.z
+#         @. s_ = ff.s
+
+#         @. v_p_ = ff.v_p
+#         @. v_m_ = ff.v_m
+
+#         @. dx_ = ff.dx
+#         @. dy_ = ff.dy
+#         @. dm_ = ff.dm
+#         @. dz_ = ff.dz
+#         @. ds_ = ff.ds
+
+# 		@. dv_p_ = ff.dv_p
+#         @. dv_m_ = ff.dv_m
+
+#     end
+#     return nothing
+# end
+
+# mutable struct MyFunction_2{T} <: Function
+# 	x::T
+# 	y::T
+# 	m::T
+# 	z::T
+# 	s::T
+# 	v_p::T
+# 	v_m::T
+	
+# 	dx::T
+# 	dy::T
+# 	dm::T
+# 	dz::T
+# 	ds::T
+# 	dv_p::T
+# 	dv_m::T
+	
+# 	x_lgn::T
+# 	C::T
+# 	H_z::T
+# 	V_temp_1::T
+# 	V_temp_2::T
+# 	A_temp::T
+# 	B_temp::T
+# end
+
+# function (ff::MyFunction_2)(du, u, p, t)
+# # function f!(du, u, p, t)
+#     @inbounds begin
+#         @. ff.x = @view u[:, :, 1:p.K,:]
+#         @. ff.y = @view u[:, :, p.K+1:2*p.K,:]
+#         @. ff.m = @view u[:, :, 2*p.K+1:3*p.K,:]
+#         @. ff.z = @view u[:, :, 3*p.K+1:4*p.K,:]
+#         @. ff.s = @view u[:, :, 4*p.K+1:5*p.K,:]
+
+#         @. ff.v_p = @view u[:, :, 5*p.K+1:5*p.K+1,:]
+#         @. ff.v_m = @view u[:, :, 5*p.K+2:5*p.K+2,:]
+
+# #         @. ff.dx = @view du[:, :, 1:p.K,:]
+# #         @. ff.dy = @view du[:, :, p.K+1:2*p.K,:]
+# #         @. ff.dm = @view du[:, :, 2*p.K+1:3*p.K,:]
+# #         @. ff.dz = @view du[:, :, 3*p.K+1:4*p.K,:]
+# #         @. ff.ds = @view du[:, :, 4*p.K+1:5*p.K,:]
+
+# #         @. ff.dv_p = @view du[:, :, 5*p.K+1:5*p.K+1,:]
+# #         @. ff.dv_m = @view du[:, :, 5*p.K+2:5*p.K+2,:]
+
+		
+		
+# # 		x_ = @view u[:, :, 1:p.K,:]
+# #         y_ = @view u[:, :, p.K+1:2*p.K,:]
+# #         m_ = @view u[:, :, 2*p.K+1:3*p.K,:]
+# #         z_ = @view u[:, :, 3*p.K+1:4*p.K,:]
+# #         s_ = @view u[:, :, 4*p.K+1:5*p.K,:]
+
+# #         v_p_ = @view u[:, :, 5*p.K+1:5*p.K+1,:]
+# #         v_m_ = @view u[:, :, 5*p.K+2:5*p.K+2,:]
+
+		
+# # 		afasdfasdfasdfadsfads
+# #         dx_ = @view du[:, :, 1:p.K,:]
+# #         dy_ = @view du[:, :, p.K+1:2*p.K,:]
+# #         dm_ = @view du[:, :, 2*p.K+1:3*p.K,:]
+# #         dz_ = @view du[:, :, 3*p.K+1:4*p.K,:]
+# #         ds_ = @view du[:, :, 4*p.K+1:5*p.K,:]
+
+# #         dv_p_ = @view du[:, :, 5*p.K+1:5*p.K+1,:]
+# #         dv_m_ = @view du[:, :, 5*p.K+2:5*p.K+2,:]
+		
+# # 	asdfasdfadsfasdfasd	
+		
+
+
+
+		
+#         fun_x_lgn!(ff.x_lgn, ff.x, p)
+#         fun_v_C!(ff.C, ff.v_p, ff.v_m, ff.V_temp_1, ff.V_temp_2, ff.A_temp, ff.B_temp, p)
+#         fun_H_z!(ff.H_z, ff.z, p)
+
+#         fun_dv!(ff.dv_p, ff.v_p, p.r, ff.x_lgn, p)
+#         fun_dv!(ff.dv_m, ff.v_m, .-p.r, ff.x_lgn, p)
+#         fun_dx_v1!(ff.dx, ff.x, ff.C, ff.z, p.x_V2, p)
+#         fun_dy!(ff.dy, ff.y, ff.C, ff.x, ff.m, p)
+#         fun_dm!(ff.dm, ff.m, ff.x, p)
+#         fun_dz!(ff.dz, ff.z, ff.y, ff.H_z, ff.s, p)
+#         fun_ds!(ff.ds, ff.s, ff.H_z, p)
+		
+
+#       @.   du[:, :, 1:p.K,:]= ff.dx
+#     @.   du[:, :, p.K+1:2*p.K,:]= ff.dy
+#       @.   du[:, :, 2*p.K+1:3*p.K,:]= ff.dm
+#        @.  du[:, :, 3*p.K+1:4*p.K,:]= ff.dz
+#        @.  du[:, :, 4*p.K+1:5*p.K,:]= ff.ds
+
+#         @. du[:, :, 5*p.K+1:5*p.K+1,:]= ff.dv_p
+#         @. du[:, :, 5*p.K+2:5*p.K+2,:] = ff.dv_m
+		       
+		
+# #         @. dx_ = ff.dx
+# #         @. dy_ = ff.dy
+# #         @. dm_ = ff.dm
+# #         @. dz_ = ff.dz
+# #         @. ds_ = ff.ds
+
+# # 		@. dv_p_ = ff.dv_p
+# #         @. dv_m_ = ff.dv_m
+
+#     end
+#     return nothing
+# end
 
 
 	
@@ -728,7 +881,6 @@ end
 # retina
 
 function I_u!(r::AbstractArray, I::AbstractArray, p::NamedTuple)
-    
 	conv!(r, I, p.k_gauss_1, p)
     @. r = I - r
 end
