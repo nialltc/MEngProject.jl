@@ -21,7 +21,7 @@ filter_resource = CUDALibs(Algorithm.IIR())
 
 
 function I_u!(r::AbstractArray, I::AbstractArray, p::NamedTuple)
-    imfilter!(filter_resource, r, I, p.k_gauss_1, p.filling)
+    imfilter!(filter_resource, r, I, p.k_gauss_1, Fill(0f0))
     @. r = I - r
     return nothing
 end
@@ -61,7 +61,7 @@ function func_filter_W!(
             #     todo fix W
             img_k = @view img[:, :, k]
             out_k = @view W_out[:, :, k]
-            imfilter!(filter_resource, out_k, img_k, centered(W[:, :, k, k]), p.filling)
+            imfilter!(filter_resource, out_k, img_k, centered(W[:, :, k, k]), Fill(0f0))
             for l ∈ 1:p.K
                 if l ≠ k
                     img_l = @view img[:, :, l]
@@ -69,7 +69,7 @@ function func_filter_W!(
                         W_temp,
                         img_l,
                         centered(W[:, :, k, l]),
-                        p.filling,
+                        Fill(0f0),
                     )
                     @. out_k += W_temp
                 end
@@ -89,7 +89,7 @@ function fun_dv!(
     x_lgn::AbstractArray,
     p::NamedTuple,
 )
-    imfilter!(filter_resource, dv, x_lgn, centered(p.k_gauss_1), p.filling)
+    imfilter!(filter_resource, dv, x_lgn, centered(p.k_gauss_1), Fill(0f0))
     @. dv =
         p.δ_v * (
             -v + ((1f0 - v) * max(u, 0f0) * (1f0 + p.C_1 * x_lgn)) -
@@ -113,7 +113,7 @@ function fun_v_C!(
 #     temp = similar(v_p)
 
     @. v_C_temp2 = exp(-1.0f0 / 8.0f0) * (max(v_p, 0f0) - max(v_m, 0f0))
-    imfilter!(filter_resource, v_C_temp1, v_C_temp2, centered(p.k_gauss_2), p.filling)
+    imfilter!(filter_resource, v_C_temp1, v_C_temp2, centered(p.k_gauss_2), Fill(0f0))
 
 #     A = similar(v_C)
     #     allocate B to v_C
@@ -121,8 +121,8 @@ function fun_v_C!(
         for k ∈ 1:p.K
             a = @view v_C_tempA[:, :, k]
             b = @view v_C[:, :, k]
-            imfilter!(filter_resource, a, v_C_temp1, centered(p.k_C_A[:, :, k]), p.filling)
-            imfilter!(filter_resource, b, v_C_temp1, centered(p.k_C_B[:, :, k]), p.filling)
+            imfilter!(filter_resource, a, v_C_temp1, centered(p.k_C_A[:, :, k]), Fill(0f0))
+            imfilter!(filter_resource, b, v_C_temp1, centered(p.k_C_B[:, :, k]), Fill(0f0))
         end
     # end
     @. v_C = p.γ * (max(v_C_tempA - abs(v_C), 0f0) + max(-v_C_tempA - abs(v_C), 0f0))
@@ -197,7 +197,7 @@ function fun_dz!(
     s::AbstractArray,
     p::NamedTuple,
 )
-    imfilter!(filter_resource, dz, s, centered(p.k_T_p), p.filling)
+    imfilter!(filter_resource, dz, s, centered(p.k_T_p), Fill(0f0))
     @. dz =
         p.δ_z * (
             -z + ((1f0 - z) * ((p.λ * max(y, 0f0)) + H_z + (p.a_23_ex * p.att))) -
@@ -213,7 +213,7 @@ function fun_ds!(
     H_z::AbstractArray,
     p::NamedTuple,
 )
-    imfilter!(filter_resource, ds, s, centered(p.k_T_m), p.filling)
+    imfilter!(filter_resource, ds, s, centered(p.k_T_m), Fill(0f0))
     @. ds = p.δ_s * (-s + H_z + (p.a_23_in * p.att) - (s * ds))
     return nothing
 end
@@ -226,7 +226,7 @@ function fun_H_z!(H_z::AbstractArray, z::AbstractArray, H_z_temp::AbstractArray,
         for k ∈ 1:p.K
             H_z_k = @view H_z[:, :, k]
             temp_k = @view H_z_temp[:, :, k]
-            imfilter!(filter_resource, H_z_k, temp_k, centered(p.k_H[:, :, k]), p.filling)
+            imfilter!(filter_resource, H_z_k, temp_k, centered(p.k_H[:, :, k]), Fill(0f0))
         end
     # end
     return nothing
@@ -293,7 +293,7 @@ end
 # # l4 excit equilabrium
 function fun_y_equ!(y::AbstractArray, C::AbstractArray, x::AbstractArray, m::AbstractArray, dy_temp::AbstractArray, p::NamedTuple)
 # 	@inbounds begin
-        imfilter!(filter_resource, dy_temp, m, p.k_W_p, p.filling)
+        imfilter!(filter_resource, dy_temp, m, p.k_W_p, Fill(0f0))
         @. dy_temp = m * dy_temp
         fun_f!(dy_temp, p)
         @. y = (C + (p.η_p * x) - dy_temp)/(1f0 + C + (p.η_p * x) + dy_temp)
