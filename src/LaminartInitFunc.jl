@@ -15,10 +15,11 @@ module LaminartInitFunc
 
 import("./LaminartEqConv.jl")
 import("./LaminartEqImfilter.jl")
+import("./LaminartKernels.jl")
 
 using NNlib, ImageFiltering, Images, OffsetArrays, CUDA
 
-function paraameterInit_conv_gpu(imgLoc::String, p::NamedTuple)
+function parameterInit_conv_gpu(imgLoc::String, p::NamedTuple)
     img = convert(Array{Float32,2},  load(imgLoc));
     img = reshape2d_4d(img)
     img = cu(img)
@@ -34,7 +35,7 @@ function paraameterInit_conv_gpu(imgLoc::String, p::NamedTuple)
 end
 
 
-function paraameterInit_conv_cpu(imgLoc::String, p::NamedTuple)
+function parameterInit_conv_cpu(imgLoc::String, p::NamedTuple)
     img = convert(Array{Float32,2},  load(imgLoc));
     img = reshape2d_4d(img)
 
@@ -49,7 +50,7 @@ function paraameterInit_conv_cpu(imgLoc::String, p::NamedTuple)
 end
 
 
-function paraameterInit_imfil_cpu(imgLoc::String, p::NamedTuple)
+function parameterInit_imfil_cpu(imgLoc::String, p::NamedTuple)
     img = convert(Array{Float32,2}, load(imgLoc));
 
     r = similar(img)
@@ -99,9 +100,9 @@ C_B_temp = similar(C_A_temp)
         reshape(Array{eltype(img)}(undef, p.W_l, p.W_l * p.K * p.K), p.W_l, p.W_l, p.K, p.K)
     for k ∈ 1:p.K
         θ = π * (k - 1.0f0) / p.K
-        C_A_temp[:, :, 1,k] = LamKernels.kern_A(p.σ_2, θ)
-        C_B_temp[:, :, 1,k] = LamKernels.kern_B(p.σ_2, θ)
-        H_temp[:, :, k,k] = p.H_fact .* LamKernels.gaussian_rot(p.H_σ_x, p.H_σ_y, θ, p.H_l)
+        C_A_temp[:, :, 1,k] = LaminartKernels.kern_A(p.σ_2, θ)
+        C_B_temp[:, :, 1,k] = LaminartKernels.kern_B(p.σ_2, θ)
+        H_temp[:, :, k,k] = p.H_fact .* LaminartKernels.gaussian_rot(p.H_σ_x, p.H_σ_y, θ, p.H_l)
 # 		todo make T kernel more general for higher K
         T_temp[1, 1, k,1] = p.T_fact[k]
         T_temp[1, 1, 2,2] = p.T_fact[1]
@@ -114,20 +115,20 @@ C_B_temp = similar(C_A_temp)
     end
 
     W_temp[:, :, 1, 1] =
-        5f0 .* LamKernels.gaussian_rot(3f0, 0.8f0, 0f0, p.W_l) .+
-        LamKernels.gaussian_rot(0.4f0, 1f0, 0f0, p.W_l)
+        5f0 .* LaminartKernels.gaussian_rot(3f0, 0.8f0, 0f0, p.W_l) .+
+        LaminartKernels.gaussian_rot(0.4f0, 1f0, 0f0, p.W_l)
 
     W_temp[:, :, 2, 2] =
-        5f0 .* LamKernels.gaussian_rot(3f0, 0.8f0,  π / 2f0, p.W_l) .+
-        LamKernels.gaussian_rot(0.4f0, 1f0, π / 2f0, p.W_l)
+        5f0 .* LaminartKernels.gaussian_rot(3f0, 0.8f0,  π / 2f0, p.W_l) .+
+        LaminartKernels.gaussian_rot(0.4f0, 1f0, π / 2f0, p.W_l)
 
     W_temp[:, :, 1, 2] = relu.(
-        0.2f0 .- LamKernels.gaussian_rot(2f0, 0.6f0, 0f0, p.W_l) .-
-        LamKernels.gaussian_rot(0.3f0, 1.2f0, 0f0, p.W_l))
+        0.2f0 .- LaminartKernels.gaussian_rot(2f0, 0.6f0, 0f0, p.W_l) .-
+        LaminartKernels.gaussian_rot(0.3f0, 1.2f0, 0f0, p.W_l))
 
     W_temp[:, :, 2, 1] = relu.(
-        0.2f0 .- LamKernels.gaussian_rot(2f0, 0.6f0, π / 2f0, p.W_l) .-
-        LamKernels.gaussian_rot(0.3f0, 1.2f0, π / 2f0, p.W_l))
+        0.2f0 .- LaminartKernels.gaussian_rot(2f0, 0.6f0, π / 2f0, p.W_l) .-
+        LaminartKernels.gaussian_rot(0.3f0, 1.2f0, π / 2f0, p.W_l))
 
 temp_out = (
         k_gauss_1 = cu(reshape2d_4d(Kernel.gaussian(p.σ_1))),
@@ -173,9 +174,9 @@ C_B_temp = similar(C_A_temp)
         reshape(Array{eltype(img)}(undef, p.W_l, p.W_l * p.K * p.K), p.W_l, p.W_l, p.K, p.K)
     for k ∈ 1:p.K
         θ = π * (k - 1.0f0) / p.K
-        C_A_temp[:, :, 1,k] = LamKernels.kern_A(p.σ_2, θ)
-        C_B_temp[:, :, 1,k] = LamKernels.kern_B(p.σ_2, θ)
-        H_temp[:, :, k,k] = p.H_fact .* LamKernels.gaussian_rot(p.H_σ_x, p.H_σ_y, θ, p.H_l)
+        C_A_temp[:, :, 1,k] = LaminartKernels.kern_A(p.σ_2, θ)
+        C_B_temp[:, :, 1,k] = LaminartKernels.kern_B(p.σ_2, θ)
+        H_temp[:, :, k,k] = p.H_fact .* LaminartKernels.gaussian_rot(p.H_σ_x, p.H_σ_y, θ, p.H_l)
 # 		todo make T kernel more general for higher K
         T_temp[1, 1, k,1] = p.T_fact[k]
         T_temp[1, 1, 2,2] = p.T_fact[1]
@@ -188,20 +189,20 @@ C_B_temp = similar(C_A_temp)
     end
 
     W_temp[:, :, 1, 1] =
-        5f0 .* LamKernels.gaussian_rot(3f0, 0.8f0, 0f0, p.W_l) .+
-        LamKernels.gaussian_rot(0.4f0, 1f0, 0f0, p.W_l)
+        5f0 .* LaminartKernels.gaussian_rot(3f0, 0.8f0, 0f0, p.W_l) .+
+        LaminartKernels.gaussian_rot(0.4f0, 1f0, 0f0, p.W_l)
 
     W_temp[:, :, 2, 2] =
-        5f0 .* LamKernels.gaussian_rot(3f0, 0.8f0,  π / 2f0, p.W_l) .+
-        LamKernels.gaussian_rot(0.4f0, 1f0, π / 2f0, p.W_l)
+        5f0 .* LaminartKernels.gaussian_rot(3f0, 0.8f0,  π / 2f0, p.W_l) .+
+        LaminartKernels.gaussian_rot(0.4f0, 1f0, π / 2f0, p.W_l)
 
     W_temp[:, :, 1, 2] = relu.(
-        0.2f0 .- LamKernels.gaussian_rot(2f0, 0.6f0, 0f0, p.W_l) .-
-        LamKernels.gaussian_rot(0.3f0, 1.2f0, 0f0, p.W_l))
+        0.2f0 .- LaminartKernels.gaussian_rot(2f0, 0.6f0, 0f0, p.W_l) .-
+        LaminartKernels.gaussian_rot(0.3f0, 1.2f0, 0f0, p.W_l))
 
     W_temp[:, :, 2, 1] = relu.(
-        0.2f0 .- LamKernels.gaussian_rot(2f0, 0.6f0, π / 2f0, p.W_l) .-
-        LamKernels.gaussian_rot(0.3f0, 1.2f0, π / 2f0, p.W_l))
+        0.2f0 .- LaminartKernels.gaussian_rot(2f0, 0.6f0, π / 2f0, p.W_l) .-
+        LaminartKernels.gaussian_rot(0.3f0, 1.2f0, π / 2f0, p.W_l))
 
 
     temp_out = (
@@ -247,10 +248,10 @@ function kernels_imfil_cpu(img::AbstractArray, p::NamedTuple)
         reshape(Array{eltype(img)}(undef, p.W_l, p.W_l * p.K * p.K), p.W_l, p.W_l, p.K, p.K)     #ijk,  1x1xk,   ijk
     for k ∈ 1:p.K
         θ = π * (k - 1) / p.K
-        C_A_temp[:, :, k] = reflect(centered(LamKernels.kern_A(p.σ_2, θ)))           #ij ijk ijk
-        C_B_temp[:, :, k] = reflect(centered(LamKernels.kern_B(p.σ_2, θ)))               #ij ijk ijk
+        C_A_temp[:, :, k] = reflect(centered(LaminartKernels.kern_A(p.σ_2, θ)))           #ij ijk ijk
+        C_B_temp[:, :, k] = reflect(centered(LaminartKernels.kern_B(p.σ_2, θ)))               #ij ijk ijk
         H_temp[:, :, k] = reflect(
-            p.H_fact .* LamKernels.gaussian_rot(p.H_σ_x, p.H_σ_y, θ, p.H_l),
+            p.H_fact .* LaminartKernels.gaussian_rot(p.H_σ_x, p.H_σ_y, θ, p.H_l),
         )  #ijk, ij for each k; ijk
         T_temp[:, :, k] = reshape([p.T_fact[k]], 1, 1)
         #todo: generalise T and W for higher K
@@ -260,27 +261,27 @@ function kernels_imfil_cpu(img::AbstractArray, p::NamedTuple)
         #         end
     end
     W_temp[:, :, 1, 1] = reflect(
-        5 .* LamKernels.gaussian_rot(3, 0.8, 0, p.W_l) .+
-        LamKernels.gaussian_rot(0.4, 1, 0, p.W_l),
+        5 .* LaminartKernels.gaussian_rot(3, 0.8, 0, p.W_l) .+
+        LaminartKernels.gaussian_rot(0.4, 1, 0, p.W_l),
     )
     W_temp[:, :, 2, 2] = reflect(
-        5 .* LamKernels.gaussian_rot(3, 0.8, π / 2, p.W_l) .+
-        LamKernels.gaussian_rot(0.4, 1, π / 2, p.W_l),
+        5 .* LaminartKernels.gaussian_rot(3, 0.8, π / 2, p.W_l) .+
+        LaminartKernels.gaussian_rot(0.4, 1, π / 2, p.W_l),
     )
     W_temp[:, :, 1, 2] = reflect(relu.(
-        0.2 .- LamKernels.gaussian_rot(2, 0.6, 0, p.W_l) .-
-        LamKernels.gaussian_rot(0.3, 1.2, 0, p.W_l),
+        0.2 .- LaminartKernels.gaussian_rot(2, 0.6, 0, p.W_l) .-
+        LaminartKernels.gaussian_rot(0.3, 1.2, 0, p.W_l),
     ))
     W_temp[:, :, 2, 1] = reflect(relu.(
-        0.2 .- LamKernels.gaussian_rot(2, 0.6, π / 2, p.W_l) .-
-        LamKernels.gaussian_rot(0.3, 1.2, π / 2, p.W_l),
+        0.2 .- LaminartKernels.gaussian_rot(2, 0.6, π / 2, p.W_l) .-
+        LaminartKernels.gaussian_rot(0.3, 1.2, π / 2, p.W_l),
     ))
 
     # todo fix W kernel
-    #  W_temp[:,:,1,1] = reflect(LamKernels.gaussian_rot(3,0.8,0,19))
-    #     W_temp[:,:,2,2] = reflect(LamKernels.gaussian_rot(3,0.8,0,19))
-    #     W_temp[:,:,1,2] = reflect(LamKernels.gaussian_rot(3,0.8,0,19))
-    #     W_temp[:,:,2,1] = reflect(LamKernels.gaussian_rot(3,0.8,0,19))
+    #  W_temp[:,:,1,1] = reflect(LaminartKernels.gaussian_rot(3,0.8,0,19))
+    #     W_temp[:,:,2,2] = reflect(LaminartKernels.gaussian_rot(3,0.8,0,19))
+    #     W_temp[:,:,1,2] = reflect(LaminartKernels.gaussian_rot(3,0.8,0,19))
+    #     W_temp[:,:,2,1] = reflect(LaminartKernels.gaussian_rot(3,0.8,0,19))
 
     # todo: fix range of W H
     #     W_range = -(p.W_size-1)/2:(p.W_size-1)/2
