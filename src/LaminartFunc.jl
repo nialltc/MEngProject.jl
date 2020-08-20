@@ -15,6 +15,9 @@ module LaminartFunc
 
 include("./LaminartKernels.jl")
 include("./LaminartEqImfilter.jl")
+include("./LaminartEqImfilterGPU_FFT.jl")
+include("./LaminartEqImfilterGPU_FIR.jl")
+include("./LaminartEqImfilterGPU_IIR.jl")
 include("./LaminartEqConv.jl")
 
 
@@ -358,14 +361,18 @@ function (ff::LamFunction_all_struct_reuse_1)(du, u, p, t)
 end
 
 
-struct LamFunction_imfil_cpu{T} <: Function
-  x_lgn::T
-  C::T
-  H_z::T
+struct LamFunction_imfil_cpu_a <: Function
+	x_lgn
+	C
+	H_z
+	H_z_temp
+	v_C_temp1
+	v_C_temp2
+	v_C_tempA
+	W_temp
 end
 
-function (ff::LamFunction_imfil_cpu)(du, u, p, t)
-# function f!(du, u, p, t)
+function (ff::LamFunction_imfil_cpu_a)(du, u, p, t)
     @inbounds begin
         x = @view u[:, :, 1:p.K]
         y = @view u[:, :, p.K + 1:2 * p.K]
@@ -373,12 +380,8 @@ function (ff::LamFunction_imfil_cpu)(du, u, p, t)
         z = @view u[:, :, 3 * p.K + 1:4 * p.K]
         s = @view u[:, :, 4 * p.K + 1:5 * p.K]
 
-        #    C = @view u[:, :, 5*p.K+1:6*p.K]
-        #    H_z = @view u[:, :, 6*p.K+1:7*p.K]
-
         v_p = @view u[:, :, 5 * p.K + 1]
         v_m = @view u[:, :, 5 * p.K + 2]
-        #    x_lgn = @view u[:, :, 7*p.K+3]
 
         dx = @view du[:, :, 1:p.K]
         dy = @view du[:, :, p.K + 1:2 * p.K]
@@ -389,33 +392,163 @@ function (ff::LamFunction_imfil_cpu)(du, u, p, t)
         dv_p = @view du[:, :, 5 * p.K + 1]
         dv_m = @view du[:, :, 5 * p.K + 2]
 
-        x_lgn = @view ff.x_lgn[:, :, 1]
-        #         x_lgn = similar(v_p)
-        #         C = similar(x)
-        #         H_z = similar(x)
-        # x_lgn = Array{eltype(u)}(undef, p.dim_i, p.dim_j)
-        #         C = reshape(Array{eltype(u)}(undef, p.dim_i, p.dim_j*p.K),p.dim_i,p.dim_j, p.K)
-        #         C = reshape(zeros(p.dim_i, p.dim_j*p.K),p.dim_i,p.dim_j, p.K)
-        # C = copy(u[:, :, 1:p.K])
-        # H_z = copy(u[:, :, 1:p.K])
 
-        LaminartEqImfilter.fun_x_lgn!(x_lgn, x, p)
-        LaminartEqImfilter.fun_v_C!(ff.C, v_p, v_m, p)
-        LaminartEqImfilter.fun_H_z!(ff.H_z, z, p)
+        LaminartEqImfilter.fun_x_lgn!(ff.x_lgn, x, p)
+        LaminartEqImfilter.fun_v_C!(ff.C, v_p, v_m, ff.v_C_temp1, ff.v_C_temp2, ff.v_C_tempA, p)
+        LaminartEqImfilter.fun_H_z!(ff.H_z, z, ff.H_z_temp, p)
 
-        LaminartEqImfilter.fun_dv!(dv_p, v_p, p.r, x_lgn, p)
-        LaminartEqImfilter.fun_dv!(dv_m, v_m, .-p.r, x_lgn, p)
+        LaminartEqImfilter.fun_dv!(dv_p, v_p, p.r, ff.x_lgn, p)
+        LaminartEqImfilter.fun_dv!(dv_m, v_m, .-p.r, ff.x_lgn, p)
         LaminartEqImfilter.fun_dx_v1!(dx, x, ff.C, z, p.x_V2, p)
-        LaminartEqImfilter.fun_dy!(dy, y, ff.C, x, m, p)
-        LaminartEqImfilter.fun_dm!(dm, m, x, p)
+        LaminartEqImfilter.fun_dy!(dy, y, ff.C, x, m, ff.W_temp, p)
+        LaminartEqImfilter.fun_dm!(dm, m, x, ff.W_temp, p)
         LaminartEqImfilter.fun_dz!(dz, z, y, ff.H_z, s, p)
         LaminartEqImfilter.fun_ds!(ds, s, ff.H_z, p)
-
     end
     return nothing
 end
 
 
+struct LamFunction_imfil_gpu_iir <: Function
+	x_lgn
+	C
+	H_z
+	H_z_temp
+	v_C_temp1
+	v_C_temp2
+	v_C_tempA
+	W_temp
+end
+
+function (ff::LamFunction_imfil_gpu_iir)(du, u, p, t)
+    @inbounds begin
+        x = @view u[:, :, 1:p.K]
+        y = @view u[:, :, p.K + 1:2 * p.K]
+        m = @view u[:, :, 2 * p.K + 1:3 * p.K]
+        z = @view u[:, :, 3 * p.K + 1:4 * p.K]
+        s = @view u[:, :, 4 * p.K + 1:5 * p.K]
+
+        v_p = @view u[:, :, 5 * p.K + 1]
+        v_m = @view u[:, :, 5 * p.K + 2]
+
+        dx = @view du[:, :, 1:p.K]
+        dy = @view du[:, :, p.K + 1:2 * p.K]
+        dm = @view du[:, :, 2 * p.K + 1:3 * p.K]
+        dz = @view du[:, :, 3 * p.K + 1:4 * p.K]
+        ds = @view du[:, :, 4 * p.K + 1:5 * p.K]
+
+        dv_p = @view du[:, :, 5 * p.K + 1]
+        dv_m = @view du[:, :, 5 * p.K + 2]
+
+
+        LaminartEqImfilterGPU_IIR.fun_x_lgn!(ff.x_lgn, x, p)
+        LaminartEqImfilterGPU_IIR.fun_v_C!(ff.C, v_p, v_m, ff.v_C_temp1, ff.v_C_temp2, ff.v_C_tempA, p)
+        LaminartEqImfilterGPU_IIR.fun_H_z!(ff.H_z, z, ff.H_z_temp, p)
+
+        LaminartEqImfilterGPU_IIR.fun_dv!(dv_p, v_p, p.r, ff.x_lgn, p)
+        LaminartEqImfilterGPU_IIR.fun_dv!(dv_m, v_m, .-p.r, ff.x_lgn, p)
+        LaminartEqImfilterGPU_IIR.fun_dx_v1!(dx, x, ff.C, z, p.x_V2, p)
+        LaminartEqImfilterGPU_IIR.fun_dy!(dy, y, ff.C, x, m, ff.W_temp, p)
+        LaminartEqImfilterGPU_IIR.fun_dm!(dm, m, x, ff.W_temp, p)
+        LaminartEqImfilterGPU_IIR.fun_dz!(dz, z, y, ff.H_z, s, p)
+        LaminartEqImfilterGPU_IIR.fun_ds!(ds, s, ff.H_z, p)
+    end
+    return nothing
+end
+
+struct LamFunction_imfil_gpu_fir <: Function
+	x_lgn
+	C
+	H_z
+	H_z_temp
+	v_C_temp1
+	v_C_temp2
+	v_C_tempA
+	W_temp
+end
+
+function (ff::LamFunction_imfil_gpu_fir)(du, u, p, t)
+    @inbounds begin
+        x = @view u[:, :, 1:p.K]
+        y = @view u[:, :, p.K + 1:2 * p.K]
+        m = @view u[:, :, 2 * p.K + 1:3 * p.K]
+        z = @view u[:, :, 3 * p.K + 1:4 * p.K]
+        s = @view u[:, :, 4 * p.K + 1:5 * p.K]
+
+        v_p = @view u[:, :, 5 * p.K + 1]
+        v_m = @view u[:, :, 5 * p.K + 2]
+
+        dx = @view du[:, :, 1:p.K]
+        dy = @view du[:, :, p.K + 1:2 * p.K]
+        dm = @view du[:, :, 2 * p.K + 1:3 * p.K]
+        dz = @view du[:, :, 3 * p.K + 1:4 * p.K]
+        ds = @view du[:, :, 4 * p.K + 1:5 * p.K]
+
+        dv_p = @view du[:, :, 5 * p.K + 1]
+        dv_m = @view du[:, :, 5 * p.K + 2]
+
+
+        LaminartEqImfilterGPU_FIR.fun_x_lgn!(ff.x_lgn, x, p)
+        LaminartEqImfilterGPU_FIR.fun_v_C!(ff.C, v_p, v_m, ff.v_C_temp1, ff.v_C_temp2, ff.v_C_tempA, p)
+        LaminartEqImfilterGPU_FIR.fun_H_z!(ff.H_z, z, ff.H_z_temp, p)
+
+        LaminartEqImfilterGPU_FIR.fun_dv!(dv_p, v_p, p.r, ff.x_lgn, p)
+        LaminartEqImfilterGPU_FIR.fun_dv!(dv_m, v_m, .-p.r, ff.x_lgn, p)
+        LaminartEqImfilterGPU_FIR.fun_dx_v1!(dx, x, ff.C, z, p.x_V2, p)
+        LaminartEqImfilterGPU_FIR.fun_dy!(dy, y, ff.C, x, m, ff.W_temp, p)
+        LaminartEqImfilterGPU_FIR.fun_dm!(dm, m, x, ff.W_temp, p)
+        LaminartEqImfilterGPU_FIR.fun_dz!(dz, z, y, ff.H_z, s, p)
+        LaminartEqImfilterGPU_FIR.fun_ds!(ds, s, ff.H_z, p)
+    end
+    return nothing
+end
+
+struct LamFunction_imfil_gpu_fft <: Function
+	x_lgn
+	C
+	H_z
+	H_z_temp
+	v_C_temp1
+	v_C_temp2
+	v_C_tempA
+	W_temp
+end
+
+function (ff::LamFunction_imfil_gpu_fft)(du, u, p, t)
+    @inbounds begin
+        x = @view u[:, :, 1:p.K]
+        y = @view u[:, :, p.K + 1:2 * p.K]
+        m = @view u[:, :, 2 * p.K + 1:3 * p.K]
+        z = @view u[:, :, 3 * p.K + 1:4 * p.K]
+        s = @view u[:, :, 4 * p.K + 1:5 * p.K]
+
+        v_p = @view u[:, :, 5 * p.K + 1]
+        v_m = @view u[:, :, 5 * p.K + 2]
+
+        dx = @view du[:, :, 1:p.K]
+        dy = @view du[:, :, p.K + 1:2 * p.K]
+        dm = @view du[:, :, 2 * p.K + 1:3 * p.K]
+        dz = @view du[:, :, 3 * p.K + 1:4 * p.K]
+        ds = @view du[:, :, 4 * p.K + 1:5 * p.K]
+
+        dv_p = @view du[:, :, 5 * p.K + 1]
+        dv_m = @view du[:, :, 5 * p.K + 2]
+
+
+        LaminartEqImfilterGPU_FFT.fun_x_lgn!(ff.x_lgn, x, p)
+        LaminartEqImfilterGPU_FFT.fun_v_C!(ff.C, v_p, v_m, ff.v_C_temp1, ff.v_C_temp2, ff.v_C_tempA, p)
+        LaminartEqImfilterGPU_FFT.fun_H_z!(ff.H_z, z, ff.H_z_temp, p)
+
+        LaminartEqImfilterGPU_FFT.fun_dv!(dv_p, v_p, p.r, ff.x_lgn, p)
+        LaminartEqImfilterGPU_FFT.fun_dv!(dv_m, v_m, .-p.r, ff.x_lgn, p)
+        LaminartEqImfilterGPU_FFT.fun_dx_v1!(dx, x, ff.C, z, p.x_V2, p)
+        LaminartEqImfilterGPU_FFT.fun_dy!(dy, y, ff.C, x, m, ff.W_temp, p)
+        LaminartEqImfilterGPU_FFT.fun_dm!(dm, m, x, ff.W_temp, p)
+        LaminartEqImfilterGPU_FFT.fun_dz!(dz, z, y, ff.H_z, s, p)
+        LaminartEqImfilterGPU_FFT.fun_ds!(ds, s, ff.H_z, p)
+    end
+    return nothing
+end
 
 # mutable struct LamFunction_gpu30 <: Function
 # 	x_lgn::AbstractArray

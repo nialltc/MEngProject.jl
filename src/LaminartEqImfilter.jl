@@ -50,9 +50,10 @@ function func_filter_W!(
     W_out::AbstractArray,
     img::AbstractArray,
     W::AbstractArray,
+		W_temp::AbstractArray,
     p::NamedTuple,
 )
-    temp_k = similar(W_out[:, :, 1])
+#     temp_k = similar(W_out[:, :, 1])
     # @inbounds begin
         for k ∈ 1:p.K
             #     todo fix W
@@ -63,12 +64,12 @@ function func_filter_W!(
                 if l ≠ k
                     img_l = @view img[:, :, l]
                     imfilter!(
-                        temp_k,
+                        W_temp,
                         img_l,
                         centered(W[:, :, k, l]),
                         p.filling,
                     )
-                    @. out_k += temp_k
+                    @. out_k += W_temp
                 end
             end
         end
@@ -101,25 +102,28 @@ function fun_v_C!(
     v_C::AbstractArray,
     v_p::AbstractArray,
     v_m::AbstractArray,
+		v_C_temp1::AbstractArray,
+		v_C_temp2::AbstractArray,
+		v_C_tempA::AbstractArray,
     p::NamedTuple,
 )
-    V = similar(v_p)
-    temp = similar(v_p)
+#     V = similar(v_p)
+#     temp = similar(v_p)
 
-    @. temp = exp(-1.0f0 / 8.0f0) * (max(v_p, 0f0) - max(v_m, 0f0))
-    imfilter!(V, temp, centered(p.k_gauss_2), p.filling)
+    @. v_C_temp2 = exp(-1.0f0 / 8.0f0) * (max(v_p, 0f0) - max(v_m, 0f0))
+    imfilter!(v_C_temp1, v_C_temp2, centered(p.k_gauss_2), p.filling)
 
-    A = similar(v_C)
+#     A = similar(v_C)
     #     allocate B to v_C
     # @inbounds begin
         for k ∈ 1:p.K
-            a = @view A[:, :, k]
+            a = @view v_C_tempA[:, :, k]
             b = @view v_C[:, :, k]
-            imfilter!(a, V, centered(p.k_C_A[:, :, k]), p.filling)
-            imfilter!(b, V, centered(p.k_C_B[:, :, k]), p.filling)
+            imfilter!(a, v_C_temp1, centered(p.k_C_A[:, :, k]), p.filling)
+            imfilter!(b, v_C_temp1, centered(p.k_C_B[:, :, k]), p.filling)
         end
     # end
-    @. v_C = p.γ * (max(A - abs(v_C), 0f0) + max(-A - abs(v_C), 0f0))
+    @. v_C = p.γ * (max(v_C_tempA - abs(v_C), 0f0) + max(-v_C_tempA - abs(v_C), 0f0))
     return nothing
 end
 
@@ -155,9 +159,10 @@ function fun_dy!(
     C::AbstractArray,
     x::AbstractArray,
     m::AbstractArray,
+	W_temp::AbstractArray,
     p::NamedTuple,
 )
-    func_filter_W!(dy, m, p.k_W_p, p)
+    func_filter_W!(dy, m, p.k_W_p, W_temp, p)
     @. dy = m * dy
     fun_f!(dy, dy, p)
     @. dy = p.δ_c * (-y + ((1f0 - y) * (C + (p.η_p * x))) - ((1f0 + y) * dy))
@@ -170,9 +175,10 @@ function fun_dm!(
     dm::AbstractArray,
     m::AbstractArray,
     x::AbstractArray,
+	W_temp::AbstractArray,
     p::NamedTuple,
 )
-    func_filter_W!(dm, m, p.k_W_m, p)
+    func_filter_W!(dm, m, p.k_W_m, W_temp, p)
     fun_f!(dm, dm, p)
     @. dm = p.δ_m * (-m + (p.η_m * x) - (m * dm))
     return nothing
@@ -211,13 +217,13 @@ function fun_ds!(
 end
 
 
-function fun_H_z!(H_z::AbstractArray, z::AbstractArray, p::NamedTuple)
-    temp = similar(z)
-    @. temp = max(z - p.Γ, 0f0)
+function fun_H_z!(H_z::AbstractArray, z::AbstractArray, H_z_temp::AbstractArray, p::NamedTuple)
+#     temp = similar(z)
+    @. H_z_temp = max(z - p.Γ, 0f0)
     # @inbounds begin
         for k ∈ 1:p.K
             H_z_k = @view H_z[:, :, k]
-            temp_k = @view temp[:, :, k]
+            temp_k = @view H_z_temp[:, :, k]
             imfilter!(H_z_k, temp_k, centered(p.k_H[:, :, k]), p.filling)
         end
     # end

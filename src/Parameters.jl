@@ -61,7 +61,8 @@ W_size = 19,
 lgn_equ_u = 1.0f0,
 lgn_equ_A = 0.0f0,
 lgn_equ_B = 0.0f0,
-filling = "circular",
+# filling = "circular",
+filling = Fill(0f0),
 W_l = 19)
 
 
@@ -113,7 +114,8 @@ W_size = 19,
 lgn_equ_u = 1.0,
 lgn_equ_A = 0.0,
 lgn_equ_B = 0.0,
-filling = "circular",
+# filling = "circular",
+filling = Fill(0.0),
 W_l = 19)
 
 
