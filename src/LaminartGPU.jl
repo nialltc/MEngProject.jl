@@ -926,7 +926,7 @@ end
 
 
 
-function kernels(img::AbstractArray, p::NamedTuple)
+function kernels_gpu(img::AbstractArray, p::NamedTuple)
        C_A_temp = reshape(
         Array{eltype(img)}(undef, p.C_AB_l, p.C_AB_l * p.K),
         p.C_AB_l,
@@ -1000,7 +1000,7 @@ temp_out = (
 merge(p, temp_out)
 end
 
-function kernels_(img::AbstractArray, p::NamedTuple)
+function kernels_cpu(img::AbstractArray, p::NamedTuple)
        C_A_temp = reshape(
         Array{eltype(img)}(undef, p.C_AB_l, p.C_AB_l * p.K),
         p.C_AB_l,
