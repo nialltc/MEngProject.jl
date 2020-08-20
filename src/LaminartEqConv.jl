@@ -15,7 +15,7 @@ julia>
 module LaminartEqConv
 
 
-using NNlib, ImageFiltering, Images, OffsetArrays, CUDA
+using NNlib
 
 
 

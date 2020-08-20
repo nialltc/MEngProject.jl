@@ -13,9 +13,9 @@ julia>
 """
 module LaminartFunc
 
-include("./LamKernels.jl")
-include ("./LaminartEqImfilter.jl")
-include ("./LaminartEqConv.jl")
+import("./LaminartKernels.jl")
+import("./LaminartEqImfilter.jl")
+import("./LaminartEqConv.jl")
 
 using NNlib, ImageFiltering, Images, OffsetArrays, CUDA
 # , MEngProject.LamKernels

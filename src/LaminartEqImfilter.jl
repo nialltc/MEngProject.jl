@@ -13,7 +13,7 @@ julia>
 """
 module LaminartEqImfilter
 
-using NNlib, ImageFiltering, Images, OffsetArrays, CUDA
+using NNlib, ImageFiltering, Images, OffsetArrays
 
 
 # retina
