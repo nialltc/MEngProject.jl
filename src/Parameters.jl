@@ -12,6 +12,7 @@ julia>
 ```
 """
 module Parameters
+
 p_temp_f32 = (σ_1 = 1.0f0,
 σ_2 = 0.5f0,
 H_σ_x = 3.0f0,

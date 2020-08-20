@@ -1,13 +1,13 @@
 module MEngProject
-include("./Laminart.jl")
-include("./LaminartGPU.jl")
-include("./LaminartConv.jl")
-include("./Laminartv1.jl")
-include("./LamKernels.jl")
+include("./LaminartFunc.jl")
+include("./LaminartInitFunc.jl")
+include("./LaminartEqImfilter.jl")
+include("./LaminartEqConv.jl")
+include("./LaminartKernels.jl")
 include("./Utils.jl")
 include("./Parameters.jl")
 using ModelingToolkit, OrdinaryDiffEq, CUDA
-export Laminart, LaminartGPU, LaminartConv, LamKernels, Laminartv1, Utils, Parameters, testa, kern_A
+export LaminartFunc, LaminartInitFunc, LaminartEqImfilter, LaminartEqConv, LaminartKernels,  Utils, Parameters
 
 
 end

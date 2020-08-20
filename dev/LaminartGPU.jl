@@ -11,7 +11,9 @@
 julia>
 ```
 """
+
 module LaminartGPU
+
 include("./LamKernels.jl")
 
 using NNlib, ImageFiltering, Images, OffsetArrays, CUDA
@@ -23,11 +25,11 @@ mutable struct LamFunction{T <: AbstractArray} <: Function
 	x::T
 	m::T
 	s::T
-	
+
 	x_lgn::T
 	C::T
 	H_z::T
-	
+
 	dy_temp::T
 	dm_temp::T
 	dz_temp::T
@@ -53,7 +55,7 @@ function (ff::LamFunction)(du, u, p, t)
 
 		v_p = @view u[:, :, 5*p.K+1:5*p.K+1,:]
 		v_m = @view u[:, :, 5*p.K+2:5*p.K+2,:]
-		
+
 		dx = @view du[:, :, 1:p.K,:]
         dy = @view du[:, :, p.K+1:2*p.K,:]
         dm = @view du[:, :, 2*p.K+1:3*p.K,:]
@@ -62,7 +64,7 @@ function (ff::LamFunction)(du, u, p, t)
 
 		dv_p = @view du[:, :, 5*p.K+1:5*p.K+1,:]
 		dv_m = @view du[:, :, 5*p.K+2:5*p.K+2,:]
-		
+
 		fun_x_lgn!(ff.x_lgn, ff.x, p)
         fun_v_C!(ff.C, v_p, v_m, ff.V_temp_1, ff.V_temp_2, ff.A_temp, ff.B_temp, p)
         fun_H_z!(ff.H_z, z, ff.H_z_temp, p)
@@ -74,7 +76,7 @@ function (ff::LamFunction)(du, u, p, t)
         fun_dm!(dm, ff.m, ff.x, ff.dm_temp, p)
         fun_dz!(dz, z, y, ff.H_z, ff.s, ff.dz_temp, p)
         fun_ds!(ds, ff.s, ff.H_z, ff.ds_temp, p)
-		
+
     end
     return nothing
 
@@ -97,11 +99,11 @@ mutable struct LamFunction_allStruct <: Function
 	ds::AbstractArray
 	dv_p::AbstractArray
 	dv_m::AbstractArray
-	
+
 	x_lgn::AbstractArray
 	C::AbstractArray
 	H_z::AbstractArray
-	
+
 	dy_temp::AbstractArray
 	dm_temp::AbstractArray
 	dz_temp::AbstractArray
@@ -127,7 +129,7 @@ function (ff::LamFunction_allStruct)(du, u, p, t)
 
 		ff.v_p = @view u[:, :, 5*p.K+1:5*p.K+1,:]
 		ff.v_m = @view u[:, :, 5*p.K+2:5*p.K+2,:]
-		
+
 		ff.dx = @view du[:, :, 1:p.K,:]
         ff.dy = @view du[:, :, p.K+1:2*p.K,:]
         ff.dm = @view du[:, :, 2*p.K+1:3*p.K,:]
@@ -136,7 +138,7 @@ function (ff::LamFunction_allStruct)(du, u, p, t)
 
 		ff.dv_p = @view du[:, :, 5*p.K+1:5*p.K+1,:]
 		ff.dv_m = @view du[:, :, 5*p.K+2:5*p.K+2,:]
-		
+
 		fun_x_lgn!(ff.x_lgn, ff.x, p)
         fun_v_C!(ff.C, ff.v_p, ff.v_m, ff.V_temp_1, ff.V_temp_2, ff.A_temp, ff.B_temp, p)
         fun_H_z!(ff.H_z, ff.z, ff.H_z_temp, p)
@@ -148,7 +150,7 @@ function (ff::LamFunction_allStruct)(du, u, p, t)
         fun_dm!(ff.dm, ff.m, ff.x, ff.dm_temp, p)
         fun_dz!(ff.dz, ff.z, ff.y, ff.H_z, ff.s, ff.dz_temp, p)
         fun_ds!(ff.ds, ff.s, ff.H_z, ff.ds_temp, p)
-		
+
 
     end
     return nothing
@@ -162,10 +164,10 @@ mutable struct LamFunction_gpu_reuse{T <: AbstractArray} <: Function
 	x_lgn::T
 	C::T
 	H_z::T
-	
+
 	tmp_a::T
 	tmp_b::T
-	
+
 	tmp_A::T
 	tmp_B::T
 	tmp_C::T
@@ -176,13 +178,13 @@ function (ff::LamFunction_gpu_reuse)(du, u, p, t)
 
        @inbounds begin
 
-		
+
         y = @view u[:, :, p.K+1:2*p.K,:]
 		z = @view u[:, :, 3*p.K+1:4*p.K,:]
-		
+
 		v_p = @view u[:, :, 5*p.K+1:5*p.K+1,:]
 		v_m = @view u[:, :, 5*p.K+2:5*p.K+2,:]
-		
+
 		dx = @view du[:, :, 1:p.K,:]
         dy = @view du[:, :, p.K+1:2*p.K,:]
         dm = @view du[:, :, 2*p.K+1:3*p.K,:]
@@ -191,27 +193,27 @@ function (ff::LamFunction_gpu_reuse)(du, u, p, t)
 
 		dv_p = @view du[:, :, 5*p.K+1:5*p.K+1,:]
 		dv_m = @view du[:, :, 5*p.K+2:5*p.K+2,:]
-		
-		
+
+
         fun_v_C!(ff.C, v_p, v_m, ff.tmp_a, ff.tmp_b, ff.tmp_A, ff.tmp_B, p) #a,b,C,D: buffers
         fun_H_z!(ff.H_z, z, ff.tmp_A, p) #A=buffer
 
 		@. ff.tmp_A = @view u[:, :, 1:p.K,:] #x
         @. ff.tmp_B = @view u[:, :, 2*p.K+1:3*p.K,:] #m
 		fun_x_lgn!(ff.x_lgn, ff.tmp_A, p)
-		
+
         fun_dv!(dv_p, v_p, p.r, ff.x_lgn, ff.tmp_a, p) #a=buffer
         fun_dv!(dv_m, v_m, .-p.r, ff.x_lgn, ff.tmp_a, p) #a=buff
-        
-		
+
+
 		fun_dx_v1!(dx, ff.tmp_A, ff.C, z, p.x_V2, p) #A:x
         fun_dy!(dy, y, ff.C, ff.tmp_A, ff.tmp_B, ff.tmp_C, p) # A:x, B:m, C:buffer
         fun_dm!(dm, ff.tmp_B, ff.tmp_A, ff.tmp_C, p) # A:x, B:m, C:buffer
-        
+
 		@. ff.tmp_A = @view u[:, :, 4*p.K+1:5*p.K,:] #s
 		fun_dz!(dz, z, y, ff.H_z, ff.tmp_A, ff.tmp_B, p) #A=s, B=buffer
         fun_ds!(ds, ff.tmp_A, ff.H_z, ff.tmp_B, p) #A=s, B=buffer
-		
+
 
     end
     return nothing
@@ -222,11 +224,11 @@ mutable struct LamFunction_equ{T <: AbstractArray} <: Function
 	x::T
 	m::T
 	s::T
-	
+
 	x_lgn::T
 	C::T
 	H_z::T
-	
+
 	dy_temp::T
 	dm_temp::T
 	dz_temp::T
@@ -252,7 +254,7 @@ function (ff::LamFunction_equ)(du, u, p, t)
 
 		v_p = @view u[:, :, 5*p.K+1:5*p.K+1,:]
 		v_m = @view u[:, :, 5*p.K+2:5*p.K+2,:]
-		
+
 		dx = @view du[:, :, 1:p.K,:]
         dy = @view du[:, :, p.K+1:2*p.K,:]
         dm = @view du[:, :, 2*p.K+1:3*p.K,:]
@@ -261,7 +263,7 @@ function (ff::LamFunction_equ)(du, u, p, t)
 
 		dv_p = @view du[:, :, 5*p.K+1:5*p.K+1,:]
 		dv_m = @view du[:, :, 5*p.K+2:5*p.K+2,:]
-		
+
 		fun_x_lgn!(ff.x_lgn, ff.x, p)
         fun_v_C!(ff.C, v_p, v_m, ff.V_temp_1, ff.V_temp_2, ff.A_temp, ff.B_temp, p)
         fun_H_z!(ff.H_z, z, ff.H_z_temp, p)
@@ -275,7 +277,7 @@ function (ff::LamFunction_equ)(du, u, p, t)
         fun_dm!(dm, ff.m, ff.x, ff.dm_temp, p)
         fun_dz!(dz, z, y, ff.H_z, ff.s, ff.dz_temp, p)
         fun_ds!(ds, ff.s, ff.H_z, ff.ds_temp, p)
-		
+
     end
     return nothing
 
@@ -286,7 +288,7 @@ mutable struct LamFunction_all_struct_reuse_1{T <: AbstractArray} <: Function
 	x_lgn::T
 	C::T
 	H_z::T
-	
+
 	y
 	z
 	v_p
@@ -298,10 +300,10 @@ mutable struct LamFunction_all_struct_reuse_1{T <: AbstractArray} <: Function
 	ds
 	dv_p
 	dv_m
-	
+
 	tmp_a::T
 	tmp_b::T
-	
+
 	tmp_A::T
 	tmp_B::T
 	tmp_C::T
@@ -312,13 +314,13 @@ function (ff::LamFunction_all_struct_reuse_1)(du, u, p, t)
 
        @inbounds begin
 
-		
+
         ff.y = @view u[:, :, p.K+1:2*p.K,:]
 		ff.z = @view u[:, :, 3*p.K+1:4*p.K,:]
-		
+
 		ff.v_p = @view u[:, :, 5*p.K+1:5*p.K+1,:]
 		ff.v_m = @view u[:, :, 5*p.K+2:5*p.K+2,:]
-		
+
 		ff.dx = @view du[:, :, 1:p.K,:]
         ff.dy = @view du[:, :, p.K+1:2*p.K,:]
         ff.dm = @view du[:, :, 2*p.K+1:3*p.K,:]
@@ -327,27 +329,27 @@ function (ff::LamFunction_all_struct_reuse_1)(du, u, p, t)
 
 		ff.dv_p = @view du[:, :, 5*p.K+1:5*p.K+1,:]
 		ff.dv_m = @view du[:, :, 5*p.K+2:5*p.K+2,:]
-		
-		
+
+
         fun_v_C!(ff.C, ff.v_p, ff.v_m, ff.tmp_a, ff.tmp_b, ff.tmp_A, ff.tmp_B, p) #a,b,C,D: buffers
         fun_H_z!(ff.H_z, ff.z, ff.tmp_A, p) #A=buffer
 
 		@. ff.tmp_A = @view u[:, :, 1:p.K,:] #x
         @. ff.tmp_B = @view u[:, :, 2*p.K+1:3*p.K,:] #m
 		fun_x_lgn!(ff.x_lgn, ff.tmp_A, p)
-		
+
         fun_dv!(ff.dv_p, ff.v_p, p.r, ff.x_lgn, ff.tmp_a, p) #a=buffer
         fun_dv!(ff.dv_m, ff.v_m, .-p.r, ff.x_lgn, ff.tmp_a, p) #a=buff
-        
-		
+
+
 		fun_dx_v1!(ff.dx, ff.tmp_A, ff.C, ff.z, p.x_V2, p) #A:x
         fun_dy!(ff.dy, ff.y, ff.C, ff.tmp_A, ff.tmp_B, ff.tmp_C, p) # A:x, B:m, C:buffer
         fun_dm!(ff.dm, ff.tmp_B, ff.tmp_A, ff.tmp_C, p) # A:x, B:m, C:buffer
-        
+
 		@. ff.tmp_A = @view u[:, :, 4*p.K+1:5*p.K,:] #s
 		fun_dz!(ff.dz, ff.z, ff.y, ff.H_z, ff.tmp_A, ff.tmp_B, p) #A=s, B=buffer
         fun_ds!(ff.ds, ff.tmp_A, ff.H_z, ff.tmp_B, p) #A=s, B=buffer
-		
+
 
     end
     return nothing
@@ -358,7 +360,7 @@ end
 # 	x_lgn::AbstractArray
 # 	C::AbstractArray
 # 	H_z::AbstractArray
-	
+
 # 	dy_temp::AbstractArray
 # 	dm_temp::AbstractArray
 # 	dz_temp::AbstractArray
@@ -384,7 +386,7 @@ end
 
 # 		ff.v_p = @view u[:, :, 5*p.K+1:5*p.K+1,:]
 # 		ff.v_m = @view u[:, :, 5*p.K+2:5*p.K+2,:]
-		
+
 # 		ff.dx = @view du[:, :, 1:p.K,:]
 #         ff.dy = @view du[:, :, p.K+1:2*p.K,:]
 #         ff.dm = @view du[:, :, 2*p.K+1:3*p.K,:]
@@ -393,7 +395,7 @@ end
 
 # 		ff.dv_p = @view du[:, :, 5*p.K+1:5*p.K+1,:]
 # 		ff.dv_m = @view du[:, :, 5*p.K+2:5*p.K+2,:]
-		
+
 # 		fun_x_lgn!(ff.x_lgn, ff.x, p)
 #         fun_v_C!(ff.C, ff.v_p, ff.v_m, ff.V_temp_1, ff.V_temp_2, ff.A_temp, ff.B_temp, p)
 #         fun_H_z!(ff.H_z, ff.z, ff.H_z_temp, p)
@@ -405,7 +407,7 @@ end
 #         fun_dm!(ff.dm, ff.m, ff.x, ff.dm_temp, p)
 #         fun_dz!(ff.dz, ff.z, ff.y, ff.H_z, ff.s, ff.dz_temp, p)
 #         fun_ds!(ff.ds, ff.s, ff.H_z, ff.ds_temp, p)
-		
+
 
 #     end
 #     return nothing
@@ -429,16 +431,16 @@ end
 # # 	ds::T
 # # 	dv_p::T
 # # 	dv_m::T
-	
+
 # 	x_lgn::T
 # 	C::T
 # 	H_z::T
-	
+
 # 	dy_temp::T
 # 	dm_temp::T
 # 	dz_temp::T
 # 	ds_temp::T
-# 	dv_temp::T 
+# 	dv_temp::T
 # 	H_z_temp::T
 # 	V_temp_1::T
 # 	V_temp_2::T
@@ -467,7 +469,7 @@ end
 
 #        v_p = @view u[:, :, 5*p.K+1:5*p.K+1,:]
 # 		v_m = @view u[:, :, 5*p.K+2:5*p.K+2,:]
-		
+
 # 		 dx = @view du[:, :, 1:p.K,:]
 #         dy = @view du[:, :, p.K+1:2*p.K,:]
 #         dm = @view du[:, :, 2*p.K+1:3*p.K,:]
@@ -476,7 +478,7 @@ end
 
 #        dv_p = @view du[:, :, 5*p.K+1:5*p.K+1,:]
 # 		dv_m = @view du[:, :, 5*p.K+2:5*p.K+2,:]
-		
+
 # #         fun_x_lgn!(ff.x_lgn, ff.x, p)
 # #         fun_v_C!(ff.C, ff.v_p, ff.v_m, ff.V_temp_1, ff.V_temp_2, ff.A_temp, ff.B_temp, p)
 # #         fun_H_z!(ff.H_z, ff.z, ff.H_z_temp, p)
@@ -488,7 +490,7 @@ end
 # #         fun_dm!(dm, ff.m, ff.x, ff.dm_temp, p)
 # #         fun_dz!(dz, ff.z, ff.y, ff.H_z, ff.s, ff.dz_temp, p)
 # #         fun_ds!(ds, ff.s, ff.H_z, ff.ds_temp, p)
-		
+
 # # 		fun_x_lgn!(ff.x_lgn, x, p)
 #         fun_v_C!(ff.C, v_p, v_m, ff.V_temp_1, ff.V_temp_2, ff.A_temp, ff.B_temp, p)
 #         fun_H_z!(ff.H_z, z, ff.H_z_temp, p)
@@ -500,8 +502,8 @@ end
 #         fun_dm!(dm, ff.m, x, ff.dm_temp, p)
 #         fun_dz!(dz, z, y, ff.H_z, ff.s, ff.dz_temp, p)
 #         fun_ds!(ds, ff.s, ff.H_z, ff.ds_temp, p)
-		
-		
+
+
 # # 		@. du[:, :, 1:p.K,:] = ff.dx
 # # 		@. du[:, :, p.K+1:2*p.K,:] = ff.dy
 # # 		@. du[:, :, 2*p.K+1:3*p.K,:] = ff.dm
@@ -534,16 +536,16 @@ end
 # # 	ds::T
 # # 	dv_p::T
 # # 	dv_m::T
-	
+
 # 	x_lgn::T
 # 	C::T
 # 	H_z::T
-	
+
 # 	dy_temp::T
 # 	dm_temp::T
 # 	dz_temp::T
 # 	ds_temp::T
-# 	dv_temp::T 
+# 	dv_temp::T
 # 	H_z_temp::T
 # 	V_temp_1::T
 # 	V_temp_2::T
@@ -572,7 +574,7 @@ end
 
 #        v_p = @view u[:, :, 5*p.K+1:5*p.K+1,:]
 # 		v_m = @view u[:, :, 5*p.K+2:5*p.K+2,:]
-		
+
 # 		 dx = @view du[:, :, 1:p.K,:]
 #         dy = @view du[:, :, p.K+1:2*p.K,:]
 #         dm = @view du[:, :, 2*p.K+1:3*p.K,:]
@@ -581,7 +583,7 @@ end
 
 #        dv_p = @view du[:, :, 5*p.K+1:5*p.K+1,:]
 # 		dv_m = @view du[:, :, 5*p.K+2:5*p.K+2,:]
-		
+
 # #         fun_x_lgn!(ff.x_lgn, ff.x, p)
 # #         fun_v_C!(ff.C, ff.v_p, ff.v_m, ff.V_temp_1, ff.V_temp_2, ff.A_temp, ff.B_temp, p)
 # #         fun_H_z!(ff.H_z, ff.z, ff.H_z_temp, p)
@@ -593,7 +595,7 @@ end
 # #         fun_dm!(dm, ff.m, ff.x, ff.dm_temp, p)
 # #         fun_dz!(dz, ff.z, ff.y, ff.H_z, ff.s, ff.dz_temp, p)
 # #         fun_ds!(ds, ff.s, ff.H_z, ff.ds_temp, p)
-		
+
 # # 		fun_x_lgn!(ff.x_lgn, x, p)
 #         fun_v_C!(ff.C, v_p, v_m, ff.V_temp_1, ff.V_temp_2, ff.A_temp, ff.B_temp, p)
 #         fun_H_z!(ff.H_z, z, ff.H_z_temp, p)
@@ -605,8 +607,8 @@ end
 #         fun_dm!(dm, ff.m, x, ff.dm_temp, p)
 #         fun_dz!(dz, z, y, ff.H_z, ff.s, ff.dz_temp, p)
 #         fun_ds!(ds, ff.s, ff.H_z, ff.ds_temp, p)
-		
-		
+
+
 # # 		@. du[:, :, 1:p.K,:] = ff.dx
 # # 		@. du[:, :, p.K+1:2*p.K,:] = ff.dy
 # # 		@. du[:, :, 2*p.K+1:3*p.K,:] = ff.dm
@@ -633,7 +635,7 @@ end
 # 	s::T
 # 	v_p::T
 # 	v_m::T
-	
+
 # 	dx::T
 # 	dy::T
 # 	dm::T
@@ -641,7 +643,7 @@ end
 # 	ds::T
 # 	dv_p::T
 # 	dv_m::T
-	
+
 # 	x_lgn::T
 # 	C::T
 # 	H_z::T
@@ -662,7 +664,7 @@ end
 # 	s::T
 # 	v_p::T
 # 	v_m::T
-	
+
 # 	dx::T
 # 	dy::T
 # 	dm::T
@@ -670,7 +672,7 @@ end
 # 	ds::T
 # 	dv_p::T
 # 	dv_m::T
-	
+
 # 	x_lgn::T
 # 	C::T
 # 	H_z::T
@@ -690,7 +692,7 @@ end
 # 	s::AbstractArray
 # 	v_p::AbstractArray
 # 	v_m::AbstractArray
-	
+
 # 	dx::AbstractArray
 # 	dy::AbstractArray
 # 	dm::AbstractArray
@@ -698,7 +700,7 @@ end
 # 	ds::AbstractArray
 # 	dv_p::AbstractArray
 # 	dv_m::AbstractArray
-	
+
 # 	x_lgn::AbstractArray
 # 	C::AbstractArray
 # 	H_z::AbstractArray
@@ -731,7 +733,7 @@ end
 #         fun_dm!(ff.dm, ff.m, ff.x, p)
 #         fun_dz!(ff.dz, ff.z, ff.y, ff.H_z, ff.s, p)
 #         fun_ds!(ff.ds, ff.s, ff.H_z, ff.ds_temp, p)
-		
+
 # 		@. du[:, :, 1:p.K,:] = ff.dx
 # 		@. du[:, :, p.K+1:2*p.K,:] = ff.dy
 # 		@. du[:, :, 2*p.K+1:3*p.K,:] = ff.dm
@@ -769,7 +771,7 @@ end
 #         fun_dm!(ff.dm, ff.m, ff.x, p)
 #         fun_dz!(ff.dz, ff.z, ff.y, ff.H_z, ff.s, p)
 #         fun_ds!(ff.ds, ff.s, ff.H_z, ff.ds_temp, p)
-		
+
 # 		@. du[:, :, 1:p.K,:] = ff.dx
 # 		@. du[:, :, p.K+1:2*p.K,:] = ff.dy
 # 		@. du[:, :, 2*p.K+1:3*p.K,:] = ff.dm
@@ -880,16 +882,16 @@ end
 
 #         @. ff.v_p = @view u[:, :, 5*p.K+1:5*p.K+1,:]
 # 		@. ff.v_m = @view u[:, :, 5*p.K+2:5*p.K+2,:]
-		
-# # 		ff.dx = @view du[:, :, 1:p.K,:] 
-# # 		ff.dy = @view du[:, :, p.K+1:2*p.K,:] 
-# # 		ff.dm = @view du[:, :, 2*p.K+1:3*p.K,:] 
-# # 		ff.dz = @view du[:, :, 3*p.K+1:4*p.K,:] 
-# # 		ff.ds = @view du[:, :, 4*p.K+1:5*p.K,:] 
+
+# # 		ff.dx = @view du[:, :, 1:p.K,:]
+# # 		ff.dy = @view du[:, :, p.K+1:2*p.K,:]
+# # 		ff.dm = @view du[:, :, 2*p.K+1:3*p.K,:]
+# # 		ff.dz = @view du[:, :, 3*p.K+1:4*p.K,:]
+# # 		ff.ds = @view du[:, :, 4*p.K+1:5*p.K,:]
 
 # # 		ff.dv_p = @view du[:, :, 5*p.K+1:5*p.K+1,:]
 # # 		ff.dv_m = @view du[:, :, 5*p.K+2:5*p.K+2,:]
-		
+
 # # 		ff.x_lgn = @view ff.x_lgn[:,:,:,:]
 # # 		ff.C_ = @view ff.C[:,:,:,:]
 # # 		ff.H_z_ = @view ff.H_z[:,:,:,:]
@@ -897,7 +899,7 @@ end
 # # 		ff.V_temp_2_ = @view ff.V_temp_2[:,:,:,:]
 # # 		ff.A_temp_ = @view ff.A_temp[:,:,:,:]
 # # 		ff.B_temp_ = @view ff.B_temp[:,:,:,:]
-		
+
 #         fun_x_lgn!(ff.x_lgn, ff.x, p)
 #         fun_v_C!(ff.C, ff.v_p, ff.v_m, ff.V_temp_1, ff.V_temp_2, ff.A_temp, ff.B_temp, p)
 #         fun_H_z!(ff.H_z, ff.z, p)
@@ -909,7 +911,7 @@ end
 #         fun_dm!(ff.dm, ff.m, ff.x, p)
 #         fun_dz!(ff.dz, ff.z, ff.y, ff.H_z, ff.s, p)
 #         fun_ds!(ff.ds, ff.s, ff.H_z, p)
-		
+
 # # 		@. du[:, :, 1:p.K,:] = ff.dx
 # # 		@. du[:, :, p.K+1:2*p.K,:] = ff.dy
 # # 		@. du[:, :, 2*p.K+1:3*p.K,:] = ff.dm
@@ -941,14 +943,14 @@ C_B_temp = similar(C_A_temp)
         p.H_l,
         p.K,
     p.K)
- T_temp = reshape(Array{eltype(img)}(undef, p.K * p.K), 1, 1, p.K, p.K)     
+ T_temp = reshape(Array{eltype(img)}(undef, p.K * p.K), 1, 1, p.K, p.K)
  W_temp =
         reshape(Array{eltype(img)}(undef, p.W_l, p.W_l * p.K * p.K), p.W_l, p.W_l, p.K, p.K)
     for k ∈ 1:p.K
         θ = π * (k - 1.0f0) / p.K
-        C_A_temp[:, :, 1,k] = LamKernels.kern_A(p.σ_2, θ)          
-        C_B_temp[:, :, 1,k] = LamKernels.kern_B(p.σ_2, θ)               
-        H_temp[:, :, k,k] = p.H_fact .* LamKernels.gaussian_rot(p.H_σ_x, p.H_σ_y, θ, p.H_l)  
+        C_A_temp[:, :, 1,k] = LamKernels.kern_A(p.σ_2, θ)
+        C_B_temp[:, :, 1,k] = LamKernels.kern_B(p.σ_2, θ)
+        H_temp[:, :, k,k] = p.H_fact .* LamKernels.gaussian_rot(p.H_σ_x, p.H_σ_y, θ, p.H_l)
 # 		todo make T kernel more general for higher K
         T_temp[1, 1, k,1] = p.T_fact[k]
         T_temp[1, 1, 2,2] = p.T_fact[1]
@@ -963,25 +965,25 @@ C_B_temp = similar(C_A_temp)
     W_temp[:, :, 1, 1] =
         5f0 .* LamKernels.gaussian_rot(3f0, 0.8f0, 0f0, p.W_l) .+
         LamKernels.gaussian_rot(0.4f0, 1f0, 0f0, p.W_l)
-    
+
 	W_temp[:, :, 2, 2] =
         5f0 .* LamKernels.gaussian_rot(3f0, 0.8f0,  π / 2f0, p.W_l) .+
         LamKernels.gaussian_rot(0.4f0, 1f0, π / 2f0, p.W_l)
-    
+
 	W_temp[:, :, 1, 2] = relu.(
         0.2f0 .- LamKernels.gaussian_rot(2f0, 0.6f0, 0f0, p.W_l) .-
         LamKernels.gaussian_rot(0.3f0, 1.2f0, 0f0, p.W_l))
-    
+
 	W_temp[:, :, 2, 1] = relu.(
         0.2f0 .- LamKernels.gaussian_rot(2f0, 0.6f0, π / 2f0, p.W_l) .-
         LamKernels.gaussian_rot(0.3f0, 1.2f0, π / 2f0, p.W_l))
-	
+
 temp_out = (
         k_gauss_1 = cu(reshape2d_4d(Kernel.gaussian(p.σ_1))),
         k_gauss_2 = cu(reshape2d_4d(Kernel.gaussian(p.σ_2))),
         k_C_A = cu(C_A_temp),
         k_C_B = cu(C_B_temp),
-		
+
 # 		todo use mean of x_lgn?
 		k_x_lgn = cu(reshape(ones(Float32,1,p.K),1,1,p.K,1)),
 # 		k_x_lgn = cu(reshape(ones(Float32,1,p.K),1,1,p.K,1) ./ p.K),
@@ -996,7 +998,7 @@ temp_out = (
         dim_j = size(img)[2],
         x_V2 = cu(reshape(zeros(Float32, size(img)[1], size(img)[2] * p.K), size(img)[1], size(img)[2],p.K,1)),
 ν_pw_n= p.ν^p.n, )
-	
+
 merge(p, temp_out)
 end
 
@@ -1015,14 +1017,14 @@ C_B_temp = similar(C_A_temp)
         p.H_l,
         p.K,
     p.K)
- T_temp = reshape(Array{eltype(img)}(undef, p.K * p.K), 1, 1, p.K, p.K)     
+ T_temp = reshape(Array{eltype(img)}(undef, p.K * p.K), 1, 1, p.K, p.K)
  W_temp =
         reshape(Array{eltype(img)}(undef, p.W_l, p.W_l * p.K * p.K), p.W_l, p.W_l, p.K, p.K)
     for k ∈ 1:p.K
         θ = π * (k - 1.0f0) / p.K
-        C_A_temp[:, :, 1,k] = LamKernels.kern_A(p.σ_2, θ)          
-        C_B_temp[:, :, 1,k] = LamKernels.kern_B(p.σ_2, θ)               
-        H_temp[:, :, k,k] = p.H_fact .* LamKernels.gaussian_rot(p.H_σ_x, p.H_σ_y, θ, p.H_l)  
+        C_A_temp[:, :, 1,k] = LamKernels.kern_A(p.σ_2, θ)
+        C_B_temp[:, :, 1,k] = LamKernels.kern_B(p.σ_2, θ)
+        H_temp[:, :, k,k] = p.H_fact .* LamKernels.gaussian_rot(p.H_σ_x, p.H_σ_y, θ, p.H_l)
 # 		todo make T kernel more general for higher K
         T_temp[1, 1, k,1] = p.T_fact[k]
         T_temp[1, 1, 2,2] = p.T_fact[1]
@@ -1037,26 +1039,26 @@ C_B_temp = similar(C_A_temp)
     W_temp[:, :, 1, 1] =
         5f0 .* LamKernels.gaussian_rot(3f0, 0.8f0, 0f0, p.W_l) .+
         LamKernels.gaussian_rot(0.4f0, 1f0, 0f0, p.W_l)
-    
+
 	W_temp[:, :, 2, 2] =
         5f0 .* LamKernels.gaussian_rot(3f0, 0.8f0,  π / 2f0, p.W_l) .+
         LamKernels.gaussian_rot(0.4f0, 1f0, π / 2f0, p.W_l)
-    
+
 	W_temp[:, :, 1, 2] = relu.(
         0.2f0 .- LamKernels.gaussian_rot(2f0, 0.6f0, 0f0, p.W_l) .-
         LamKernels.gaussian_rot(0.3f0, 1.2f0, 0f0, p.W_l))
-    
+
 	W_temp[:, :, 2, 1] = relu.(
         0.2f0 .- LamKernels.gaussian_rot(2f0, 0.6f0, π / 2f0, p.W_l) .-
         LamKernels.gaussian_rot(0.3f0, 1.2f0, π / 2f0, p.W_l))
-	
-	
+
+
 	temp_out = (
         k_gauss_1 = reshape2d_4d(Kernel.gaussian(p.σ_1)),
         k_gauss_2 = reshape2d_4d(Kernel.gaussian(p.σ_2)),
         k_C_A = C_A_temp,
         k_C_B = C_B_temp,
-		
+
 # 		todo use mean of x_lgn?
 		k_x_lgn = reshape(ones(Float32,1,p.K),1,1,p.K,1),
 # 		k_x_lgn = reshape(ones(Float32,1,p.K),1,1,p.K,1)./p.K,
@@ -1091,11 +1093,11 @@ function conv!(out::AbstractArray, img::AbstractArray, kern::AbstractArray, p::N
 # 	img_ = @view img[:,:,:,:]
 # 	kern_ = @view kern[:,:,:,:]
 # 	    @inbounds out .= NNlib.conv(img[:,:,:,:], kern, pad=(size(kern)[1]>>1, size(kern)[1]>>1, size(kern)[2]>>1, size(kern)[2]>>1), flipped=true)
-	
+
 #     @inbounds out .= NNlib.conv(img, kern, pad=(size(kern)[1]>>1, size(kern)[1]>>1, size(kern)[2]>>1, size(kern)[2]>>1), flipped=true)
 # 	    @inbounds out .= NNlib.conv(img_, kern_, pad=(size(kern_)[1]>>1, size(kern_)[1]>>1, size(kern_)[2]>>1, size(kern_)[2]>>1), flipped=true)
-		    @inbounds NNlib.conv!(out, img, kern, NNlib.DenseConvDims(img, kern, padding=(size(kern)[1]>>1, size(kern)[1]>>1, size(kern)[2]>>1, size(kern)[2]>>1), flipkernel=true))
-	
+    @inbounds NNlib.conv!(out, img, kern, NNlib.DenseConvDims(img, kern, padding = ( size(kern)[1]>>1 , size(kern)[1]>>1 , size(kern)[2]>>1 , size(kern)[2]>>1 ), flipkernel = true))
+
 # 	@. out_ = out
     return nothing
 end
