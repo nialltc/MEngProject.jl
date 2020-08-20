@@ -13,12 +13,13 @@ julia>
 """
 module LaminartFunc
 
-import("./LaminartKernels.jl")
-import("./LaminartEqImfilter.jl")
-import("./LaminartEqConv.jl")
+include("./LaminartKernels.jl")
+include("./LaminartEqImfilter.jl")
+include("./LaminartEqConv.jl")
+
 
 using NNlib, ImageFiltering, Images, OffsetArrays, CUDA
-# , MEngProject.LamKernels
+
 
 
 mutable struct LamFunction{T <: AbstractArray} <: Function
@@ -398,20 +399,20 @@ function (ff::LamFunction_imfil_cpu)(du, u, p, t)
         # C = copy(u[:, :, 1:p.K])
         # H_z = copy(u[:, :, 1:p.K])
 
-        fun_x_lgn!(x_lgn, x, p)
-        fun_v_C!(ff.C, v_p, v_m, p)
-        fun_H_z!(ff.H_z, z, p)
+        LaminartEqImfilter.fun_x_lgn!(x_lgn, x, p)
+        LaminartEqImfilter.fun_v_C!(ff.C, v_p, v_m, p)
+        LaminartEqImfilter.fun_H_z!(ff.H_z, z, p)
 
-        fun_dv!(dv_p, v_p, p.r, x_lgn, p)
-        fun_dv!(dv_m, v_m, .-p.r, x_lgn, p)
-        fun_dx_v1!(dx, x, ff.C, z, p.x_V2, p)
-        fun_dy!(dy, y, ff.C, x, m, p)
-        fun_dm!(dm, m, x, p)
-        fun_dz!(dz, z, y, ff.H_z, s, p)
-        fun_ds!(ds, s, ff.H_z, p)
+        LaminartEqImfilter.fun_dv!(dv_p, v_p, p.r, x_lgn, p)
+        LaminartEqImfilter.fun_dv!(dv_m, v_m, .-p.r, x_lgn, p)
+        LaminartEqImfilter.fun_dx_v1!(dx, x, ff.C, z, p.x_V2, p)
+        LaminartEqImfilter.fun_dy!(dy, y, ff.C, x, m, p)
+        LaminartEqImfilter.fun_dm!(dm, m, x, p)
+        LaminartEqImfilter.fun_dz!(dz, z, y, ff.H_z, s, p)
+        LaminartEqImfilter.fun_ds!(ds, s, ff.H_z, p)
 
     end
-    nothing
+    return nothing
 end
 
 

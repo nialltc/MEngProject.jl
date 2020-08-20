@@ -13,9 +13,10 @@ julia>
 """
 module LaminartInitFunc
 
-import("./LaminartEqConv.jl")
-import("./LaminartEqImfilter.jl")
-import("./LaminartKernels.jl")
+include("./LaminartEqConv.jl")
+include("./LaminartEqImfilter.jl")
+include("./LaminartKernels.jl")
+
 
 using NNlib, ImageFiltering, Images, OffsetArrays, CUDA
 
@@ -26,7 +27,7 @@ function parameterInit_conv_gpu(imgLoc::String, p::NamedTuple)
 
     r = similar(img)
 
-    parameters = kernels_gpu(img, p);
+    parameters = kernels_conv_gpu(img, p);
 
     LaminartEqConv.I_u!(r, img, parameters)
     temp_out = (I = img, r = r)
@@ -41,7 +42,7 @@ function parameterInit_conv_cpu(imgLoc::String, p::NamedTuple)
 
     r = similar(img)
 
-    parameters = kernels_cpu(img, p);
+    parameters = kernels_conv_cpu(img, p);
 
     LaminartEqConv.I_u!(r, img, parameters)
     temp_out = (I = img, r = r)

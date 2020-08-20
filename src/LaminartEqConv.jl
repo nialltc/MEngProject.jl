@@ -261,7 +261,7 @@ end
 function fun_x_equ!(x::AbstractArray, C::AbstractArray, z::AbstractArray, x_v2::AbstractArray, x_temp::AbstractArray, p::NamedTuple)
     @inbounds begin
         @. x_temp = (p.α * C) + (p.ϕ * max(z - p.Γ, 0f0)) + (p.v_21 * x_v2) + p.att
-        @. x = x_temp /(1+x_temp)
+        @. x = x_temp /(1f0 + x_temp)
     end
     return nothing 
 end
@@ -273,7 +273,7 @@ function fun_y_equ!(y::AbstractArray, C::AbstractArray, x::AbstractArray, m::Abs
         conv!(dy_temp, m, p.k_W_p, p)
         @. dy_temp = m * dy_temp
         fun_f!(dy_temp, p)
-        @. y = (C + (p.η_p * x) - dy_temp)/(1 + C + (p.η_p * x) + dy_temp)
+        @. y = (C + (p.η_p * x) - dy_temp)/(1f0 + C + (p.η_p * x) + dy_temp)
     end
     return nothing
 end
