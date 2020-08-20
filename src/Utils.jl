@@ -13,9 +13,11 @@ julia>
 """
 module Utils
 using PyPlot, Images
+using DrWatson
+@quickactivate "MEngProject"
 
 # saving plots
-location="../out/"
+location=plotsdir()
 
 
 function plot_rb(img::AbstractArray;  name="img", save = false, axMin = -1, axMax = 1, clbar=false,  loc=location, filetype=".png")
