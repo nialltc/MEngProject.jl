@@ -1076,6 +1076,12 @@ git-tree-sha1 = "05a19b392a843157263582142fd4ac312e578451"
 uuid = "71a1bf82-56d0-4bbc-8a3c-48b961074391"
 version = "0.1.4"
 
+[[Noise]]
+deps = ["ColorTypes", "ImageCore", "PoissonRandom", "Random"]
+git-tree-sha1 = "e6b3d04a28decc71056d734e192fe87246cd0817"
+uuid = "81d43f40-5267-43b7-ae1c-8b967f377efa"
+version = "0.2.0"
+
 [[ODE]]
 deps = ["Compat", "DiffEqBase", "LinearAlgebra", "Polynomials", "Reexport"]
 git-tree-sha1 = "f89fa9c2c6996ab5ac0590a2812affbbc3acd13c"
