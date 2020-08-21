@@ -19,6 +19,8 @@ using DrWatson
 # saving plots
 location=plotsdir()
 
+layers = ["L6 (\$x\$)","L6(\$x\$)","L4 excit (\$y\$)","L4 excit (\$y\$)","L4 inhib (\$m\$)","L4 inhib (\$m\$)","L2/3 excit (\$z\$)","L2/3 excit (\$z\$)","L2/3 inhib (\$s\$)","L2/3 inhib (\$s\$)","LGN (\$v^+\$)","LGN (\$v^-\$)"]
+la = ["x","x","y","y","m","m","z","z","s","s","vp","vm"]
 
 function plot_rb(img::AbstractArray;  name="img", save = false, axMin = -1, axMax = 1, clbar=false,  loc=location, filetype=".png")
     findmax(img)[1] > axMax && throw(ArgumentError(string("Image has max ", findmax(img)[1], ",outside range")))
@@ -26,6 +28,27 @@ function plot_rb(img::AbstractArray;  name="img", save = false, axMin = -1, axMa
     fig, ax = plt.subplots()
 
     im = ax.imshow(img, cmap=matplotlib.cm.RdBu_r,
+               vmax=axMax, vmin=axMin)
+    if clbar
+        cbar = fig.colorbar(im,  shrink=0.9, ax=ax)
+    end
+
+    plt.axis("off")
+    fig.tight_layout()
+    plt.show()
+    if save
+        plt.savefig(string(loc,name,filetype))
+    end
+end
+
+function plot_two(img::AbstractArray, k, t;   name="img", save = false, axMin = -1, axMax = 1, clbar=false,  loc=location, filetype=".png")
+    findmax(img)[1] > axMax && throw(ArgumentError(string("Image has max ", findmax(img)[1], ",outside range")))
+    findmin(img)[1] < axMin && throw(ArgumentError(string("Image has min ", findmin(img)[1], ",outside range")))
+    fig, ax = plt.subplots()
+
+    im = ax.imshow(img[:,:,k,1,t], cmap=matplotlib.cm.BrBG,
+               vmax=axMax, vmin=axMin)
+	ax.imshow(img[:,:,k+1,1,t], cmap=matplotlib.cm.BrBG,
                vmax=axMax, vmin=axMin)
     if clbar
         cbar = fig.colorbar(im,  shrink=0.9, ax=ax)
