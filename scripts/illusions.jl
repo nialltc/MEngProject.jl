@@ -13,7 +13,7 @@ tspan = (0.0f0, 800f0)
 
 batch_ = string(batch,"_",rand(1000:9999))
 
-for f in files[2:end]
+for f in files[20:end]
 	
 	p = LaminartInitFunc.parameterInit_conv_gpu(datadir("img",f), Parameters.parameters_f32);
 	
