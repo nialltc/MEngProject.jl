@@ -338,9 +338,9 @@ uuid = "8ba89e20-285c-5b6f-9357-94700520ee1b"
 
 [[Distributions]]
 deps = ["FillArrays", "LinearAlgebra", "PDMats", "Printf", "QuadGK", "Random", "SpecialFunctions", "Statistics", "StatsBase", "StatsFuns"]
-git-tree-sha1 = "9c41285c57c6e0d73a21ed4b65f6eec34805f937"
+git-tree-sha1 = "dec9607adfa6a82399cce0bd9b8557f8cc3b7bcd"
 uuid = "31c24e10-a181-5473-b8eb-7969acd0382f"
-version = "0.23.8"
+version = "0.23.9"
 
 [[DocStringExtensions]]
 deps = ["LibGit2", "Markdown", "Pkg", "Test"]
@@ -408,9 +408,9 @@ version = "0.3.1"
 
 [[FFTW]]
 deps = ["AbstractFFTs", "FFTW_jll", "IntelOpenMP_jll", "Libdl", "LinearAlgebra", "MKL_jll", "Reexport"]
-git-tree-sha1 = "3f72ed8ee79c8b1b0376194497fee1e8255e1c94"
+git-tree-sha1 = "8b7c16b56936047ca41bf25effa137ae0b381ae8"
 uuid = "7a1cc6ca-52ef-59f5-83cd-3a7055c09341"
-version = "1.2.3"
+version = "1.2.4"
 
 [[FFTW_jll]]
 deps = ["Libdl", "Pkg"]
@@ -434,9 +434,9 @@ uuid = "7b1f6079-737a-58dc-b8bc-7a2ca5c1b5ee"
 
 [[FillArrays]]
 deps = ["LinearAlgebra", "Random", "SparseArrays"]
-git-tree-sha1 = "4863cbb7910079369e258dee4add9d06ead5063a"
+git-tree-sha1 = "9a457808000939be5f052291cbed7de409c2839d"
 uuid = "1a297f60-69ca-5386-bcde-b61e274b549b"
-version = "0.8.14"
+version = "0.9.4"
 
 [[FiniteDiff]]
 deps = ["ArrayInterface", "LinearAlgebra", "Requires", "SparseArrays", "StaticArrays"]
@@ -1026,9 +1026,9 @@ version = "0.7.1"
 
 [[ModelingToolkit]]
 deps = ["ArrayInterface", "DataStructures", "DiffEqBase", "DiffEqJump", "DiffRules", "Distributed", "DocStringExtensions", "GeneralizedGenerated", "LabelledArrays", "Latexify", "LightGraphs", "LinearAlgebra", "MacroTools", "NaNMath", "RecursiveArrayTools", "Requires", "SafeTestsets", "SparseArrays", "SpecialFunctions", "StaticArrays", "SymbolicUtils", "TreeViews", "UnPack", "Unitful"]
-git-tree-sha1 = "eb2c38dee4e3038356d824286bff3441fe406622"
+git-tree-sha1 = "91c8582df357b9eaabf35957e20cd2ed6c8126fe"
 uuid = "961ee093-0014-501f-94e3-6117800e7a78"
-version = "3.16.0"
+version = "3.17.0"
 
 [[MosaicViews]]
 deps = ["OffsetArrays", "PaddedViews"]
@@ -1536,9 +1536,9 @@ version = "5.2.0+0"
 
 [[SymbolicUtils]]
 deps = ["AbstractAlgebra", "Combinatorics", "DataStructures", "NaNMath", "SpecialFunctions", "TimerOutputs"]
-git-tree-sha1 = "a35fbe7b561ad6cb1ffa412253c823dc42dd840b"
+git-tree-sha1 = "3cd0b83054bd456ac5c8740900ef4d1f830462c0"
 uuid = "d1185830-fcd6-423d-90d6-eec64667417b"
-version = "0.5.0"
+version = "0.5.1"
 
 [[TableTraits]]
 deps = ["IteratorInterfaceExtensions"]
