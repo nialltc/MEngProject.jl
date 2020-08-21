@@ -89,16 +89,18 @@ function kernels_conv_gpu(img::AbstractArray, p::NamedTuple)
         1,
         p.K
     )
-C_B_temp = similar(C_A_temp)
+	C_B_temp = similar(C_A_temp)
         H_temp = reshape(
         zeros(eltype(img), p.H_l, p.H_l * p.K * p.K),
         p.H_l,
         p.H_l,
         p.K,
     p.K)
- T_temp = reshape(Array{eltype(img)}(undef, p.K * p.K), 1, 1, p.K, p.K)
- W_temp =
+	T_temp = reshape(Array{eltype(img)}(undef, p.K * p.K), 1, 1, p.K, p.K)
+	W_p_temp =
         reshape(Array{eltype(img)}(undef, p.W_l, p.W_l * p.K * p.K), p.W_l, p.W_l, p.K, p.K)
+	W_m_temp = similar(W_p_temp)
+	
     for k ∈ 1:p.K
         θ = π * (k - 1.0f0) / p.K
         C_A_temp[:, :, 1,k] = LaminartKernels.kern_A(p.σ_2, θ)
@@ -115,22 +117,32 @@ C_B_temp = similar(C_A_temp)
         #         end
     end
 
-    W_temp[:, :, 1, 1] =
-        5f0 .* LaminartKernels.gaussian_rot(3f0, 0.8f0, 0f0, p.W_l) .+
-        LaminartKernels.gaussian_rot(0.4f0, 1f0, 0f0, p.W_l)
+    W_p_temp[:, :, 1, 1] =
+        p.W_p_same_fact .* LaminartKernels.gaussian_rot(p.W_p_σ_x_same_a, p.W_p_σ_y_same_a, 0f0, p.W_l) .+
+        LaminartKernels.gaussian_rot(p.W_p_σ_x_same_b, p.W_p_σ_y_same_b, 0f0, p.W_l)
 
-    W_temp[:, :, 2, 2] =
-        5f0 .* LaminartKernels.gaussian_rot(3f0, 0.8f0,  π / 2f0, p.W_l) .+
-        LaminartKernels.gaussian_rot(0.4f0, 1f0, π / 2f0, p.W_l)
+    W_p_temp[:, :, 2, 2] =
+        p.W_p_same_fact .* LaminartKernels.gaussian_rot(p.W_p_σ_x_same_a, p.W_p_σ_y_same_a,  π / 2f0, p.W_l) .+
+        LaminartKernels.gaussian_rot(p.W_p_σ_x_same_b, p.W_p_σ_y_same_b, π / 2f0, p.W_l)
 
-    W_temp[:, :, 1, 2] = relu.(
-        0.2f0 .- LaminartKernels.gaussian_rot(2f0, 0.6f0, 0f0, p.W_l) .-
-        LaminartKernels.gaussian_rot(0.3f0, 1.2f0, 0f0, p.W_l))
+    W_p_temp[:, :, 1, 2] = relu.(p.W_p_opp_fact_a .* (Kernel.gaussian((p.W_p_σ_opp_a, p.W_p_σ_opp_a),(p.W_l, p.W_l))) .- p.W_p_opp_fact_b .* (LaminartKernels.gaussian_rot(p.W_p_σ_x_opp_b, p.W_p_σ_y_opp_b, 0f0, p.W_l) .+ LaminartKernels.gaussian_rot(p.W_p_σ_x_opp_c, p.W_p_σ_y_opp_c, 0f0, p.W_l)))
 
-    W_temp[:, :, 2, 1] = relu.(
-        0.2f0 .- LaminartKernels.gaussian_rot(2f0, 0.6f0, π / 2f0, p.W_l) .-
-        LaminartKernels.gaussian_rot(0.3f0, 1.2f0, π / 2f0, p.W_l))
+    W_p_temp[:, :, 2, 1] = relu.(p.W_p_opp_fact_a .* (Kernel.gaussian((p.W_p_σ_opp_a, p.W_p_σ_opp_a),(p.W_l, p.W_l))) .- p.W_p_opp_fact_b .* (LaminartKernels.gaussian_rot(p.W_p_σ_x_opp_b, p.W_p_σ_y_opp_b, 0f0, p.W_l) .+ LaminartKernels.gaussian_rot(p.W_p_σ_x_opp_c, p.W_p_σ_y_opp_c, 0f0, p.W_l)))
 
+	
+	W_m_temp[:, :, 1, 1] =
+        p.W_m_same_fact .* LaminartKernels.gaussian_rot(p.W_m_σ_x_same_a, p.W_m_σ_y_same_a, 0f0, p.W_l) .+
+        LaminartKernels.gaussian_rot(p.W_m_σ_x_same_b, p.W_m_σ_y_same_b, 0f0, p.W_l)
+
+    W_m_temp[:, :, 2, 2] =
+        p.W_m_same_fact .* LaminartKernels.gaussian_rot(p.W_m_σ_x_same_a, p.W_m_σ_y_same_a,  π / 2f0, p.W_l) .+
+        LaminartKernels.gaussian_rot(p.W_m_σ_x_same_b, p.W_m_σ_y_same_b, π / 2f0, p.W_l)
+
+    W_m_temp[:, :, 1, 2] = relu.(p.W_m_opp_fact_a .* (Kernel.gaussian((p.W_m_σ_opp_a, p.W_m_σ_opp_a),(p.W_l, p.W_l))) .- p.W_m_opp_fact_b .* (LaminartKernels.gaussian_rot(p.W_m_σ_x_opp_b, p.W_m_σ_y_opp_b, 0f0, p.W_l) .+ LaminartKernels.gaussian_rot(p.W_m_σ_x_opp_c, p.W_m_σ_y_opp_c, 0f0, p.W_l)))
+
+    W_m_temp[:, :, 2, 1] = relu.(p.W_p_opp_fact_a .* (Kernel.gaussian((p.W_p_σ_opp_a, p.W_p_σ_opp_a),(p.W_l, p.W_l))) .- p.W_p_opp_fact_b .* (LaminartKernels.gaussian_rot(p.W_p_σ_x_opp_b, p.W_p_σ_y_opp_b, 0f0, p.W_l) .+ LaminartKernels.gaussian_rot(p.W_p_σ_x_opp_c, p.W_p_σ_y_opp_c, 0f0, p.W_l)))
+	
+	
 temp_out = (
         k_gauss_1 = cu(reshape2d_4d(Kernel.gaussian(p.σ_1))),
         k_gauss_2 = cu(reshape2d_4d(Kernel.gaussian(p.σ_2))),
@@ -140,8 +152,8 @@ temp_out = (
 # 		todo use mean of x_lgn?
         k_x_lgn = cu(reshape(ones(Float32,1,p.K),1,1,p.K,1)),
 # 		k_x_lgn = cu(reshape(ones(Float32,1,p.K),1,1,p.K,1) ./ p.K),
-        k_W_p = cu(W_temp),
-        k_W_m = cu(W_temp),
+        k_W_p = cu(W_p_temp),
+        k_W_m = cu(W_m_temp),
         k_H = cu(H_temp),
         k_T_p = cu(T_temp),
         k_T_m = cu(p.T_p_m .* T_temp),
