@@ -11,10 +11,10 @@
 julia>
 ```
 """
-module Laminart
+module LaminartConv
 include("./LamKernels.jl")
 
-using NNlib, ImageFiltering, Images, OffsetArrays
+using NNlib, ImageFiltering, Images, OffsetArrays, CUDA
 # , MEngProject.LamKernels
 
 export I_u, fun_v_C, fun_equ
@@ -25,142 +25,230 @@ struct MyFunction{T} <: Function
   H_z::T
 end
 
+# function (ff::MyFunction)(du, u, p, t)
+# # function f!(du, u, p, t)
+#     @inbounds begin
+#         x = CuArray(@view u[:, :, 1:p.K,:])
+#         y = CuArray(@view u[:, :, p.K+1:2*p.K,:])
+#         m = CuArray(@view u[:, :, 2*p.K+1:3*p.K,:])
+#         z = CuArray(@view u[:, :, 3*p.K+1:4*p.K,:])
+#         s = CuArray(@view u[:, :, 4*p.K+1:5*p.K,:])
+
+#         v_p = CuArray(@view u[:, :, 5*p.K+1:5*p.K+1,:])
+#         v_m = CuArray(@view u[:, :, 5*p.K+2:5*p.K+2,:])
+
+#         dx = CuArray(@view du[:, :, 1:p.K,:])
+#         dy = CuArray(@view du[:, :, p.K+1:2*p.K,:])
+#         dm = CuArray(@view du[:, :, 2*p.K+1:3*p.K,:])
+#         dz = CuArray(@view du[:, :, 3*p.K+1:4*p.K,:])
+#         ds = CuArray(@view du[:, :, 4*p.K+1:5*p.K,:])
+
+#         dv_p = CuArray(@view du[:, :, 5*p.K+1:5*p.K+1,:])
+#         dv_m = CuArray(@view du[:, :, 5*p.K+2:5*p.K+2,:])
+
+#         fun_x_lgn!(ff.x_lgn, x, p)
+#         fun_v_C!(ff.C, v_p, v_m, p)
+#         fun_H_z!(ff.H_z, z, p)
+
+#         fun_dv!(dv_p, v_p, p.r, ff.x_lgn, p)
+#         fun_dv!(dv_m, v_m, .-p.r, ff.x_lgn, p)
+#         fun_dx_v1!(dx, x, ff.C, z, p.x_V2, p)
+#         fun_dy!(dy, y, ff.C, x, m, p)
+#         fun_dm!(dm, m, x, p)
+#         fun_dz!(dz, z, y, ff.H_z, s, p)
+#         fun_ds!(ds, s, ff.H_z, p)
+
+#     end
+#     return nothing
+# end
+
+
+
 function (ff::MyFunction)(du, u, p, t)
 # function f!(du, u, p, t)
-    @inbounds begin
-        x = @view u[:, :, 1:p.K]
-        y = @view u[:, :, p.K+1:2*p.K]
-        m = @view u[:, :, 2*p.K+1:3*p.K]
-        z = @view u[:, :, 3*p.K+1:4*p.K]
-        s = @view u[:, :, 4*p.K+1:5*p.K]
+#     @inbounds begin
+        x = @view u[:, :, 1:p.K,:]
+        y = @view u[:, :, p.K+1:2*p.K,:]
+        m = @view u[:, :, 2*p.K+1:3*p.K,:]
+        z = @view u[:, :, 3*p.K+1:4*p.K,:]
+        s = @view u[:, :, 4*p.K+1:5*p.K,:]
 
-        #    C = @view u[:, :, 5*p.K+1:6*p.K]
-        #    H_z = @view u[:, :, 6*p.K+1:7*p.K]
+        v_p = @view u[:, :, 5*p.K+1:5*p.K+1,:]
+        v_m = @view u[:, :, 5*p.K+2:5*p.K+2,:]
 
-        v_p = @view u[:, :, 5*p.K+1]
-        v_m = @view u[:, :, 5*p.K+2]
-        #    x_lgn = @view u[:, :, 7*p.K+3]
+        dx = @view du[:, :, 1:p.K,:]
+        dy = @view du[:, :, p.K+1:2*p.K,:]
+        dm = @view du[:, :, 2*p.K+1:3*p.K,:]
+        dz = @view du[:, :, 3*p.K+1:4*p.K,:]
+        ds = @view du[:, :, 4*p.K+1:5*p.K,:]
 
-        dx = @view du[:, :, 1:p.K]
-        dy = @view du[:, :, p.K+1:2*p.K]
-        dm = @view du[:, :, 2*p.K+1:3*p.K]
-        dz = @view du[:, :, 3*p.K+1:4*p.K]
-        ds = @view du[:, :, 4*p.K+1:5*p.K]
+        dv_p = @view du[:, :, 5*p.K+1:5*p.K+1,:]
+        dv_m = @view du[:, :, 5*p.K+2:5*p.K+2,:]
 
-        dv_p = @view du[:, :, 5*p.K+1]
-        dv_m = @view du[:, :, 5*p.K+2]
-
-        x_lgn = @view ff.x_lgn[:,:,1]
-        #         x_lgn = similar(v_p)
-        #         C = similar(x)
-        #         H_z = similar(x)
-        # x_lgn = Array{eltype(u)}(undef, p.dim_i, p.dim_j)
-        #         C = reshape(Array{eltype(u)}(undef, p.dim_i, p.dim_j*p.K),p.dim_i,p.dim_j, p.K)
-        #         C = reshape(zeros(p.dim_i, p.dim_j*p.K),p.dim_i,p.dim_j, p.K)
-        # C = copy(u[:, :, 1:p.K])
-        # H_z = copy(u[:, :, 1:p.K])
-
-        fun_x_lgn!(x_lgn, x, p)
+        fun_x_lgn!(ff.x_lgn, x, p)
         fun_v_C!(ff.C, v_p, v_m, p)
         fun_H_z!(ff.H_z, z, p)
 
-        fun_dv!(dv_p, v_p, p.r, x_lgn, p)
-        fun_dv!(dv_m, v_m, .-p.r, x_lgn, p)
+        fun_dv!(dv_p, v_p, p.r, ff.x_lgn, p)
+        fun_dv!(dv_m, v_m, .-p.r, ff.x_lgn, p)
         fun_dx_v1!(dx, x, ff.C, z, p.x_V2, p)
-        fun_dy!(dy, y, ff.C, x, m, p)
-        fun_dm!(dm, m, x, p)
-        fun_dz!(dz, z, y, ff.H_z, s, p)
-        fun_ds!(ds, s, ff.H_z, p)
+#         fun_dy!(dy, y, ff.C, x, m, p)
+#         fun_dm!(dm, m, x, p)
+#         fun_dz!(dz, z, y, ff.H_z, s, p)
+#         fun_ds!(ds, s, ff.H_z, p)
 
-    end
-    nothing
+#     end
+    return nothing
 end
 
 
+
+# function (ff::MyFunction)(du, u, p, t)
+# # function f!(du, u, p, t)
+#     @inbounds begin
+#         x = @view u[:, :, 1:p.K,:]
+#         y = @view u[:, :, p.K+1:2*p.K,:]
+#         m = @view u[:, :, 2*p.K+1:3*p.K,:]
+#         z = @view u[:, :, 3*p.K+1:4*p.K,:]
+#         s = @view u[:, :, 4*p.K+1:5*p.K,:]
+
+#         v_p = @view u[:, :, 5*p.K+1:5*p.K+1,:]
+#         v_m = @view u[:, :, 5*p.K+2:5*p.K+2,:]
+
+#         dx = @view du[:, :, 1:p.K,:]
+#         dy = @view du[:, :, p.K+1:2*p.K,:]
+#         dm = @view du[:, :, 2*p.K+1:3*p.K,:]
+#         dz = @view du[:, :, 3*p.K+1:4*p.K,:]
+#         ds = @view du[:, :, 4*p.K+1:5*p.K,:]
+
+#         dv_p = @view du[:, :, 5*p.K+1:5*p.K+1,:]
+#         dv_m = @view du[:, :, 5*p.K+2:5*p.K+2,:]
+
+#         fun_x_lgn!(ff.x_lgn[:,:,:,:], x[:,:,:,:], p)
+#         fun_v_C!(ff.C[:,:,:,:], v_p[:,:,:,:], v_m[:,:,:,:], p)
+#         fun_H_z!(ff.H_z[:,:,:,:], z[:,:,:,:], p)
+
+#         fun_dv!(dv_p[:,:,:,:], v_p[:,:,:,:], p.r[:,:,:,:], ff.x_lgn[:,:,:,:], p)
+#         fun_dv!(dv_m[:,:,:,:], v_m[:,:,:,:], .-p.r[:,:,:,:], ff.x_lgn[:,:,:,:], p)
+#         fun_dx_v1!(dx[:,:,:,:], x[:,:,:,:], ff.C[:,:,:,:], z[:,:,:,:], p.x_V2[:,:,:,:], p)
+#         fun_dy!(dy[:,:,:,:], y[:,:,:,:], ff.C[:,:,:,:], x[:,:,:,:], m[:,:,:,:], p)
+#         fun_dm!(dm[:,:,:,:], m[:,:,:,:], x[:,:,:,:], p)
+#         fun_dz!(dz[:,:,:,:], z[:,:,:,:], y[:,:,:,:], ff.H_z[:,:,:,:], s[:,:,:,:], p)
+#         fun_ds!(ds[:,:,:,:], s[:,:,:,:], ff.H_z[:,:,:,:], p)
+
+#     end
+#     return nothing
+# end
+
+
+
 function kernels(img::AbstractArray, p::NamedTuple)
-    C_A_temp = reshape(
+       C_A_temp = reshape(
         Array{eltype(img)}(undef, p.C_AB_l, p.C_AB_l * p.K),
         p.C_AB_l,
         p.C_AB_l,
-        p.K,
+        1,
+		p.K
     )
-    C_B_temp = copy(C_A_temp)
-    H_temp = reshape(
-        Array{eltype(img)}(undef, p.H_l, p.H_l * p.K),
+C_B_temp = similar(C_A_temp)
+	    H_temp = reshape(
+        zeros(eltype(img), p.H_l, p.H_l * p.K * p.K),
         p.H_l,
         p.H_l,
         p.K,
-    )
-    T_temp = reshape(Array{eltype(img)}(undef, 1, 1 * p.K), 1, 1, p.K)     #ijk,  1x1xk,   ijk
-    W_temp =
-        reshape(Array{eltype(img)}(undef, p.W_l, p.W_l * p.K * p.K), p.W_l, p.W_l, p.K, p.K)     #ijk,  1x1xk,   ijk
+    p.K)
+ T_temp = reshape(Array{eltype(img)}(undef, p.K * p.K), 1, 1, p.K, p.K)     
+ W_temp =
+        reshape(Array{eltype(img)}(undef, p.W_l, p.W_l * p.K * p.K), p.W_l, p.W_l, p.K, p.K)
     for k ∈ 1:p.K
-        θ = π * (k - 1) / p.K
-        C_A_temp[:, :, k] = reflect(centered(LamKernels.kern_A(p.σ_2, θ)))           #ij ijk ijk
-        C_B_temp[:, :, k] = reflect(centered(LamKernels.kern_B(p.σ_2, θ)))               #ij ijk ijk
-        H_temp[:, :, k] = reflect(
-            p.H_fact .* LamKernels.gaussian_rot(p.H_σ_x, p.H_σ_y, θ, p.H_l),
-        )  #ijk, ij for each k; ijk
-        T_temp[:, :, k] = reshape([p.T_fact[k]], 1, 1)
+        θ = π * (k - 1.0f0) / p.K
+        C_A_temp[:, :, 1,k] = LamKernels.kern_A(p.σ_2, θ)          
+        C_B_temp[:, :, 1,k] = LamKernels.kern_B(p.σ_2, θ)               
+        H_temp[:, :, k,k] = p.H_fact .* LamKernels.gaussian_rot(p.H_σ_x, p.H_σ_y, θ, p.H_l)  
+# 		todo make T kernel more general for higher K
+        T_temp[1, 1, k,1] = p.T_fact[k]
+        T_temp[1, 1, 2,2] = p.T_fact[1]
+        T_temp[1, 1, 1,2] = p.T_fact[2]
         #todo: generalise T and W for higher K
         #         T_temp[:,:,k] = KernelFactors.gaussian(p.T_σ, p.K)
         #         for l ∈ 1:p.K
         #             W_temp[:,:,l,k] =
         #         end
     end
-    W_temp[:, :, 1, 1] = reflect(
-        5 .* LamKernels.gaussian_rot(3, 0.8, 0, p.W_l) .+
-        LamKernels.gaussian_rot(0.4, 1, 0, p.W_l),
-    )
-    W_temp[:, :, 2, 2] = reflect(
-        5 .* LamKernels.gaussian_rot(3, 0.8, π / 2, p.W_l) .+
-        LamKernels.gaussian_rot(0.4, 1, π / 2, p.W_l),
-    )
-    W_temp[:, :, 1, 2] = reflect(relu.(
-        0.2 .- LamKernels.gaussian_rot(2, 0.6, 0, p.W_l) .-
-        LamKernels.gaussian_rot(0.3, 1.2, 0, p.W_l),
-    ))
-    W_temp[:, :, 2, 1] = reflect(relu.(
-        0.2 .- LamKernels.gaussian_rot(2, 0.6, π / 2, p.W_l) .-
-        LamKernels.gaussian_rot(0.3, 1.2, π / 2, p.W_l),
-    ))
 
-    # todo fix W kernel
-    #  W_temp[:,:,1,1] = reflect(LamKernels.gaussian_rot(3,0.8,0,19))
-    #     W_temp[:,:,2,2] = reflect(LamKernels.gaussian_rot(3,0.8,0,19))
-    #     W_temp[:,:,1,2] = reflect(LamKernels.gaussian_rot(3,0.8,0,19))
-    #     W_temp[:,:,2,1] = reflect(LamKernels.gaussian_rot(3,0.8,0,19))
-
-    # todo: fix range of W H
-    #     W_range = -(p.W_size-1)/2:(p.W_size-1)/2
-    #     H_range = -(p.H_size-1)/2:(p.H_size-1)/2
-    W_range = -9:9
-    H_range = -9:9
-
-    temp_out = (
-        k_gauss_1 = reflect(Kernel.gaussian(p.σ_1)),
-        k_gauss_2 = reflect(Kernel.gaussian(p.σ_2)),
+    W_temp[:, :, 1, 1] =
+        5f0 .* LamKernels.gaussian_rot(3f0, 0.8f0, 0f0, p.W_l) .+
+        LamKernels.gaussian_rot(0.4f0, 1f0, 0f0, p.W_l)
+    
+	W_temp[:, :, 2, 2] =
+        5f0 .* LamKernels.gaussian_rot(3f0, 0.8f0,  π / 2f0, p.W_l) .+
+        LamKernels.gaussian_rot(0.4f0, 1f0, π / 2f0, p.W_l)
+    
+	W_temp[:, :, 1, 2] = relu.(
+        0.2f0 .- LamKernels.gaussian_rot(2f0, 0.6f0, 0f0, p.W_l) .-
+        LamKernels.gaussian_rot(0.3f0, 1.2f0, 0f0, p.W_l))
+    
+	W_temp[:, :, 2, 1] = relu.(
+        0.2f0 .- LamKernels.gaussian_rot(2f0, 0.6f0, π / 2f0, p.W_l) .-
+        LamKernels.gaussian_rot(0.3f0, 1.2f0, π / 2f0, p.W_l))
+	
+#     W_temp[:, :, 1, 1] =
+#         5f0 .* LamKernels.gaussian_rot(3f0, 0.8f0, 0f0, p.W_l) .+
+#         LamKernels.gaussian_rot(0.4f0, 1f0, 0f0, p.W_l)
+#     W_temp[:, :, 2, 2] =
+#         5f0 .* LamKernels.gaussian_rot(3f0, 0.8f0, 0f0, p.W_l) .+
+#         LamKernels.gaussian_rot(0.4f0, 1f0, π / 2f0, p.W_l)
+#     W_temp[:, :, 1, 2] = relu.(
+#         0.2f0 .- LamKernels.gaussian_rot(2f0, 0.6f0, 0f0, p.W_l) .-
+#         LamKernels.gaussian_rot(0.3f0, 1.2f0, 0f0, p.W_l))
+#     W_temp[:, :, 2, 1] = relu.(
+#         0.2f0 .- LamKernels.gaussian_rot(2f0, 0.6f0, 0f0, p.W_l) .-
+#         LamKernels.gaussian_rot(0.3f0, 1.2f0, π / 2f0, p.W_l))
+	
+temp_out = (
+        k_gauss_1 = reshape2d_4d(Kernel.gaussian(p.σ_1)),
+        k_gauss_2 = reshape2d_4d(Kernel.gaussian(p.σ_2)),
         k_C_A = C_A_temp,
         k_C_B = C_B_temp,
+		
+# 		todo use mean of x_lgn?
+		k_x_lgn = reshape(ones(Float32,1,p.K),1,1,p.K,1),
+# 		k_x_lgn = reshape(ones(Float32,1,p.K),1,1,p.K,1))./p.K,
         k_W_p = W_temp,
         k_W_m = W_temp,
-        # k_W_m = OffsetArray(W_temp, W_range, W_range, 1:p.K, 1:p.K),
         k_H = H_temp,
-        # k_H = OffsetArray(H_temp, H_range, H_range, 1:p.K),
         k_T_p = T_temp,
-        k_T_m = (p.T_p_m .* T_temp),
-        k_T_p_v2 = (p.T_v2_fact .* T_temp),
-        k_T_m_v2 = (p.T_v2_fact .* p.T_p_m .* T_temp),
+        k_T_m = p.T_p_m .* T_temp,
+        k_T_p_v2 = p.T_v2_fact .* T_temp,
+        k_T_m_v2 = p.T_v2_fact .* p.T_p_m .* T_temp,
         dim_i = size(img)[1],
         dim_j = size(img)[2],
-        x_V2 = reshape(
-            zeros(typeof(img[1, 1]), size(img)[1], size(img)[2] * p.K),
-            size(img)[1],
-            size(img)[2],
-            p.K,
-        ),
-    )
-    return merge(p, temp_out)
+        x_V2 = reshape(zeros(Float32, size(img)[1], size(img)[2] * p.K), size(img)[1], size(img)[2],p.K,1),
+ν_pw_n= p.ν^p.n, )
+merge(p, temp_out)
+end
+
+
+function reshape2d_4d(img::AbstractArray)
+    reshape(img, size(img)[1], size(img)[2], 1, 1)
+end
+
+# function reshape_ijk_ij1k(img::AbstractArray, p::NamedTuple)
+#     reshape(img, size(img)[1], size(img)[2], 1, p.K)
+# end
+	
+	
+function conv!(out::AbstractArray, img::AbstractArray, kern::AbstractArray, p::NamedTuple)
+	out_ = @view out[:,:,:,:]
+    out_ .= NNlib.conv(img, kern, pad=(size(kern)[1]>>1, size(kern)[1]>>1, size(kern)[2]>>1, size(kern)[2]>>1), flipped=true)
+# 	@. out_ = out
+    return nothing
+end
+
+
+function conv_dw!(out::AbstractArray, img::AbstractArray, kern::AbstractArray, p::NamedTuple)
+     out = NNlib.depthwiseconv(img, kern, pad=(size(kern)[1]>>1, size(kern)[2]>>1, size(kern)[3]>>1, size(kern)[4]>>1), flipped=true)
+    return nothing
 end
 
 
@@ -248,15 +336,21 @@ end
 # end
 
 function add_I_u_p(I::AbstractArray, p::NamedTuple)
-    temp_out = (I = I, r = I_u(I, p))
+# 	todo fix
+	I_4d = CuArray(reshape2d_4d(I))
+	r = similar(I_4d)
+	I_u!(r, I_4d, p)
+    temp_out = (I = I_4d, r = r)
     return merge(p, temp_out)
 end
 
 
 # retina
 
-function I_u(I::AbstractArray, p::NamedTuple)
-    return I - imfilter(I, p.k_gauss_1, p.filling)
+function I_u!(r::AbstractArray, I::AbstractArray, p::NamedTuple)
+    
+	conv!(r, I, p.k_gauss_1, p)
+    @. r = I - r
 end
 
 
@@ -265,12 +359,8 @@ end
 
 
 function fun_x_lgn!(x_lgn::AbstractArray, x::AbstractArray, p::NamedTuple)
-    @. x_lgn = 0.0
-    # @inbounds begin
-        for k ∈ 1:p.K
-            @. x_lgn += @view x[:, :, k]
-        # end
-    end
+	out_ = @view x_lgn[:,:,:,:]
+	    out_ .= NNlib.conv(x[:,:,:,:], p.k_x_lgn, pad=0,flipped=true)
     return nothing
 end
 
@@ -289,7 +379,7 @@ end
 
 
 function fun_f!(f_out::AbstractArray, x::AbstractArray, p::NamedTuple)
-    @. f_out = (p.μ * x^p.n) / (p.ν^p.n + x^p.n)
+    @. f_out = (p.μ * x^p.n) / (p.ν_pw_n + x^p.n)
     return nothing
 end
 
@@ -335,7 +425,7 @@ function fun_dv!(
     x_lgn::AbstractArray,
     p::NamedTuple,
 )
-    imfilter!(dv, x_lgn, centered(p.k_gauss_1), p.filling)
+	conv!(dv, x_lgn, p.k_gauss_1, p)
     @. dv =
         p.δ_v * (
             -v + ((1f0 - v) * max(u, 0f0) * (1f0 + p.C_1 * x_lgn)) -
@@ -356,18 +446,14 @@ function fun_v_C!(
     temp = similar(v_p)
 
     @. temp = exp(-1.0f0 / 8.0f0) * (max(v_p, 0) - max(v_m, 0))
-    imfilter!(V, temp, centered(p.k_gauss_2), p.filling)
+    conv!(V, temp, p.k_gauss_2, p)
 
     A = similar(v_C)
     #     allocate B to v_C
-    # @inbounds begin
-        for k ∈ 1:p.K
-            a = @view A[:, :, k]
-            b = @view v_C[:, :, k]
-            imfilter!(a, V, centered(p.k_C_A[:, :, k]), p.filling)
-            imfilter!(b, V, centered(p.k_C_B[:, :, k]), p.filling)
-        end
-    # end
+    
+	conv!(A, V, p.k_C_A, p)
+	conv!(v_C, V, p.k_C_B, p)
+ 
     @. v_C = p.γ * (max(A - abs(v_C), 0) + max(-A - abs(v_C), 0))
     return nothing
 end
@@ -406,7 +492,7 @@ function fun_dy!(
     m::AbstractArray,
     p::NamedTuple,
 )
-    func_filter_W!(dy, m, p.k_W_p, p)
+    conv!(dy, m, p.k_W_p, p)
     @. dy = m * dy
     fun_f!(dy, dy, p)
     @. dy = p.δ_c * (-y + ((1 - y) * (C + (p.η_p * x))) - ((1 + y) * dy))
@@ -421,7 +507,7 @@ function fun_dm!(
     x::AbstractArray,
     p::NamedTuple,
 )
-    func_filter_W!(dm, m, p.k_W_m, p)
+    conv!(dm, m, p.k_W_m, p)
     fun_f!(dm, dm, p)
     @. dm = p.δ_m * (-m + (p.η_m * x) - (m * dm))
     return nothing
@@ -438,7 +524,7 @@ function fun_dz!(
     s::AbstractArray,
     p::NamedTuple,
 )
-    imfilter!(dz, s, centered(p.k_T_p), p.filling)
+    conv!(dz, s, p.k_T_p, p)
     @. dz =
         p.δ_z * (
             -z + ((1 - z) * ((p.λ * max(y, 0)) + H_z + (p.a_23_ex * p.att))) -
@@ -454,22 +540,14 @@ function fun_ds!(
     H_z::AbstractArray,
     p::NamedTuple,
 )
-    imfilter!(ds, s, centered(p.k_T_m), p.filling)
+    conv!(ds, s, p.k_T_m, p)
     @. ds = p.δ_s * (-s + H_z + (p.a_23_in * p.att) - (s * ds))
     return nothing
 end
 
 
 function fun_H_z!(H_z::AbstractArray, z::AbstractArray, p::NamedTuple)
-    temp = similar(z)
-    @. temp = max(z - p.Γ, 0)
-    # @inbounds begin
-        for k ∈ 1:p.K
-            H_z_k = @view H_z[:, :, k]
-            temp_k = @view temp[:, :, k]
-            imfilter!(H_z_k, temp_k, centered(p.k_H[:, :, k]), p.filling)
-        end
-    # end
+	conv!(H_z, max.(z .- p.Γ, 0f0), p.k_H, p)
     return nothing
 end
 
@@ -506,7 +584,7 @@ function fun_dy_v2!(
     m_v2::AbstractArray,
     p::NamedTuple,
 )
-    func_filter_W!(dy, m_v2, p.k_W_p, p)
+    conv!(dy, m_v2, p.k_W_p, p)
     fun_f!(dy, dy, p)
     @. dy =
         p.δ_c * (
@@ -605,3 +683,4 @@ end
 # end
 
 end
+
