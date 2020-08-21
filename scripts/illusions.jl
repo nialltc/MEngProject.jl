@@ -4,7 +4,7 @@ using MEngProject, CUDA, DifferentialEquations, PyPlot, NNlib,  ImageFiltering, 
 
 using OrdinaryDiffEq, ParameterizedFunctions, LSODA, Sundials, DiffEqDevTools, Noise
 
-batch = 0001
+batch = 1
 
 
 files = readdir(datadir("img"))
