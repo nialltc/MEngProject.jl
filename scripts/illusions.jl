@@ -13,11 +13,11 @@ tspan = (0.0f0, 800f0)
 
 batch_ = string(batch,"_",rand(1000:9999))
 
-for f in files
+for f in files[2:end]
 	
 	p = LaminartInitFunc.parameterInit_conv_gpu(datadir("img",f), Parameters.parameters_f32);
 	
-	u0 = cureshape(zeros(Float32, p.dim_i, p.dim_j*(5*2+2)), p.dim_i, p.dim_j, 5*2+2,1))
+	u0 = cu(reshape(zeros(Float32, p.dim_i, p.dim_j*(5*2+2)), p.dim_i, p.dim_j, 5*2+2,1))
 	
 	arr1 = u0[:, :, 1:2,:]
 arr2 = u0[:, :, 1:1,:];
@@ -42,7 +42,7 @@ arr2 = u0[:, :, 1:1,:];
     )
 
 	prob = ODEProblem(f, u0, tspan, p)
-	@benchmark sol = solve(prob)
+# 	@benchmark sol = solve(prob)
 	sol = solve(prob)
 	
 	
@@ -57,18 +57,15 @@ arr2 = u0[:, :, 1:1,:];
 						   vmax=axMax, vmin=-axMax)
 			im2 = ax.imshow(sol(t)[:,:,k+1,1], cmap=matplotlib.cm.RdBu_r,
 						   vmax=axMax, vmin=-axMax, alpha=0.5)
-			#     if clbar
 
 			cbar = fig.colorbar(im2,  shrink=0.9, ax=ax)
 			cbar.ax.set_xlabel("\$k=$k2\$")
 					cbar = fig.colorbar(im,  shrink=0.9, ax=ax)
 			cbar.ax.set_xlabel("\$k=$k\$")
-			#     end
 			layer=Utils.layers[k]
 				plt.title("Layer: $layer, \$t=$t\$")
 				plt.axis("off")
 				fig.tight_layout()
-			#     plt.show()
 			plt.savefig(plotsdir(string("batch",batch_),string(f,"_",t,"_",Utils.la[k],".png")))
 		end
 
@@ -95,4 +92,16 @@ arr2 = u0[:, :, 1:1,:];
 	end
 	
 	
+# time plot
+	fig, axs = plt.subplots()
+	lines = ["b--","g--","r-.","c-.","r:","c:","m-","y-","m:","y:","b-.","g-."]
+	for k ∈ 1:12
+		layer=Utils.layers_1[k]
+		axs.plot(sol[findmax(sol[:,:,k,1,end])[2][1],findmax(sol[:,:,k,1,end])[2][2],k,1,:],lines[k], label="$layer")
+	end
+	axs.set_xlabel("Time")
+	axs.set_ylabel("Activation")
+	plt.legend()
+	fig.tight_layout()
+	plt.savefig(plotsdir(string("batch",batch_),string(f,"_time.png")))
 end
