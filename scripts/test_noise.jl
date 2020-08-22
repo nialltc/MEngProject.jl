@@ -27,7 +27,7 @@ tspan = (0.0f0, 800f0)
 batch_ = string(batch, "_", rand(1000:9999))
 mkdir(plotsdir(string("noise", batch_)))
 for file in files[1:end]
-    for noise in [0.2f0, 0.4f0, 0.7f0, 1f0, 1.5f0, 2f0]
+    for noise in [0.01f0, 0.05f0, 0.1f0, 2f0, 0.5f0, 1f0]
         try
             p = LaminartInitFunc.parameterInit_conv_gpu_noise(
                 datadir("img", file),
