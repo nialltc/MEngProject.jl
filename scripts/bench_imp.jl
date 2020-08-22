@@ -10,111 +10,244 @@ batch = 1
 files = readdir(datadir("img"))
 
 
-@inbounds begin
-	tspan = (0.0f0,800f0)
+global benches = []
 
-	batch_ = string(batch,"_",rand(1000:9999))
-	mkdir(plotsdir(string("bench_imp",batch_)))
-	for file in files[2:end]
+tspan = (0.0f0,10f0)
 
-		p = LaminartInitFunc.parameterInit_conv_gpu(datadir("img",file), Parameters.parameters_f32);
+batch_ = string(batch,"_",rand(1000:9999))
+mkdir(plotsdir(string("bench_imp",batch_)))
+file = "kan_sq_cont_l.png"
 
-		u0 = cu(reshape(zeros(Float32, p.dim_i, p.dim_j*(5*p.K+2)), p.dim_i, p.dim_j, 5*p.K+2,1))
+test_name_plt = ["CPU conv", "GPU conv",  "CPU imfilter", "GPU imfilter FFT", "GPU imfilter FIR", "GPU imfilter IIR"]
 
-		arr1 = similar(u0[:, :, 1:2,:])
-		arr2 = similar(u0[:, :, 1:1,:])
+# GPU
+p = LaminartInitFunc.parameterInit_conv_gpu(datadir("img",file), Parameters.parameters_f32);
 
-		f = LaminartFunc.LamFunction(
-			arr1, #x
-			similar(arr1), #m
-			similar(arr1), #s
-			arr2, #x_lgn,
-			similar(arr1), #C,
-			similar(arr1), #H_z,
-			similar(arr1), # dy_temp,
-			similar(arr1), # dm_temp,
-			similar(arr1), # dz_temp,
-			similar(arr1), # ds_temp,
-			similar(arr2), # dv_temp,
-			similar(arr1), # H_z_temp,
-			similar(arr2), #  V_temp_1,
-			similar(arr2), #  V_temp_2,
-			similar(arr1), #  A_temp,
-			similar(arr1), #   B_temp
-		)
-		prob = ODEProblem(f, u0, tspan, p)
-	# 	@benchmark sol = solve(prob)
-		sol = solve(prob)
+u0 = cu(reshape(zeros(Float32, p.dim_i, p.dim_j*(5*p.K+2)), p.dim_i, p.dim_j, 5*p.K+2,1))
 
+arr1 = similar(u0[:, :, 1:2,:])
+arr2 = similar(u0[:, :, 1:1,:])
 
-		for t ∈ [25,50,100,200,400,800]
-# 				for t ∈ [25,50,100]
-
-			v0 = @view sol(t)[:,:,:,1]
-			axMax = findmax(v0)[1]
-
-			for k ∈ 1:2:10
-				fig, ax = plt.subplots()
-
-				v1 = @view sol(t)[:,:,k,1]
-				v2 = @view sol(t)[:,:,k+1,1]
-				im = ax.imshow(v1, cmap=matplotlib.cm.PRGn,
-							   vmax=axMax, vmin=-axMax)
-				im2 = ax.imshow(v2, cmap=matplotlib.cm.RdBu_r,
-							   vmax=axMax, vmin=-axMax, alpha=0.5)
-
-				cbar = fig.colorbar(im2,  shrink=0.9, ax=ax)
-				cbar.ax.set_xlabel("\$k=$k2\$")
-						cbar = fig.colorbar(im,  shrink=0.9, ax=ax)
-				cbar.ax.set_xlabel("\$k=$k\$")
-				layer=Utils.layers[k]
-					plt.title("Layer: $layer, \$t=$t\$")
-					plt.axis("off")
-					fig.tight_layout()
-				plt.savefig(plotsdir(string("bench_imp",batch_),string(file,"_",t,"_",Utils.la[k],".png")))
-				close("all")
-			end
+f = LaminartFunc.LamFunction(
+	arr1, #x
+	similar(arr1), #m
+	similar(arr1), #s
+	arr2, #x_lgn,
+	similar(arr1), #C,
+	similar(arr1), #H_z,
+	similar(arr1), # dy_temp,
+	similar(arr1), # dm_temp,
+	similar(arr1), # dz_temp,
+	similar(arr1), # ds_temp,
+	similar(arr2), # dv_temp,
+	similar(arr1), # H_z_temp,
+	similar(arr2), #  V_temp_1,
+	similar(arr2), #  V_temp_2,
+	similar(arr1), #  A_temp,
+	similar(arr1), #   B_temp
+)
+prob = ODEProblem(f, u0, tspan, p)
+bm = @benchmark solve(prob)
+push!(benches, bm)
 
 
-			k=11
-			fig, ax = plt.subplots()
-			v1 = @view sol[:,:,k,1,t]
-			v2 = @view sol[:,:,k+1,1,t]
-			im = ax.imshow(v1, cmap=matplotlib.cm.PRGn,
-						   vmax=axMax, vmin=-axMax)
-			im2 = ax.imshow(v2, cmap=matplotlib.cm.RdBu_r,
-						   vmax=axMax, vmin=-axMax, alpha=0.5)
 
-			cbar = fig.colorbar(im2,  shrink=0.9, ax=ax)
-			cbar.ax.set_xlabel("\$v^-\$")
-					cbar = fig.colorbar(im,  shrink=0.9, ax=ax)
-			cbar.ax.set_xlabel("\$v^+\$")
+# CPU conv
 
-			layer=Utils.layers[k]
-				plt.title("Layer: $layer, \$t=$t\$")
-				plt.axis("off")
-				fig.tight_layout()
+p = LaminartInitFunc.parameterInit_conv_cpu(datadir("img",file), Parameters.parameters_f32);
 
-			plt.savefig(plotsdir(string("bench_imp",batch_),string(file,"_",t,"_",Utils.la[k],".png")))
-			close("all")
-		end
+u0 = reshape(zeros(Float32, p.dim_i, p.dim_j*(5*p.K+2)), p.dim_i, p.dim_j, 5*p.K+2,1)
 
 
-	# time plot
-		fig, axs = plt.subplots()
+f = LaminartFunc.LamFunction(
+	arr1, #x
+	similar(arr1), #m
+	similar(arr1), #s
+	arr2, #x_lgn,
+	similar(arr1), #C,
+	similar(arr1), #H_z,
+	similar(arr1), # dy_temp,
+	similar(arr1), # dm_temp,
+	similar(arr1), # dz_temp,
+	similar(arr1), # ds_temp,
+	similar(arr2), # dv_temp,
+	similar(arr1), # H_z_temp,
+	similar(arr2), #  V_temp_1,
+	similar(arr2), #  V_temp_2,
+	similar(arr1), #  A_temp,
+	similar(arr1), #   B_temp
+)
+prob = ODEProblem(f, u0, tspan, p)
+bm = @benchmark solve(prob)
+push!(benches, bm)
 
-		for k ∈ 1:12
-			v3 = @view sol[:,:,k,1,end]
-			v4 = @view sol[findmax(v3)[2][1],findmax(v3)[2][2],k,1,:]
-			layer=Utils.layers_1[k]
-			axs.plot(v4,Utils.lines[k], label="$layer")
-		end
-		axs.set_xlabel("Time")
-		axs.set_ylabel("Activation")
-		plt.legend()
-		fig.tight_layout()
-		plt.savefig(plotsdir(string("bench_imp",batch_),string(file,"_time.png")))
-		close("all")
-	end
 
+# CPU imfilter
+
+p = LaminartInitFunc.parameterInit_imfil_cpu(datadir("img",file), Parameters.parameters_f32);
+
+u0 = reshape(zeros(Float32, p.dim_i, p.dim_j*(5*p.K+2)), p.dim_i, p.dim_j, 5*p.K+2)
+
+arr1 = similar(u0[:, :, 1:2])
+arr2 = similar(u0[:, :, 1:1])
+
+f = LaminartFunc.LamFunction_imfil_cpu(
+	arr2, #x_lgn,
+	arr1, #C,
+	similar(arr1), #H_z,
+   	similar(arr1), # H_z_temp,
+   	similar(arr2), # v_C_temp1,
+   	similar(arr2), # v_C_temp2,
+   	similar(arr1), # v_C_tempA,
+   	similar(arr1[:,:,1]), #W_temp
+)
+prob = ODEProblem(f, u0, tspan, p)
+bm = @benchmark solve(prob)
+push!(benches, bm)
+
+
+
+# GPU imfilter FFT
+
+p = LaminartInitFunc.parameterInit_imfil_cpu(datadir("img",file), Parameters.parameters_f32);
+
+u0 = reshape(zeros(Float32, p.dim_i, p.dim_j*(5*p.K+2)), p.dim_i, p.dim_j, 5*p.K+2)
+
+
+f = LaminartFunc.LamFunction_imfil_cpu(
+	arr2, #x_lgn,
+	arr1, #C,
+	similar(arr1), #H_z,
+   	similar(arr1), # H_z_temp,
+   	similar(arr2), # v_C_temp1,
+   	similar(arr2), # v_C_temp2,
+   	similar(arr1), # v_C_tempA,
+   	similar(arr1[:,:,1]), #W_temp
+)
+prob = ODEProblem(f, u0, tspan, p)
+bm = @benchmark solve(prob)
+push!(benches, bm)
+
+
+
+# GPU imfilter IIR
+
+p = LaminartInitFunc.parameterInit_imfil_cpu(datadir("img",file), Parameters.parameters_f32);
+
+u0 = reshape(zeros(Float32, p.dim_i, p.dim_j*(5*p.K+2)), p.dim_i, p.dim_j, 5*p.K+2)
+
+
+f = LaminartFunc.LamFunction_imfil_cpu(
+	arr2, #x_lgn,
+	arr1, #C,
+	similar(arr1), #H_z,
+   	similar(arr1), # H_z_temp,
+   	similar(arr2), # v_C_temp1,
+   	similar(arr2), # v_C_temp2,
+   	similar(arr1), # v_C_tempA,
+   	similar(arr1[:,:,1]), #W_temp
+)
+prob = ODEProblem(f, u0, tspan, p)
+bm = @benchmark solve(prob)
+push!(benches, bm)
+
+
+
+# GPU imfilter FIR
+
+p = LaminartInitFunc.parameterInit_imfil_cpu(datadir("img",file), Parameters.parameters_f32);
+
+u0 = reshape(zeros(Float32, p.dim_i, p.dim_j*(5*p.K+2)), p.dim_i, p.dim_j, 5*p.K+2)
+
+
+
+f = LaminartFunc.LamFunction_imfil_cpu(
+	arr2, #x_lgn,
+	arr1, #C,
+	similar(arr1), #H_z,
+   	similar(arr1), # H_z_temp,
+   	similar(arr2), # v_C_temp1,
+   	similar(arr2), # v_C_temp2,
+   	similar(arr1), # v_C_tempA,
+   	similar(arr1[:,:,1]), #W_temp
+)
+prob = ODEProblem(f, u0, tspan, p)
+bm = @benchmark solve(prob)
+push!(benches, bm)
+
+
+# benchmark plot
+
+fig, ax = plt.subplots()
+for ben in enumerate(test_name_plt)
+    ax.scatter(
+        median(benches[ben[1]].times) * 1e-9,
+        ben[2],
+        color = Utils.colours[ben[1]],
+        alpha = 0.3,
+        edgecolors = "none",
+    )
 end
+
+
+ax.legend()
+ax.set_ylabel("Time (\$s\$)")
+ax.grid(True)
+fig.tight_layout()
+plt.savefig(plotsdir(
+    string("bench_imp", batch_),
+    string("bench_imp_time.png"),
+))
+close("all")
+
+
+
+
+# memory
+
+fig, ax = plt.subplots()
+for ben in enumerate(test_name_plt)
+    ax.scatter(
+        benches[ben[1]].memory * 1e-6,
+        ben[2],
+        color = Utils.colours[ben[1]],
+        alpha = 0.3,
+        edgecolors = "none",
+    )
+end
+
+
+ax.legend()
+ax.set_ylabel("Memory (\$MB\$)")
+ax.grid(True)
+fig.tight_layout()
+plt.savefig(plotsdir(
+    string("bench_imp", batch_),
+    string("bench_imp_mem.png"),
+))
+close("all")
+
+
+# alloc
+
+fig, ax = plt.subplots()
+for ben in enumerate(test_name_plt)
+    ax.scatter(
+        benches[ben[1]].allocs * 1e-6,
+        ben[2],
+        color = Utils.colours[ben[1]],
+        alpha = 0.3,
+        edgecolors = "none",
+    )
+end
+
+
+ax.legend()
+ax.set_ylabel("Allocations")
+ax.grid(True)
+fig.tight_layout()
+plt.savefig(plotsdir(
+    string("bench_imp", batch_),
+    string("bench_imp_alloc.png"),
+))
+close("all")
