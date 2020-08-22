@@ -18,7 +18,7 @@ include("./LaminartEqImfilter.jl")
 include("./LaminartKernels.jl")
 
 
-using NNlib, ImageFiltering, Images, OffsetArrays, CUDA
+using NNlib, ImageFiltering, Images, OffsetArrays, CUDA, Noise
 
 function parameterInit_conv_gpu(imgLoc::String, p::NamedTuple)
     img = convert(Array{Float32,2},  load(imgLoc));
@@ -35,6 +35,22 @@ function parameterInit_conv_gpu(imgLoc::String, p::NamedTuple)
     return parameters
 end
 
+
+function parameterInit_conv_gpu_noise(imgLoc::String, p::NamedTuple, noise::Real)
+    img = convert(Array{Float32,2},  load(imgLoc));
+	img = add_gauss(img, noise)
+    img = reshape2d_4d(img)
+    img = cu(img)
+
+    r = similar(img)
+
+    parameters = kernels_conv_gpu(img, p);
+
+    LaminartEqConv.I_u!(r, img, parameters)
+    temp_out = (I = img, r = r)
+    parameters = merge(parameters, temp_out)
+    return parameters
+end
 
 function parameterInit_conv_cpu(imgLoc::String, p::NamedTuple)
     img = convert(Array{Float32,2},  load(imgLoc));
