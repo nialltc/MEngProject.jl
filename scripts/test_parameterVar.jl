@@ -39,7 +39,24 @@ files = ["kan_sq_cont_l.png"]
 		]
 		test_name =["base","C1C2_0","C2_1","C1_25","phi0","phi4","Gamma01","Gamma04","etaP3_etaM05","etaP1_etaM25","lamda05","lamda15","psi1","psi0","fb_half","fb0","fb_doub"]
 		
-		test_name_plt =["Base","\$C_1, C_2 =0\$","\$C_2=1\$","\$C_1= 2.5\$","\$\phi =0\$","\$\phi = 4\$","\$\Gamma= 0.101\$","\$\Gamma=0.4\$","\$\eta^+ =3,\eta^-=0.5\$","\$\eta^+=1, \$\eta^-=2.5\$","\$\lamda=0.5\$","\$\lamda=1.5\$","\$\psi = 1\$","\$psi=0\$","All feedback halved","All feedback \$=0\$","All feedback doubled"]
+		test_name_plt =[
+			"Base", 
+			"\$C_1, C_2 =0\$", 
+			"\$C_2=1\$", 
+			"\$C_1= 2.5\$", 
+			"\$ϕ =0\$", 
+			"\$ϕ = 4\$", 
+			"\$Γ= 0.101\$",
+			"\$Γ=0.4\$",
+			"\$η^+ =3,η^-=0.5\$",
+			"\$η^+=1, \$η^-=2.5\$",
+			"\$λ=0.5\$",
+			"\$λ=1.5\$",
+			"\$ψ = 1\$",
+			"\$ψ=0\$",
+			"All feedback halved",
+			"All feedback \$=0\$",
+			"All feedback doubled"]
 		
 		for para_test in para_sets
 			test_no += 1
@@ -51,10 +68,10 @@ files = ["kan_sq_cont_l.png"]
 			arr2 = similar(u0[:, :, 1:1,:])
 
 			f = LaminartFunc.LamFunction(
-				similar(arr1), #x
+				arr1, #x
 				similar(arr1), #m
 				similar(arr1), #s
-				similar(arr2), #x_lgn,
+				arr2, #x_lgn,
 				similar(arr1), #C,
 				similar(arr1), #H_z,
 				similar(arr1), # dy_temp,
@@ -81,6 +98,7 @@ files = ["kan_sq_cont_l.png"]
 				axMax = findmax(v0)[1]
 
 				for k ∈ 1:2:10
+                    k2=k+1
 					fig, ax = plt.subplots()
 
 					v1 = @view sol(t)[:,:,k,1]
@@ -122,7 +140,7 @@ files = ["kan_sq_cont_l.png"]
 					plt.axis("off")
 					fig.tight_layout()
 
-				plt.savefig(plotsdir(string("paraVar",batch_),string(file,"_para_",test_name[test_no],"_t",t,"_",Utils.la[k],".png")))
+				plt.savefig(plotsdir(string("paraVar", batch_), string(file, "_para_", test_name[test_no], "_t", t, "_", Utils.la[k], ".png")))
 				close("all")
 			end
 
@@ -134,14 +152,14 @@ files = ["kan_sq_cont_l.png"]
 				v3 = @view sol[:,:,k,1,end]
 				v4 = @view sol[findmax(v3)[2][1],findmax(v3)[2][2],k,1,:]
 				layer=Utils.layers_1[k]
-				axs.plot(v4,Utils.lines[k], label="$layer")
+				axs.plot(v4, Utils.lines[k], label="$layer")
 			end
 			axs.set_xlabel("Time")
 			axs.set_ylabel("Activation")
-			plt.title(string(test_name_plt[test_no])
+			plt.title(test_name_plt[test_no])
 			plt.legend()
 			fig.tight_layout()
-			plt.savefig(plotsdir(string("paraVar",batch_),string(file,"_para_",test_name[test_no],"_time.png")))
+			plt.savefig(plotsdir(string("paraVar", batch_), string(file, "_para_", test_name[test_no], "_time.png")))
 			close("all")
 		end
 	end

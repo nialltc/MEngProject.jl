@@ -92,10 +92,10 @@ W_l = 19)
 
 
 
-function para_var(va::Dict)
+function para_var(va::NamedTuple)
 	"""
-	Takes in dict with C_1, C_2, ϕ, Γ, η_p, η_m, λ, ψ
-	Returns parameters dict with these values replaced
+	Takes in named tuple with C_1, C_2, ϕ, Γ, η_p, η_m, λ, ψ
+	Returns parameters named tuple with these values replaced
 	"""
 	p_temp_f32 = (σ_1 = 1.0f0,
 	σ_2 = 0.5f0,
@@ -177,10 +177,10 @@ function para_var(va::Dict)
 end
 
 
-function para_var_k(va::Dict)
+function para_var_k(va::NamedTuple)
 	"""
-	Takes in dict with H_fact, T_fact, T_p_m, W_p_same_fact, W_m_same_fact, H_l, W_l
-	Returns parameters dict with these values replaced
+	Takes in named tuple with H_fact, T_fact, T_p_m, W_p_same_fact, W_m_same_fact, H_l, W_l
+	Returns parameters named tuple with these values replaced
 	"""
 	p_temp_f32 = (σ_1 = 1.0f0,
 	σ_2 = 0.5f0,
