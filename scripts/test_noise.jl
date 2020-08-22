@@ -101,7 +101,7 @@ for file in files[1:end]
                         cbar = fig.colorbar(im, shrink = 0.9, ax = ax)
                         cbar.ax.set_xlabel("\$k=$k\$")
                         layer = Utils.layers[k]
-                        plt.title("Layer: $layer, \$t=$t\$, noise\$σ=$noise\$")
+                        plt.title("Layer: $layer, \$t=$t\$, noise \$σ=$noise\$")
                         plt.axis("off")
                         fig.tight_layout()
                         plt.savefig(plotsdir(
@@ -145,7 +145,7 @@ for file in files[1:end]
                     cbar.ax.set_xlabel("\$v^+\$")
 
                     layer = Utils.layers[k]
-                    plt.title("Layer: $layer, \$t=$t\$, noise\$σ=$noise\$")
+                    plt.title("Layer: $layer, \$t=$t\$, noise \$σ=$noise\$")
                     plt.axis("off")
                     fig.tight_layout()
 
