@@ -8,7 +8,7 @@ batch = 1
 
 
 files = readdir(datadir("img"))
-
+let
 @inbounds begin
 	tspan = (0.0f0,800f0)
 
@@ -118,4 +118,5 @@ files = readdir(datadir("img"))
 		close("all")
 	end
 
+end
 end

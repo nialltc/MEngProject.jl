@@ -19,15 +19,15 @@ using OrdinaryDiffEq,
 batch = 1
 
 
-files = readdir(datadir("img", "res_test"))
+files = readdir(datadir("res_test"))
 # files = ["kan_sq_cont_l.png"]
-
+let
 @inbounds begin
     tspan = (0.0f0, 10f0)
 
     batch_ = string(batch, "_", rand(1000:9999))
     mkdir(plotsdir(string("bench_dim", batch_)))
-    test_no = 0
+
 
     test_name = ["025", "050", "075", "100", "200", "300", "400"]
     test_name_plt = [
@@ -39,20 +39,20 @@ files = readdir(datadir("img", "res_test"))
         "\$300×300\$",
         "\$400×400\$",
     ]
-
+	test_no = 0
     benchm_gpu = []
 	benchm_cpu = []
 	y1Res_gpu = []
 	y1Res_cpu = []
 
-    for file in files[1:end]
+    for file in files[1:1]
 
 
         # 		for para_test in para_sets
         test_no += 1
         p = LaminartInitFunc.parameterInit_conv_gpu(
             datadir("img", file),
-            Parameters.para_var(para_test),
+            Parameters.parameters_f32,
         )
 
         u0 = cu(reshape(
@@ -154,7 +154,7 @@ files = readdir(datadir("img", "res_test"))
 
 		p = LaminartInitFunc.parameterInit_conv_cpu(
             datadir("img", file),
-            Parameters.para_var(para_test),
+            Parameters.parameters_f32,
         )
 
         u0 = reshape(
@@ -285,4 +285,5 @@ files = readdir(datadir("img", "res_test"))
         string(file, "_para_", test_name[test_no], "_time.png"),
     ))
     close("all")
+end
 end

@@ -9,7 +9,9 @@ batch = 1
 
 files = readdir(datadir("img"))
 
-@inbounds begin
+let
+
+end@inbounds begin
 	tspan = (0.0f0,800f0)
 
 	batch_ = string(batch,"_",rand(1000:9999))
@@ -116,4 +118,5 @@ files = readdir(datadir("img"))
 		close("all")
 	end
 
+end
 end

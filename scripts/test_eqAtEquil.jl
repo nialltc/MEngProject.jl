@@ -6,7 +6,7 @@ using OrdinaryDiffEq, ParameterizedFunctions, LSODA, Sundials, DiffEqDevTools, N
 
 batch = 1
 
-
+let
 files = readdir(datadir("img"))
 
 @inbounds begin
@@ -116,4 +116,5 @@ files = readdir(datadir("img"))
 		close("all")
 	end
 
+end
 end

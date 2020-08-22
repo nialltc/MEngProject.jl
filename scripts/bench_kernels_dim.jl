@@ -9,6 +9,7 @@ batch = 1
 
 # files = readdir(datadir("img"))
 files = ["kan_sq_cont_l.png"]
+let
 
 @inbounds begin
 	tspan = (0.0f0,100f0)
@@ -19,10 +20,10 @@ files = ["kan_sq_cont_l.png"]
 
 	for file in files[1:end]
 		para_sets = [
-			(H_fact13.0f0, T_fact=[0.87f0,0.13f0], T_p_m=0.302f0, W_p_same_fact=39f0, W_m_same_fact=330f0, H_l=19, W_l=19),
-(H_fact=13.0f0, T_fact=[0.87f0,0.13f0], T_p_m=0.302f0, W_p_same_fact=39f0, W_m_same_fact=330f0, H_l=15, W_l=19),
+			(H_fact=13.0f0, T_fact=[0.87f0,0.13f0], T_p_m=0.302f0, W_p_same_fact=39f0, W_m_same_fact=330f0, H_l=19, W_l=19),
+			(H_fact=13.0f0, T_fact=[0.87f0,0.13f0], T_p_m=0.302f0, W_p_same_fact=39f0, W_m_same_fact=330f0, H_l=15, W_l=19),
 			(H_fact=13.0f0, T_fact=[0.87f0,0.13f0], T_p_m=0.302f0, W_p_same_fact=39f0, W_m_same_fact=330f0, H_l=19, W_l=15),
-						(H_fact=13.0f0, T_fact=[0.87f0,0.13f0], T_p_m=0.302f0, W_p_same_fact=39f0, W_m_same_fact=330f0, H_l=15, W_l=15),
+			(H_fact=13.0f0, T_fact=[0.87f0,0.13f0], T_p_m=0.302f0, W_p_same_fact=39f0, W_m_same_fact=330f0, H_l=15, W_l=15),
 		]
 		test_name = ["base","H_l15","W_l15","H_l15W_l15"]
 		test_name_plt = ["Base","Length \$H = 15\$","Length \$W = 15\$","Length \$H, W = 15\$"]
@@ -120,4 +121,5 @@ files = ["kan_sq_cont_l.png"]
 		close("all")
 
 	end
+end
 end

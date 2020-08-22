@@ -6,7 +6,7 @@ using OrdinaryDiffEq, ParameterizedFunctions, LSODA, Sundials, DiffEqDevTools, N
 
 batch = 1
 
-
+let
 # files = readdir(datadir("img"))
 files = ["kan_sq_cont_l.png"]
 
@@ -16,12 +16,12 @@ files = ["kan_sq_cont_l.png"]
 	batch_ = string(batch,"_",rand(1000:9999))
 	mkdir(plotsdir(string("paraVar",batch_)))
 	test_no = 0
-	
+
 	for file in files[1:end]
 		para_sets = [
 			(C_1=1.5f0, C_2=0.075f0, ϕ=2.0f0, Γ=0.2f0, η_p=2.1f0, η_m=1.5f0, λ=1.5f0, ψ=0.5f0), #base
 			(C_1=0.0f0, C_2=0.0f0,   ϕ=2.0f0, Γ=0.2f0, η_p=2.1f0, η_m=1.5f0, λ=1.5f0, ψ=0.5f0), #C_1, C_2 down full
-			(C_1=1.5f0, C_2=1.0f0,   ϕ=2.0f0, Γ=0.2f0, η_p=2.1f0, η_m=1.5f0, λ=1.5f0, ψ=0.5f0), #C_2 up 
+			(C_1=1.5f0, C_2=1.0f0,   ϕ=2.0f0, Γ=0.2f0, η_p=2.1f0, η_m=1.5f0, λ=1.5f0, ψ=0.5f0), #C_2 up
 			(C_1=2.5f0, C_2=0.075f0, ϕ=2.0f0, Γ=0.2f0, η_p=2.1f0, η_m=1.5f0, λ=1.5f0, ψ=0.5f0), #C_1 up
 			(C_1=1.5f0, C_2=0.075f0, ϕ=0.0f0, Γ=0.2f0, η_p=2.1f0, η_m=1.5f0, λ=1.5f0, ψ=0.5f0), #ϕ down full
 			(C_1=1.5f0, C_2=0.075f0, ϕ=4.0f0, Γ=0.2f0, η_p=2.1f0, η_m=1.5f0, λ=1.5f0, ψ=0.5f0), #ϕ up double
@@ -38,14 +38,14 @@ files = ["kan_sq_cont_l.png"]
 			(C_1=3.0f0, C_2=0.125f0, ϕ=4.0f0, Γ=0.2f0, η_p=2.1f0, η_m=1.5f0, λ=1.5f0, ψ=1.5f0), #all fb up double
 		]
 		test_name =["base","C1C2_0","C2_1","C1_25","phi0","phi4","Gamma01","Gamma04","etaP3_etaM05","etaP1_etaM25","lamda05","lamda15","psi1","psi0","fb_half","fb0","fb_doub"]
-		
+
 		test_name_plt =[
-			"Base", 
-			"\$C_1, C_2 =0\$", 
-			"\$C_2=1\$", 
-			"\$C_1= 2.5\$", 
-			"\$ϕ =0\$", 
-			"\$ϕ = 4\$", 
+			"Base",
+			"\$C_1, C_2 =0\$",
+			"\$C_2=1\$",
+			"\$C_1= 2.5\$",
+			"\$ϕ =0\$",
+			"\$ϕ = 4\$",
 			"\$Γ= 0.101\$",
 			"\$Γ=0.4\$",
 			"\$η^+ =3,η^-=0.5\$",
@@ -57,7 +57,7 @@ files = ["kan_sq_cont_l.png"]
 			"All feedback halved",
 			"All feedback \$=0\$",
 			"All feedback doubled"]
-		
+
 		for para_test in para_sets
 			test_no += 1
 			p = LaminartInitFunc.parameterInit_conv_gpu(datadir("img",file), Parameters.para_var(para_test));
@@ -163,4 +163,5 @@ files = ["kan_sq_cont_l.png"]
 			close("all")
 		end
 	end
+end
 end
