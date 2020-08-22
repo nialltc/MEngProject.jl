@@ -9,7 +9,6 @@ batch = 1
 
 files = readdir(datadir("img"))
 
-@inbounds begin
 	tspan = (0.0f0,800f0)
 
 	batch_ = string(batch,"_",rand(1000:9999))
@@ -49,14 +48,37 @@ files = readdir(datadir("img"))
 
 			for t ∈ [25,50,100,200,400,800]
 	# 				for t ∈ [25,50,100]
+				@inbounds begin
 
-				v0 = @view sol(t)[:,:,:,1]
-				axMax = findmax(v0)[1]
+					v0 = @view sol(t)[:,:,:,1]
+					axMax = findmax(v0)[1]
 
-				for k ∈ 1:2:10
-					k2 = k+1
+					for k ∈ 1:2:10
+						k2 = k+1
+						fig, ax = plt.subplots()
+
+						v1 = @view sol(t)[:,:,k,1]
+						v2 = @view sol(t)[:,:,k+1,1]
+						im = ax.imshow(v1, cmap=matplotlib.cm.PRGn,
+									   vmax=axMax, vmin=-axMax)
+						im2 = ax.imshow(v2, cmap=matplotlib.cm.RdBu_r,
+									   vmax=axMax, vmin=-axMax, alpha=0.5)
+
+						cbar = fig.colorbar(im2,  shrink=0.9, ax=ax)
+						cbar.ax.set_xlabel("\$k=$k2\$")
+								cbar = fig.colorbar(im,  shrink=0.9, ax=ax)
+						cbar.ax.set_xlabel("\$k=$k\$")
+						layer=Utils.layers[k]
+							plt.title("Layer: $layer, \$t=$t\$")
+							plt.axis("off")
+							fig.tight_layout()
+						plt.savefig(plotsdir(string("illusions",batch_),string(file,"_",t,"_",Utils.la[k],".png")))
+						close("all")
+					end
+
+
+					k=11
 					fig, ax = plt.subplots()
-
 					v1 = @view sol(t)[:,:,k,1]
 					v2 = @view sol(t)[:,:,k+1,1]
 					im = ax.imshow(v1, cmap=matplotlib.cm.PRGn,
@@ -65,41 +87,19 @@ files = readdir(datadir("img"))
 								   vmax=axMax, vmin=-axMax, alpha=0.5)
 
 					cbar = fig.colorbar(im2,  shrink=0.9, ax=ax)
-					cbar.ax.set_xlabel("\$k=$k2\$")
+					cbar.ax.set_xlabel("\$v^-\$")
 							cbar = fig.colorbar(im,  shrink=0.9, ax=ax)
-					cbar.ax.set_xlabel("\$k=$k\$")
+					cbar.ax.set_xlabel("\$v^+\$")
+
 					layer=Utils.layers[k]
 						plt.title("Layer: $layer, \$t=$t\$")
 						plt.axis("off")
 						fig.tight_layout()
+
 					plt.savefig(plotsdir(string("illusions",batch_),string(file,"_",t,"_",Utils.la[k],".png")))
 					close("all")
 				end
-
-
-				k=11
-				fig, ax = plt.subplots()
-				v1 = @view sol(t)[:,:,k,1]
-				v2 = @view sol(t)[:,:,k+1,1]
-				im = ax.imshow(v1, cmap=matplotlib.cm.PRGn,
-							   vmax=axMax, vmin=-axMax)
-				im2 = ax.imshow(v2, cmap=matplotlib.cm.RdBu_r,
-							   vmax=axMax, vmin=-axMax, alpha=0.5)
-
-				cbar = fig.colorbar(im2,  shrink=0.9, ax=ax)
-				cbar.ax.set_xlabel("\$v^-\$")
-						cbar = fig.colorbar(im,  shrink=0.9, ax=ax)
-				cbar.ax.set_xlabel("\$v^+\$")
-
-				layer=Utils.layers[k]
-					plt.title("Layer: $layer, \$t=$t\$")
-					plt.axis("off")
-					fig.tight_layout()
-
-				plt.savefig(plotsdir(string("illusions",batch_),string(file,"_",t,"_",Utils.la[k],".png")))
-				close("all")
 			end
-
 
 		# time plot
 			fig, axs = plt.subplots()
