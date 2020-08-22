@@ -12,15 +12,15 @@ files = readdir(datadir("img"))
 tspan = (0.0f0, 800f0)
 
 batch_ = string(batch,"_",rand(1000:9999))
-
-for f in files[20:end]
+mkdir(plotsdir(string("batch",batch_)))
+for file in files[2:end]
 	
-	p = LaminartInitFunc.parameterInit_conv_gpu(datadir("img",f), Parameters.parameters_f32);
+	p = LaminartInitFunc.parameterInit_conv_gpu(datadir("img",file), Parameters.parameters_f32);
 	
 	u0 = cu(reshape(zeros(Float32, p.dim_i, p.dim_j*(5*2+2)), p.dim_i, p.dim_j, 5*2+2,1))
 	
 	arr1 = u0[:, :, 1:2,:]
-arr2 = u0[:, :, 1:1,:];
+	arr2 = u0[:, :, 1:1,:];
 
 	f = LaminartFunc.LamFunction(
 		similar(arr1), #x
@@ -47,6 +47,9 @@ arr2 = u0[:, :, 1:1,:];
 	
 	
 	for t ∈ [25,50,100,200,400,800]
+# 			for t ∈ [25,50,100]
+
+
 		axMax = findmax(sol(t)[:,:,:,1])[1]
 
 		for k ∈ 1:2:10
@@ -66,7 +69,7 @@ arr2 = u0[:, :, 1:1,:];
 				plt.title("Layer: $layer, \$t=$t\$")
 				plt.axis("off")
 				fig.tight_layout()
-			plt.savefig(plotsdir(string("batch",batch_),string(f,"_",t,"_",Utils.la[k],".png")))
+			plt.savefig(plotsdir(string("batch",batch_),string(file,"_",t,"_",Utils.la[k],".png")))
 		end
 
 		k=11
@@ -88,7 +91,7 @@ arr2 = u0[:, :, 1:1,:];
 			plt.axis("off")
 			fig.tight_layout()
 
-		plt.savefig(plotsdir(string("batch",batch_),string(f,"_",t,"_",Utils.la[k],".png")))
+		plt.savefig(plotsdir(string("batch",batch_),string(file,"_",t,"_",Utils.la[k],".png")))
 	end
 	
 	
@@ -103,5 +106,5 @@ arr2 = u0[:, :, 1:1,:];
 	axs.set_ylabel("Activation")
 	plt.legend()
 	fig.tight_layout()
-	plt.savefig(plotsdir(string("batch",batch_),string(f,"_time.png")))
+	plt.savefig(plotsdir(string("batch",batch_),string(file,"_time.png")))
 end
