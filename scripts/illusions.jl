@@ -9,7 +9,7 @@ batch = 1
 
 files = readdir(datadir("img"))
 
-tspan = (0.0f0, 800f0)
+tspan = (0.0f0, 200f0)
 
 batch_ = string(batch,"_",rand(1000:9999))
 mkdir(plotsdir(string("batch",batch_)))
@@ -46,7 +46,8 @@ for file in files[2:end]
 	sol = solve(prob)
 	
 	
-	for t ∈ [25,50,100,200,400,800]
+	for t ∈ [25,50,100,200]
+	#for t ∈ [25,50,100,200,400,800]
 # 			for t ∈ [25,50,100]
 
 
