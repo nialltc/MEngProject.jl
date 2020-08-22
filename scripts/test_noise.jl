@@ -16,26 +16,27 @@ using MEngProject,
 using OrdinaryDiffEq,
     ParameterizedFunctions, LSODA, Sundials, DiffEqDevTools, Noise
 
-batch = 1
+batch = 2
 
 
 # files = readdir(datadir("img"))
-files = ["kan_sq_cont_l.png", "stairs_100gs.png"]
+files = ["stairs_100gs.png"]
+# files = ["kan_sq_cont_l.png", "stairs_100gs.png"]
 
 tspan = (0.0f0, 800f0)
 
 batch_ = string(batch, "_", rand(1000:9999))
 mkdir(plotsdir(string("noise", batch_)))
 for file in files[1:end]
-    for noise in [0.2f0, 0.4f0, 0.7f0, 1f0, 1.5f0, 2f0]
+    for noise in [0.01f0, 0.05f0, 0.1f0, 0.2f0, 0.5f0, 1f0,]
 		img = convert(Array{Float32,2},  load(datadir("img",files[1])));
 		img = mult_gauss(img,noise)
         fig, ax = plt.subplots()
 		im = ax.imshow(
 			img,
 			cmap = matplotlib.cm.gray,
-			vmax = 0,
-			vmin = 1,
+			vmax = 1,
+			vmin = 0,
 		)
 		plt.title("Input image, noise \$σ=$noise\$")
 		plt.axis("off")
