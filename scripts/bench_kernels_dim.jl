@@ -162,8 +162,17 @@ for file in files[1:end]
                         ".png",
                     ),
                 ))
+                u0 = nothing
+                p = nothing
+                arr1 = nothing
+                arr2 = nothing
+                f = nothing
+                prob = nothing
+                sol = nothing
                 close("all")
             end
+        finally
+            nothing
         end
 
 
@@ -171,10 +180,12 @@ for file in files[1:end]
         fig, axs = plt.subplots()
 
         for k ∈ 1:12
-            v3 = @view sol[:, :, k, 1, end]
-            v4 = @view sol[findmax(v3)[2][1], findmax(v3)[2][2], k, 1, :]
-            layer = Utils.layers_1[k]
-            axs.plot(v4, Utils.lines[k], label = "$layer")
+			@inbounds begin
+	            v3 = @view sol[:, :, k, 1, end]
+	            v4 = @view sol[findmax(v3)[2][1], findmax(v3)[2][2], k, 1, :]
+	            layer = Utils.layers_1[k]
+	            axs.plot(v4, Utils.lines[k], label = "$layer")
+			end
         end
         axs.set_xlabel("Time")
         axs.set_ylabel("Activation")

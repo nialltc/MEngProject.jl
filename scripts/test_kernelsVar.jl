@@ -327,8 +327,17 @@ for file in files[1:end]
                         "_time.png",
                     ),
                 ))
-                close("all")
+				u0 = nothing
+				p = nothing
+				arr1 = nothing
+				arr2 = nothing
+				f = nothing
+				prob = nothing
+				sol = nothing
+				close("all")
             end
+		finally
+			nothing
         end
     end
 end

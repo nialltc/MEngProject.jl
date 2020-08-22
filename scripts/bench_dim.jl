@@ -202,6 +202,7 @@ for file in enumerate(files[1:1])
         sol = solve(prob)
 
         push!(y1Res_cpu, sol[:, :, 7:7, :, :])
+    finally
         u0 = nothing
         p = nothing
         arr1 = nothing

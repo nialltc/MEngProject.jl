@@ -165,6 +165,8 @@ for file in files[1:end]
                     close("all")
                 end
             end
+        finally
+            nothing
         end
 
 
@@ -186,6 +188,13 @@ for file in files[1:end]
             string("noise", batch_),
             string(file, "_noise_", noise, "_time.png"),
         ))
+        u0 = nothing
+        p = nothing
+        arr1 = nothing
+        arr2 = nothing
+        f = nothing
+        prob = nothing
+        sol = nothing
         close("all")
     end
 end

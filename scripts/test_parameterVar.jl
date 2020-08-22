@@ -385,8 +385,9 @@ for file in files[1:end]
                         ".png",
                     ),
                 ))
+			end
+		finally
                 close("all")
-            end
         end
 
 
@@ -409,6 +410,13 @@ for file in files[1:end]
                 string(file, "_para_", test_name[para_test[1]], "_time.png"),
             ))
             close("all")
+			u0 = nothing
+			p = nothing
+			arr1 = nothing
+			arr2 = nothing
+			f = nothing
+			prob = nothing
+			sol = nothing
         end
     end
 end
