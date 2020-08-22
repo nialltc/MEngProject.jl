@@ -14,19 +14,19 @@ files = ["kan_sq_cont_l.png"]
 	tspan = (0.0f0,100f0)
 
 	batch_ = string(batch,"_",rand(1000:9999))
-	mkdir(plotsdir(string("batch",batch_)))
+	mkdir(plotsdir(string("bench_kern",batch_)))
 	test_no = 0
-	
+
 	for file in files[1:end]
 		para_sets = [
-			(H_fact13.0f0, T_fact=[0.87f0,0.13f0], T_p_m=0.302f0, W_p_same_fact=39f0, W_m_same_fact=330f0, H_l=19, W_l=19), 
-(H_fact=13.0f0, T_fact=[0.87f0,0.13f0], T_p_m=0.302f0, W_p_same_fact=39f0, W_m_same_fact=330f0, H_l=15, W_l=19), 
-			(H_fact=13.0f0, T_fact=[0.87f0,0.13f0], T_p_m=0.302f0, W_p_same_fact=39f0, W_m_same_fact=330f0, H_l=19, W_l=15), 
-						(H_fact=13.0f0, T_fact=[0.87f0,0.13f0], T_p_m=0.302f0, W_p_same_fact=39f0, W_m_same_fact=330f0, H_l=15, W_l=15), 
+			(H_fact13.0f0, T_fact=[0.87f0,0.13f0], T_p_m=0.302f0, W_p_same_fact=39f0, W_m_same_fact=330f0, H_l=19, W_l=19),
+(H_fact=13.0f0, T_fact=[0.87f0,0.13f0], T_p_m=0.302f0, W_p_same_fact=39f0, W_m_same_fact=330f0, H_l=15, W_l=19),
+			(H_fact=13.0f0, T_fact=[0.87f0,0.13f0], T_p_m=0.302f0, W_p_same_fact=39f0, W_m_same_fact=330f0, H_l=19, W_l=15),
+						(H_fact=13.0f0, T_fact=[0.87f0,0.13f0], T_p_m=0.302f0, W_p_same_fact=39f0, W_m_same_fact=330f0, H_l=15, W_l=15),
 		]
 		test_name = ["base","H_l15","W_l15","H_l15W_l15"]
 		test_name_plt = ["Base","Length \$H = 15\$","Length \$W = 15\$","Length \$H, W = 15\$"]
-		
+
 		benchm = []
 		for para_test in para_sets
 			test_no += 1
@@ -38,10 +38,10 @@ files = ["kan_sq_cont_l.png"]
 			arr2 = similar(u0[:, :, 1:1,:])
 
 			f = LaminartFunc.LamFunction(
-				similar(arr1), #x
+				arr1, #x
 				similar(arr1), #m
 				similar(arr1), #s
-				similar(arr2), #x_lgn,
+				arr2, #x_lgn,
 				similar(arr1), #C,
 				similar(arr1), #H_z,
 				similar(arr1), # dy_temp,
@@ -55,7 +55,6 @@ files = ["kan_sq_cont_l.png"]
 				similar(arr1), #  A_temp,
 				similar(arr1), #   B_temp
 			)
-
 			prob = ODEProblem(f, u0, tspan, p)
 			append!(benchm, @benchmark sol = solve(prob))
 			sol = solve(prob)
@@ -84,7 +83,7 @@ files = ["kan_sq_cont_l.png"]
 						plt.title(string("Layer: $layer, \$t=$t\$, ", test_name_plt[test_no]))
 						plt.axis("off")
 						fig.tight_layout()
-					plt.savefig(plotsdir(string("batch",batch_),string(file,"_para_",test_name[test_no],"_t",t,"_",Utils.la[k],".png")))
+					plt.savefig(plotsdir(string("bench_kern",batch_),string(file,"_para_",test_name[test_no],"_t",t,"_",Utils.la[k],".png")))
 					close("all")
 
 
@@ -102,13 +101,13 @@ files = ["kan_sq_cont_l.png"]
 			plt.title(test_name_plt[test_no])
 			plt.legend()
 			fig.tight_layout()
-			plt.savefig(plotsdir(string("batch",batch_),string(file,"_para_",test_name[test_no],"_time.png")))
+			plt.savefig(plotsdir(string("bench_kern",batch_),string(file,"_para_",test_name[test_no],"_time.png")))
 			close("all")
 		end
-		
-		
+
+
 		# benchmark plot
-				
+
 		fig, ax = plt.subplots()
 		for test ∈ 1:test_no
 			ax.scatter(median(benchm[test_no].times), benchm[test_no].memory, label=test_name_plt,
@@ -117,8 +116,8 @@ files = ["kan_sq_cont_l.png"]
 		ax.legend()
 		ax.grid(True)
 		fig.tight_layout()
-		plt.savefig(plotsdir(string("batch",batch_),string(file,"_para_",test_name[test_no],"_time.png")))
+		plt.savefig(plotsdir(string("bench_kern",batch_),string(file,"_para_",test_name[test_no],"_time.png")))
 		close("all")
-		
+
 	end
 end

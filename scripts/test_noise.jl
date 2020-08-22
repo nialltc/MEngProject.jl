@@ -17,7 +17,7 @@ files = ["kan_sq_cont_l.png", "stairs_200gs.png"]
 	mkdir(plotsdir(string("noise",batch_)))
 	for file in files[1:end]
 		for noise in [0.2f0, 0.4f0, 0.7f0, 1f0, 1.5f0, 2f0]
-			
+
 			p = LaminartInitFunc.parameterInit_conv_gpu_noise(datadir("img",file), Parameters.parameters_f32, noise);
 
 			u0 = cu(reshape(zeros(Float32, p.dim_i, p.dim_j*(5*p.K+2)), p.dim_i, p.dim_j, 5*p.K+2,1))
@@ -26,10 +26,10 @@ files = ["kan_sq_cont_l.png", "stairs_200gs.png"]
 			arr2 = similar(u0[:, :, 1:1,:])
 
 			f = LaminartFunc.LamFunction(
-				similar(arr1), #x
+				arr1, #x
 				similar(arr1), #m
 				similar(arr1), #s
-				similar(arr2), #x_lgn,
+				arr2, #x_lgn,
 				similar(arr1), #C,
 				similar(arr1), #H_z,
 				similar(arr1), # dy_temp,
@@ -56,6 +56,7 @@ files = ["kan_sq_cont_l.png", "stairs_200gs.png"]
 				axMax = findmax(v0)[1]
 
 				for k ∈ 1:2:10
+					k2 = k+1
 					fig, ax = plt.subplots()
 
 					v1 = @view sol(t)[:,:,k,1]
@@ -70,7 +71,7 @@ files = ["kan_sq_cont_l.png", "stairs_200gs.png"]
 							cbar = fig.colorbar(im,  shrink=0.9, ax=ax)
 					cbar.ax.set_xlabel("\$k=$k\$")
 					layer=Utils.layers[k]
-						plt.title("Layer: $layer, \$t=$t\$, noise\$\sigma=$noise\$")
+						plt.title("Layer: $layer, \$t=$t\$, noise\$σ=$noise\$")
 						plt.axis("off")
 						fig.tight_layout()
 					plt.savefig(plotsdir(string("noise",batch_),string(file,"_noise_",noise,"_t",t,"_",Utils.la[k],".png")))
@@ -93,7 +94,7 @@ files = ["kan_sq_cont_l.png", "stairs_200gs.png"]
 				cbar.ax.set_xlabel("\$v^+\$")
 
 				layer=Utils.layers[k]
-					plt.title("Layer: $layer, \$t=$t\$, noise\$\sigma=$noise\$")
+					plt.title("Layer: $layer, \$t=$t\$, noise\$σ=$noise\$")
 					plt.axis("off")
 					fig.tight_layout()
 
@@ -113,7 +114,7 @@ files = ["kan_sq_cont_l.png", "stairs_200gs.png"]
 			end
 			axs.set_xlabel("Time")
 			axs.set_ylabel("Activation")
-			plt.title("Noise \$\sigma=$noise\$")
+			plt.title("Noise \$σ=$noise\$")
 			plt.legend()
 			fig.tight_layout()
 			plt.savefig(plotsdir(string("noise",batch_),string(file,"_noise_",noise,"_time.png")))

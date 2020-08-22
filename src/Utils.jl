@@ -27,6 +27,7 @@ la = ["x","x","y","y","m","m","z","z","s","s","v","v"]
 
 lines = ["b--","g--","r-.","c-.","r:","c:","m-","y-","m:","y:","b-.","g-."]
 
+colours = ["tab:blue", "tab:orange", "tab:green", "tab:red", "tab:purple", "tab:brown", "tab:pink", "tab:gray", "tab:olive", "tab:cyan"]
 function plot_rb(img::AbstractArray;  name="img", save = false, axMin = -1, axMax = 1, clbar=false,  loc=location, filetype=".png")
     findmax(img)[1] > axMax && throw(ArgumentError(string("Image has max ", findmax(img)[1], ",outside range")))
     findmin(img)[1] < axMin && throw(ArgumentError(string("Image has min ", findmin(img)[1], ",outside range")))

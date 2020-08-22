@@ -13,7 +13,7 @@ files = readdir(datadir("img"))
 	tspan = (0.0f0,800f0)
 
 	batch_ = string(batch,"_",rand(1000:9999))
-	mkdir(plotsdir(string("batch",batch_)))
+	mkdir(plotsdir(string("test_eqEqual",batch_)))
 	for file in files[2:end]
 
 		p = LaminartInitFunc.parameterInit_conv_gpu(datadir("img",file), Parameters.parameters_f32);
@@ -24,10 +24,10 @@ files = readdir(datadir("img"))
 		arr2 = similar(u0[:, :, 1:1,:])
 
 		f = LaminartFunc.LamFunction(
-			similar(arr1), #x
+			arr1, #x
 			similar(arr1), #m
 			similar(arr1), #s
-			similar(arr2), #x_lgn,
+			arr2, #x_lgn,
 			similar(arr1), #C,
 			similar(arr1), #H_z,
 			similar(arr1), # dy_temp,
@@ -41,7 +41,6 @@ files = readdir(datadir("img"))
 			similar(arr1), #  A_temp,
 			similar(arr1), #   B_temp
 		)
-
 		prob = ODEProblem(f, u0, tspan, p)
 	# 	@benchmark sol = solve(prob)
 		sol = solve(prob)
@@ -55,7 +54,7 @@ files = readdir(datadir("img"))
 
 			for k ∈ 1:2:10
 				fig, ax = plt.subplots()
-				
+
 				v1 = @view sol(t)[:,:,k,1]
 				v2 = @view sol(t)[:,:,k+1,1]
 				im = ax.imshow(v1, cmap=matplotlib.cm.PRGn,
@@ -71,7 +70,7 @@ files = readdir(datadir("img"))
 					plt.title("Layer: $layer, \$t=$t\$")
 					plt.axis("off")
 					fig.tight_layout()
-				plt.savefig(plotsdir(string("batch",batch_),string(file,"_",t,"_",Utils.la[k],".png")))
+				plt.savefig(plotsdir(string("test_eqEqual",batch_),string(file,"_",t,"_",Utils.la[k],".png")))
 				close("all")
 			end
 
@@ -95,7 +94,7 @@ files = readdir(datadir("img"))
 				plt.axis("off")
 				fig.tight_layout()
 
-			plt.savefig(plotsdir(string("batch",batch_),string(file,"_",t,"_",Utils.la[k],".png")))
+			plt.savefig(plotsdir(string("test_eqEqual",batch_),string(file,"_",t,"_",Utils.la[k],".png")))
 			close("all")
 		end
 
@@ -113,8 +112,8 @@ files = readdir(datadir("img"))
 		axs.set_ylabel("Activation")
 		plt.legend()
 		fig.tight_layout()
-		plt.savefig(plotsdir(string("batch",batch_),string(file,"_time.png")))
+		plt.savefig(plotsdir(string("test_eqEqual",batch_),string(file,"_time.png")))
 		close("all")
 	end
-	
+
 end

@@ -24,10 +24,10 @@ files = readdir(datadir("img"))
 		arr2 = similar(u0[:, :, 1:1,:])
 
 		f = LaminartFunc.LamFunction(
-			similar(arr1), #x
+			arr1, #x
 			similar(arr1), #m
 			similar(arr1), #s
-			similar(arr2), #x_lgn,
+			arr2, #x_lgn,
 			similar(arr1), #C,
 			similar(arr1), #H_z,
 			similar(arr1), # dy_temp,
@@ -54,8 +54,9 @@ files = readdir(datadir("img"))
 			axMax = findmax(v0)[1]
 
 			for k ∈ 1:2:10
+				k2 = k+1
 				fig, ax = plt.subplots()
-				
+
 				v1 = @view sol(t)[:,:,k,1]
 				v2 = @view sol(t)[:,:,k+1,1]
 				im = ax.imshow(v1, cmap=matplotlib.cm.PRGn,
@@ -116,5 +117,5 @@ files = readdir(datadir("img"))
 		plt.savefig(plotsdir(string("illusions",batch_),string(file,"_time.png")))
 		close("all")
 	end
-	
+
 end
