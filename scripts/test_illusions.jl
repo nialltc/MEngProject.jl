@@ -79,8 +79,8 @@ files = readdir(datadir("img"))
 
 			k=11
 			fig, ax = plt.subplots()
-			v1 = @view sol[:,:,k,1,t]
-			v2 = @view sol[:,:,k+1,1,t]
+			v1 = @view sol(t)[:,:,k,1]
+			v2 = @view sol(t)[:,:,k+1,1]
 			im = ax.imshow(v1, cmap=matplotlib.cm.PRGn,
 						   vmax=axMax, vmin=-axMax)
 			im2 = ax.imshow(v2, cmap=matplotlib.cm.RdBu_r,
