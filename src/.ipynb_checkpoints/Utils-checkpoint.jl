@@ -25,6 +25,8 @@ layers_1 = ["\$x_1\$", "\$x_2\$", "\$y_1\$","\$y_2\$","\$m_1\$","\$m_2\$","\$z_1
 
 la = ["x","x","y","y","m","m","z","z","s","s","v","v"]
 
+lines = ["b--","g--","r-.","c-.","r:","c:","m-","y-","m:","y:","b-.","g-."]
+
 function plot_rb(img::AbstractArray;  name="img", save = false, axMin = -1, axMax = 1, clbar=false,  loc=location, filetype=".png")
     findmax(img)[1] > axMax && throw(ArgumentError(string("Image has max ", findmax(img)[1], ",outside range")))
     findmin(img)[1] < axMin && throw(ArgumentError(string("Image has min ", findmin(img)[1], ",outside range")))
