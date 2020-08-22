@@ -19,7 +19,7 @@ using OrdinaryDiffEq,
 batch = 1
 
 
-files = readdir(datadir("res_test"))
+files = readdir(datadir("res_test"))[2:end]
 # files = ["kan_sq_cont_l.png"]
 let
 @inbounds begin
@@ -51,7 +51,7 @@ let
         # 		for para_test in para_sets
         test_no += 1
         p = LaminartInitFunc.parameterInit_conv_gpu(
-            datadir("img", file),
+            datadir("res_test", file),
             Parameters.parameters_f32,
         )
 
@@ -153,7 +153,7 @@ let
 
 
 		p = LaminartInitFunc.parameterInit_conv_cpu(
-            datadir("img", file),
+            datadir("res_test", file),
             Parameters.parameters_f32,
         )
 
@@ -287,3 +287,4 @@ let
     close("all")
 end
 end
+
