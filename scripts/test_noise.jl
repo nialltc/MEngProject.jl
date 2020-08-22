@@ -6,7 +6,7 @@ using OrdinaryDiffEq, ParameterizedFunctions, LSODA, Sundials, DiffEqDevTools, N
 
 batch = 1
 
-let
+
 # files = readdir(datadir("img"))
 files = ["kan_sq_cont_l.png", "stairs_200gs.png"]
 
@@ -121,5 +121,4 @@ files = ["kan_sq_cont_l.png", "stairs_200gs.png"]
 			close("all")
 		end
 	end
-end
 end

@@ -9,7 +9,7 @@ batch = 1
 
 files = readdir(datadir("img"))
 
-let
+
 @inbounds begin
 	tspan = (0.0f0,800f0)
 
@@ -117,5 +117,4 @@ let
 		close("all")
 	end
 
-end
 end

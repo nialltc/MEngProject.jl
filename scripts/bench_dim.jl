@@ -20,8 +20,12 @@ batch = 1
 
 
 files = readdir(datadir("res_test"))[2:end]
-# files = ["kan_sq_cont_l.png"]
-let
+
+global benchm_gpu = []
+global benchm_cpu = []
+global y1Res_gpu = []
+global y1Res_cpu = []
+
 @inbounds begin
     tspan = (0.0f0, 10f0)
 
@@ -39,19 +43,12 @@ let
         "\$300×300\$",
         "\$400×400\$",
     ]
-	test_no = 0
-    benchm_gpu = []
-	benchm_cpu = []
-	y1Res_gpu = []
-	y1Res_cpu = []
-
-    for file in files[1:1]
 
 
-        # 		for para_test in para_sets
-        test_no += 1
+    for file in enumerate(files[1:1])
+
         p = LaminartInitFunc.parameterInit_conv_gpu(
-            datadir("res_test", file),
+            datadir("res_test", file[2]),
             Parameters.parameters_f32,
         )
 
@@ -86,7 +83,7 @@ let
         )
 
         prob = ODEProblem(f, u0, tspan, p)
-        append!(benchm_gpu, @benchmark solve(prob))
+        push!(benchm_gpu, @benchmark solve(prob))
         sol = solve(prob)
 
 
@@ -122,16 +119,16 @@ let
         layer = Utils.layers[k]
         plt.title(string(
             "Layer: $layer, \$t=$t\$, resolution=",
-            test_name_plt[test_no],
+            test_name_plt[file[1]],
         ))
         plt.axis("off")
         fig.tight_layout()
         plt.savefig(plotsdir(
             string("bench_dim", batch_),
             string(
-                file,
+                file[2],
                 "_res_",
-                test_name[test_no],
+                test_name[file[1]],
                 "_t",
                 t,
                 "_",
@@ -142,7 +139,7 @@ let
         close("all")
 
 		v3 = @view sol[:,:,7:7,:,:]
-		append!(y1Res, Array(v3))
+		push!(y1Res, Array(v3))
 		u0 = nothing
 		p = nothing
 		arr1 = nothing
@@ -153,7 +150,7 @@ let
 
 
 		p = LaminartInitFunc.parameterInit_conv_cpu(
-            datadir("res_test", file),
+            datadir("res_test", file[2]),
             Parameters.parameters_f32,
         )
 
@@ -188,10 +185,10 @@ let
         )
 
         prob = ODEProblem(f, u0, tspan, p)
-        append!(benchm_cpu, @benchmark solve(prob))
+        push!(benchm_cpu, @benchmark solve(prob))
         sol = solve(prob)
 
-		append!(y1Res_cpu, sol[:,:,7:7,:,:])
+		push!(y1Res_cpu, sol[:,:,7:7,:,:])
 		u0 = nothing
 		p = nothing
 		arr1 = nothing
@@ -220,7 +217,7 @@ let
     fig.tight_layout()
     plt.savefig(plotsdir(
         string("bench_dim", batch_),
-        string(file, "_para_", test_name[test_no], "_time.png"),
+        string(file[2], "_para_", test_name[file[1]], "_time.png"),
     ))
     close("all")
 
@@ -258,7 +255,7 @@ let
     fig.tight_layout()
     plt.savefig(plotsdir(
         string("bench_dim", batch_),
-        string(file, "_para_", test_name[test_no], "_time.png"),
+        string(file[2], "_para_", test_name[file[1]], "_time.png"),
     ))
     close("all")
 
@@ -282,9 +279,8 @@ let
     fig.tight_layout()
     plt.savefig(plotsdir(
         string("bench_dim", batch_),
-        string(file, "_para_", test_name[test_no], "_time.png"),
+        string(file[2], "_para_", test_name[file[1]], "_time.png"),
     ))
     close("all")
 end
 end
-

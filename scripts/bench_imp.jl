@@ -9,9 +9,8 @@ batch = 1
 
 files = readdir(datadir("img"))
 
-let
 
-end@inbounds begin
+@inbounds begin
 	tspan = (0.0f0,800f0)
 
 	batch_ = string(batch,"_",rand(1000:9999))
@@ -118,5 +117,4 @@ end@inbounds begin
 		close("all")
 	end
 
-end
 end

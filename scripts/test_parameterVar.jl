@@ -6,16 +6,18 @@ using OrdinaryDiffEq, ParameterizedFunctions, LSODA, Sundials, DiffEqDevTools, N
 
 batch = 1
 
-let
+
 # files = readdir(datadir("img"))
 files = ["kan_sq_cont_l.png"]
+
+global 	test_no = 0
 
 @inbounds begin
 	tspan = (0.0f0,800f0)
 
 	batch_ = string(batch,"_",rand(1000:9999))
 	mkdir(plotsdir(string("paraVar",batch_)))
-	test_no = 0
+
 
 	for file in files[1:end]
 		para_sets = [
@@ -163,5 +165,4 @@ files = ["kan_sq_cont_l.png"]
 			close("all")
 		end
 	end
-end
 end
