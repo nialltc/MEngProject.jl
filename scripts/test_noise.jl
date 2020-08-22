@@ -28,6 +28,30 @@ batch_ = string(batch, "_", rand(1000:9999))
 mkdir(plotsdir(string("noise", batch_)))
 for file in files[1:end]
     for noise in [0.2f0, 0.4f0, 0.7f0, 1f0, 1.5f0, 2f0]
+		img = convert(Array{Float32,2},  load(datadir("img",files[1])));
+		img = mult_gauss(img,noise)
+        fig, ax = plt.subplots()
+		im = ax.imshow(
+			img,
+			cmap = matplotlib.cm.gray,
+			vmax = 0,
+			vmin = 1,
+		)
+		plt.title("Input image, noise \$σ=$noise\$")
+		plt.axis("off")
+		fig.tight_layout()
+		plt.savefig(plotsdir(
+			string("noise", batch_),
+			string(
+				file,
+				"_input_noise_",
+				noise,
+				".png",
+			),
+		))
+		close("all")
+		img = nothing
+
         try
             p = LaminartInitFunc.parameterInit_conv_gpu_noise(
                 datadir("img", file),
