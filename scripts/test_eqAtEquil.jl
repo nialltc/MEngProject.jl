@@ -40,8 +40,8 @@ files = readdir(datadir("img"))
             1,
         ))
 
-        arr1 = similar(u0[:, :, 1:2, :])
-        arr2 = similar(u0[:, :, 1:1, :])
+		arr1 = similar(@view u0[:, :, 1:2, :])
+		arr2 = similar(@view u0[:, :, 1:2, :])
 
         f = LaminartFunc.LamFunction(
             arr1, #x

@@ -71,8 +71,8 @@ for file in enumerate(files)
             1,
         ))
 
-        arr1 = similar(u0[:, :, 1:2, :])
-        arr2 = similar(u0[:, :, 1:1, :])
+        arr1 = similar(@view u0[:, :, 1:2, :])
+        arr2 = similar(@view u0[:, :, 1:2, :])
 
         f = LaminartFunc.LamFunction(
             arr1, #x
@@ -153,7 +153,7 @@ for file in enumerate(files)
 
             v3 = @view sol[:, :, 7:7, :, :]
             push!(y1Res, Array(v3))
-            
+
         end
 		catch err
 	finally
@@ -182,8 +182,8 @@ for file in enumerate(files)
             1,
         )
 
-        arr1 = similar(u0[:, :, 1:2, :])
-        arr2 = similar(u0[:, :, 1:1, :])
+        arr1 = similar(@view u0[:, :, 1:2, :])
+        arr2 = similar(@view u0[:, :, 1:2, :])
 
         f = LaminartFunc.LamFunction(
             arr1, #x
