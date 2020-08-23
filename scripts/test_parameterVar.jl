@@ -260,7 +260,7 @@ for file in files
             ))
 
             arr1 = similar(@view u0[:, :, 1:2, :])
-            arr2 = similar(@view u0[:, :, 1:2, :])
+            arr2 = similar(@view u0[:, :, 1:1, :])
 
             f = LaminartFunc.LamFunction(
                 arr1, #x
