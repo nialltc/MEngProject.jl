@@ -414,7 +414,7 @@ function (ff::LamFunction_all_struct_reuse_1)(du, u, p, t)
 end
 
 
-struct LamFunction_imfil_cpu_a <: Function
+struct LamFunction_imfil_cpu <: Function
     x_lgn::Any
     C::Any
     H_z::Any
@@ -425,7 +425,7 @@ struct LamFunction_imfil_cpu_a <: Function
     W_temp::Any
 end
 
-function (ff::LamFunction_imfil_cpu_a)(du, u, p, t)
+function (ff::LamFunction_imfil_cpu)(du, u, p, t)
     @inbounds begin
         x = @view u[:, :, 1:p.K]
         y = @view u[:, :, p.K+1:2*p.K]
