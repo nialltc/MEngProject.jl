@@ -16,24 +16,25 @@ using MEngProject,
 using OrdinaryDiffEq,
     ParameterizedFunctions, LSODA, Sundials, DiffEqDevTools, Noise
 
-batch = 1
+
+batch = 10
 
 
 # files = readdir(datadir("img"))
 
 files = [
-    # 	"Iine_gap_1_100_gs.png",
-    #  "Iine_gap_2_100_gs.png",
-    #  "Iine_gap_3_100_gs.png",
-    #  "Iine_gap_4_100_gs.png",
-    #  "Iines_gaps_100_gs.png",
-    #  "diag_dots_100_gs.png",
-    #  "diag_gap_100_gs.png",
-    #  "kan_sq_cont.png",
-    #  "kan_sq_cont_l.png",
-    #  "mo05709.png",
-    #  "stairs_100gs.png",
-    #  "stairs_200gs.png",
+    	"Iine_gap_1_100_gs.png",
+     "Iine_gap_2_100_gs.png",
+     "Iine_gap_3_100_gs.png",
+     "Iine_gap_4_100_gs.png",
+     "Iines_gaps_100_gs.png",
+     "diag_dots_100_gs.png",
+     "diag_gap_100_gs.png",
+     "kan_sq_cont.png",
+     "kan_sq_cont_l.png",
+     "mo05709.png",
+     "stairs_100gs.png",
+     "stairs_200gs.png",
     "viper00187.png",
     "viper00661.jpg",
     "viper00715.png",

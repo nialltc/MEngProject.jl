@@ -18,7 +18,7 @@ using OrdinaryDiffEq,
 
 batch = 1
 
-global benches = []
+global benchm_s = []
 
 tspan = (0.0f0, 10f0)
 
@@ -75,7 +75,7 @@ prob = ODEProblem(f, u0, tspan, p)
 
 for solv in solvers
     bm = @benchmark solve(prob)
-    push!(benches, bm)
+    push!(benchm_s, bm)
 end
 
 
@@ -88,7 +88,7 @@ fig, ax = plt.subplots()
 for ben in enumerate(test_name_plt)
     ax.scatter(
         ben[2],
-        median(benches[ben[1]].times) * 1e-9,
+        median(benchm_s[ben[1]].times) * 1e-9,
         color = Utils.colours[ben[1]],
         edgecolors = "none",
     )
@@ -111,7 +111,7 @@ fig, ax = plt.subplots()
 for ben in enumerate(test_name_plt)
     ax.scatter(
         ben[2],
-        benches[ben[1]].memory * 1e-6,
+        benchm_s[ben[1]].memory * 1e-6,
         color = Utils.colours[ben[1]],
         edgecolors = "none",
     )
@@ -132,7 +132,7 @@ fig, ax = plt.subplots()
 for ben in enumerate(test_name_plt)
     ax.scatter(
         ben[2],
-        benches[ben[1]].allocs * 1e-6,
+        benchm_s[ben[1]].allocs * 1e-6,
         color = Utils.colours[ben[1]],
         edgecolors = "none",
     )

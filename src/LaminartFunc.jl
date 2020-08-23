@@ -25,7 +25,7 @@ using NNlib, ImageFiltering, Images, OffsetArrays, CUDA
 
 
 
-mutable struct LamFunction{T <: AbstractArray} <: Function
+mutable struct LamFunction{T<:AbstractArray} <: Function
     x::T
     m::T
     s::T
@@ -49,28 +49,37 @@ end
 
 function (ff::LamFunction)(du, u, p, t)
 
-       @inbounds begin
+    @inbounds begin
 
-        @. ff.x = @view u[:, :, 1:p.K,:]
-        y = @view u[:, :, p.K+1:2*p.K,:]
-        @. ff.m = @view u[:, :, 2*p.K+1:3*p.K,:]
-        z = @view u[:, :, 3*p.K+1:4*p.K,:]
-        @. ff.s = @view u[:, :, 4*p.K+1:5*p.K,:]
+        @. ff.x = @view u[:, :, 1:p.K, :]
+        y = @view u[:, :, p.K+1:2*p.K, :]
+        @. ff.m = @view u[:, :, 2*p.K+1:3*p.K, :]
+        z = @view u[:, :, 3*p.K+1:4*p.K, :]
+        @. ff.s = @view u[:, :, 4*p.K+1:5*p.K, :]
 
-        v_p = @view u[:, :, 5*p.K+1:5*p.K+1,:]
-        v_m = @view u[:, :, 5*p.K+2:5*p.K+2,:]
+        v_p = @view u[:, :, 5*p.K+1:5*p.K+1, :]
+        v_m = @view u[:, :, 5*p.K+2:5*p.K+2, :]
 
-        dx = @view du[:, :, 1:p.K,:]
-        dy = @view du[:, :, p.K+1:2*p.K,:]
-        dm = @view du[:, :, 2*p.K+1:3*p.K,:]
-        dz = @view du[:, :, 3*p.K+1:4*p.K,:]
-        ds = @view du[:, :, 4*p.K+1:5*p.K,:]
+        dx = @view du[:, :, 1:p.K, :]
+        dy = @view du[:, :, p.K+1:2*p.K, :]
+        dm = @view du[:, :, 2*p.K+1:3*p.K, :]
+        dz = @view du[:, :, 3*p.K+1:4*p.K, :]
+        ds = @view du[:, :, 4*p.K+1:5*p.K, :]
 
-        dv_p = @view du[:, :, 5*p.K+1:5*p.K+1,:]
-        dv_m = @view du[:, :, 5*p.K+2:5*p.K+2,:]
+        dv_p = @view du[:, :, 5*p.K+1:5*p.K+1, :]
+        dv_m = @view du[:, :, 5*p.K+2:5*p.K+2, :]
 
         LaminartEqConv.fun_x_lgn!(ff.x_lgn, ff.x, p)
-        LaminartEqConv.fun_v_C!(ff.C, v_p, v_m, ff.V_temp_1, ff.V_temp_2, ff.A_temp, ff.B_temp, p)
+        LaminartEqConv.fun_v_C!(
+            ff.C,
+            v_p,
+            v_m,
+            ff.V_temp_1,
+            ff.V_temp_2,
+            ff.A_temp,
+            ff.B_temp,
+            p,
+        )
         LaminartEqConv.fun_H_z!(ff.H_z, z, ff.H_z_temp, p)
 
         LaminartEqConv.fun_dv!(dv_p, v_p, p.r, ff.x_lgn, ff.dv_temp, p)
@@ -123,28 +132,37 @@ end
 
 function (ff::LamFunction_allStruct)(du, u, p, t)
 
-       @inbounds begin
+    @inbounds begin
 
-        @. ff.x = @view u[:, :, 1:p.K,:]
-        ff.y = @view u[:, :, p.K+1:2*p.K,:]
-        @. ff.m = @view u[:, :, 2*p.K+1:3*p.K,:]
-        ff.z = @view u[:, :, 3*p.K+1:4*p.K,:]
-        @. ff.s = @view u[:, :, 4*p.K+1:5*p.K,:]
+        @. ff.x = @view u[:, :, 1:p.K, :]
+        ff.y = @view u[:, :, p.K+1:2*p.K, :]
+        @. ff.m = @view u[:, :, 2*p.K+1:3*p.K, :]
+        ff.z = @view u[:, :, 3*p.K+1:4*p.K, :]
+        @. ff.s = @view u[:, :, 4*p.K+1:5*p.K, :]
 
-        ff.v_p = @view u[:, :, 5*p.K+1:5*p.K+1,:]
-        ff.v_m = @view u[:, :, 5*p.K+2:5*p.K+2,:]
+        ff.v_p = @view u[:, :, 5*p.K+1:5*p.K+1, :]
+        ff.v_m = @view u[:, :, 5*p.K+2:5*p.K+2, :]
 
-        ff.dx = @view du[:, :, 1:p.K,:]
-        ff.dy = @view du[:, :, p.K+1:2*p.K,:]
-        ff.dm = @view du[:, :, 2*p.K+1:3*p.K,:]
-        ff.dz = @view du[:, :, 3*p.K+1:4*p.K,:]
-        ff.ds = @view du[:, :, 4*p.K+1:5*p.K,:]
+        ff.dx = @view du[:, :, 1:p.K, :]
+        ff.dy = @view du[:, :, p.K+1:2*p.K, :]
+        ff.dm = @view du[:, :, 2*p.K+1:3*p.K, :]
+        ff.dz = @view du[:, :, 3*p.K+1:4*p.K, :]
+        ff.ds = @view du[:, :, 4*p.K+1:5*p.K, :]
 
-        ff.dv_p = @view du[:, :, 5*p.K+1:5*p.K+1,:]
-        ff.dv_m = @view du[:, :, 5*p.K+2:5*p.K+2,:]
+        ff.dv_p = @view du[:, :, 5*p.K+1:5*p.K+1, :]
+        ff.dv_m = @view du[:, :, 5*p.K+2:5*p.K+2, :]
 
         LaminartEqConv.fun_x_lgn!(ff.x_lgn, ff.x, p)
-        LaminartEqConv.fun_v_C!(ff.C, ff.v_p, ff.v_m, ff.V_temp_1, ff.V_temp_2, ff.A_temp, ff.B_temp, p)
+        LaminartEqConv.fun_v_C!(
+            ff.C,
+            ff.v_p,
+            ff.v_m,
+            ff.V_temp_1,
+            ff.V_temp_2,
+            ff.A_temp,
+            ff.B_temp,
+            p,
+        )
         LaminartEqConv.fun_H_z!(ff.H_z, ff.z, ff.H_z_temp, p)
 
         LaminartEqConv.fun_dv!(ff.dv_p, ff.v_p, p.r, ff.x_lgn, ff.dv_temp, p)
@@ -163,7 +181,7 @@ end
 
 
 
-mutable struct LamFunction_gpu_reuse{T <: AbstractArray} <: Function
+mutable struct LamFunction_gpu_reuse{T<:AbstractArray} <: Function
 
     x_lgn::T
     C::T
@@ -180,30 +198,39 @@ end
 
 function (ff::LamFunction_gpu_reuse)(du, u, p, t)
 
-       @inbounds begin
+    @inbounds begin
 
 
-        y = @view u[:, :, p.K + 1:2 * p.K, :]
-        z = @view u[:, :, 3 * p.K + 1:4 * p.K, :]
+        y = @view u[:, :, p.K+1:2*p.K, :]
+        z = @view u[:, :, 3*p.K+1:4*p.K, :]
 
-        v_p = @view u[:, :, 5 * p.K + 1:5 * p.K + 1, :]
-        v_m = @view u[:, :, 5 * p.K + 2:5 * p.K + 2, :]
+        v_p = @view u[:, :, 5*p.K+1:5*p.K+1, :]
+        v_m = @view u[:, :, 5*p.K+2:5*p.K+2, :]
 
         dx = @view du[:, :, 1:p.K, :]
-        dy = @view du[:, :, p.K + 1:2 * p.K, :]
-        dm = @view du[:, :, 2 * p.K + 1:3 * p.K, :]
-        dz = @view du[:, :, 3 * p.K + 1:4 * p.K, :]
-        ds = @view du[:, :, 4 * p.K + 1:5 * p.K, :]
+        dy = @view du[:, :, p.K+1:2*p.K, :]
+        dm = @view du[:, :, 2*p.K+1:3*p.K, :]
+        dz = @view du[:, :, 3*p.K+1:4*p.K, :]
+        ds = @view du[:, :, 4*p.K+1:5*p.K, :]
 
-        dv_p = @view du[:, :, 5 * p.K + 1:5 * p.K + 1, :]
-        dv_m = @view du[:, :, 5 * p.K + 2:5 * p.K + 2, :]
+        dv_p = @view du[:, :, 5*p.K+1:5*p.K+1, :]
+        dv_m = @view du[:, :, 5*p.K+2:5*p.K+2, :]
 
 
-        LaminartEqConv.fun_v_C!(ff.C, v_p, v_m, ff.tmp_a, ff.tmp_b, ff.tmp_A, ff.tmp_B, p) #a,b,C,D: buffers
+        LaminartEqConv.fun_v_C!(
+            ff.C,
+            v_p,
+            v_m,
+            ff.tmp_a,
+            ff.tmp_b,
+            ff.tmp_A,
+            ff.tmp_B,
+            p,
+        ) #a,b,C,D: buffers
         LaminartEqConv.fun_H_z!(ff.H_z, z, ff.tmp_A, p) #A=buffer
 
-        @. ff.tmp_A = @view u[:, :, 1:p.K,:] #x
-        @. ff.tmp_B = @view u[:, :, 2*p.K+1:3*p.K,:] #m
+        @. ff.tmp_A = @view u[:, :, 1:p.K, :] #x
+        @. ff.tmp_B = @view u[:, :, 2*p.K+1:3*p.K, :] #m
         LaminartEqConv.fun_x_lgn!(ff.x_lgn, ff.tmp_A, p)
 
         LaminartEqConv.fun_dv!(dv_p, v_p, p.r, ff.x_lgn, ff.tmp_a, p) #a=buffer
@@ -214,7 +241,7 @@ function (ff::LamFunction_gpu_reuse)(du, u, p, t)
         LaminartEqConv.fun_dy!(dy, y, ff.C, ff.tmp_A, ff.tmp_B, ff.tmp_C, p) # A:x, B:m, C:buffer
         LaminartEqConv.fun_dm!(dm, ff.tmp_B, ff.tmp_A, ff.tmp_C, p) # A:x, B:m, C:buffer
 
-        @. ff.tmp_A = @view u[:, :, 4*p.K+1:5*p.K,:] #s
+        @. ff.tmp_A = @view u[:, :, 4*p.K+1:5*p.K, :] #s
         LaminartEqConv.fun_dz!(dz, z, y, ff.H_z, ff.tmp_A, ff.tmp_B, p) #A=s, B=buffer
         LaminartEqConv.fun_ds!(ds, ff.tmp_A, ff.H_z, ff.tmp_B, p) #A=s, B=buffer
 
@@ -224,7 +251,7 @@ function (ff::LamFunction_gpu_reuse)(du, u, p, t)
 
 end
 
-mutable struct LamFunction_equ{T <: AbstractArray} <: Function
+mutable struct LamFunction_equ{T<:AbstractArray} <: Function
     x::T
     m::T
     s::T
@@ -248,34 +275,43 @@ end
 
 function (ff::LamFunction_equ)(du, u, p, t)
 
-       @inbounds begin
+    @inbounds begin
 
-        @. ff.x = @view u[:, :, 1:p.K,:]
-        y = @view u[:, :, p.K+1:2*p.K,:]
-        @. ff.m = @view u[:, :, 2*p.K+1:3*p.K,:]
-        z = @view u[:, :, 3*p.K+1:4*p.K,:]
-        @. ff.s = @view u[:, :, 4*p.K+1:5*p.K,:]
+        @. ff.x = @view u[:, :, 1:p.K, :]
+        y = @view u[:, :, p.K+1:2*p.K, :]
+        @. ff.m = @view u[:, :, 2*p.K+1:3*p.K, :]
+        z = @view u[:, :, 3*p.K+1:4*p.K, :]
+        @. ff.s = @view u[:, :, 4*p.K+1:5*p.K, :]
 
-        v_p = @view u[:, :, 5*p.K+1:5*p.K+1,:]
-        v_m = @view u[:, :, 5*p.K+2:5*p.K+2,:]
+        v_p = @view u[:, :, 5*p.K+1:5*p.K+1, :]
+        v_m = @view u[:, :, 5*p.K+2:5*p.K+2, :]
 
-        dx = @view du[:, :, 1:p.K,:]
-        dy = @view du[:, :, p.K+1:2*p.K,:]
-        dm = @view du[:, :, 2*p.K+1:3*p.K,:]
-        dz = @view du[:, :, 3*p.K+1:4*p.K,:]
-        ds = @view du[:, :, 4*p.K+1:5*p.K,:]
+        dx = @view du[:, :, 1:p.K, :]
+        dy = @view du[:, :, p.K+1:2*p.K, :]
+        dm = @view du[:, :, 2*p.K+1:3*p.K, :]
+        dz = @view du[:, :, 3*p.K+1:4*p.K, :]
+        ds = @view du[:, :, 4*p.K+1:5*p.K, :]
 
-        dv_p = @view du[:, :, 5*p.K+1:5*p.K+1,:]
-        dv_m = @view du[:, :, 5*p.K+2:5*p.K+2,:]
+        dv_p = @view du[:, :, 5*p.K+1:5*p.K+1, :]
+        dv_m = @view du[:, :, 5*p.K+2:5*p.K+2, :]
 
         LaminartEqConv.fun_x_lgn!(ff.x_lgn, ff.x, p)
-        LaminartEqConv.fun_v_C!(ff.C, v_p, v_m, ff.V_temp_1, ff.V_temp_2, ff.A_temp, ff.B_temp, p)
+        LaminartEqConv.fun_v_C!(
+            ff.C,
+            v_p,
+            v_m,
+            ff.V_temp_1,
+            ff.V_temp_2,
+            ff.A_temp,
+            ff.B_temp,
+            p,
+        )
         LaminartEqConv.fun_H_z!(ff.H_z, z, ff.H_z_temp, p)
 
         LaminartEqConv.fun_dv!(dv_p, v_p, p.r, ff.x_lgn, ff.dv_temp, p)
         LaminartEqConv.fun_dv!(dv_m, v_m, .-p.r, ff.x_lgn, ff.dv_temp, p)
-#         LaminartEqConv.fun_dx_v1!(dx, ff.x, ff.C, z, p.x_V2, p)
-#         LaminartEqConv.fun_dy!(dy, y, ff.C, ff.x, ff.m, ff.dy_temp, p)
+        #         LaminartEqConv.fun_dx_v1!(dx, ff.x, ff.C, z, p.x_V2, p)
+        #         LaminartEqConv.fun_dy!(dy, y, ff.C, ff.x, ff.m, ff.dy_temp, p)
         LaminartEqConv.fun_x_equ!(ff.x, ff.C, z, ff.dy_temp, p.x_V2, p)
         LaminartEqConv.fun_y_equ!(y, ff.C, ff.x, ff.m, ff.dy_temp, p)
         LaminartEqConv.fun_dm!(dm, ff.m, ff.x, ff.dm_temp, p)
@@ -287,23 +323,23 @@ function (ff::LamFunction_equ)(du, u, p, t)
 
 end
 
-mutable struct LamFunction_all_struct_reuse_1{T <: AbstractArray} <: Function
+mutable struct LamFunction_all_struct_reuse_1{T<:AbstractArray} <: Function
 
     x_lgn::T
     C::T
     H_z::T
 
-    y
-    z
-    v_p
-    v_m
-    dx
-    dy
-    dm
-    dz
-    ds
-    dv_p
-    dv_m
+    y::Any
+    z::Any
+    v_p::Any
+    v_m::Any
+    dx::Any
+    dy::Any
+    dm::Any
+    dz::Any
+    ds::Any
+    dv_p::Any
+    dv_m::Any
 
     tmp_a::T
     tmp_b::T
@@ -316,30 +352,39 @@ end
 
 function (ff::LamFunction_all_struct_reuse_1)(du, u, p, t)
 
-       @inbounds begin
+    @inbounds begin
 
 
-        ff.y = @view u[:, :, p.K + 1:2 * p.K, :]
-        ff.z = @view u[:, :, 3 * p.K + 1:4 * p.K, :]
+        ff.y = @view u[:, :, p.K+1:2*p.K, :]
+        ff.z = @view u[:, :, 3*p.K+1:4*p.K, :]
 
-        ff.v_p = @view u[:, :, 5 * p.K + 1:5 * p.K + 1, :]
-        ff.v_m = @view u[:, :, 5 * p.K + 2:5 * p.K + 2, :]
+        ff.v_p = @view u[:, :, 5*p.K+1:5*p.K+1, :]
+        ff.v_m = @view u[:, :, 5*p.K+2:5*p.K+2, :]
 
         ff.dx = @view du[:, :, 1:p.K, :]
-        ff.dy = @view du[:, :, p.K + 1:2 * p.K, :]
-        ff.dm = @view du[:, :, 2 * p.K + 1:3 * p.K, :]
-        ff.dz = @view du[:, :, 3 * p.K + 1:4 * p.K, :]
-        ff.ds = @view du[:, :, 4 * p.K + 1:5 * p.K, :]
+        ff.dy = @view du[:, :, p.K+1:2*p.K, :]
+        ff.dm = @view du[:, :, 2*p.K+1:3*p.K, :]
+        ff.dz = @view du[:, :, 3*p.K+1:4*p.K, :]
+        ff.ds = @view du[:, :, 4*p.K+1:5*p.K, :]
 
-        ff.dv_p = @view du[:, :, 5 * p.K + 1:5 * p.K + 1, :]
-        ff.dv_m = @view du[:, :, 5 * p.K + 2:5 * p.K + 2, :]
+        ff.dv_p = @view du[:, :, 5*p.K+1:5*p.K+1, :]
+        ff.dv_m = @view du[:, :, 5*p.K+2:5*p.K+2, :]
 
 
-        LaminartEqConv.fun_v_C!(ff.C, ff.v_p, ff.v_m, ff.tmp_a, ff.tmp_b, ff.tmp_A, ff.tmp_B, p) #a,b,C,D: buffers
+        LaminartEqConv.fun_v_C!(
+            ff.C,
+            ff.v_p,
+            ff.v_m,
+            ff.tmp_a,
+            ff.tmp_b,
+            ff.tmp_A,
+            ff.tmp_B,
+            p,
+        ) #a,b,C,D: buffers
         LaminartEqConv.fun_H_z!(ff.H_z, ff.z, ff.tmp_A, p) #A=buffer
 
-        @. ff.tmp_A = @view u[:, :, 1:p.K,:] #x
-        @. ff.tmp_B = @view u[:, :, 2*p.K+1:3*p.K,:] #m
+        @. ff.tmp_A = @view u[:, :, 1:p.K, :] #x
+        @. ff.tmp_B = @view u[:, :, 2*p.K+1:3*p.K, :] #m
         LaminartEqConv.fun_x_lgn!(ff.x_lgn, ff.tmp_A, p)
 
         LaminartEqConv.fun_dv!(ff.dv_p, ff.v_p, p.r, ff.x_lgn, ff.tmp_a, p) #a=buffer
@@ -347,10 +392,18 @@ function (ff::LamFunction_all_struct_reuse_1)(du, u, p, t)
 
 
         LaminartEqConv.fun_dx_v1!(ff.dx, ff.tmp_A, ff.C, ff.z, p.x_V2, p) #A:x
-        LaminartEqConv.fun_dy!(ff.dy, ff.y, ff.C, ff.tmp_A, ff.tmp_B, ff.tmp_C, p) # A:x, B:m, C:buffer
+        LaminartEqConv.fun_dy!(
+            ff.dy,
+            ff.y,
+            ff.C,
+            ff.tmp_A,
+            ff.tmp_B,
+            ff.tmp_C,
+            p,
+        ) # A:x, B:m, C:buffer
         LaminartEqConv.fun_dm!(ff.dm, ff.tmp_B, ff.tmp_A, ff.tmp_C, p) # A:x, B:m, C:buffer
 
-        @. ff.tmp_A = @view u[:, :, 4*p.K+1:5*p.K,:] #s
+        @. ff.tmp_A = @view u[:, :, 4*p.K+1:5*p.K, :] #s
         LaminartEqConv.fun_dz!(ff.dz, ff.z, ff.y, ff.H_z, ff.tmp_A, ff.tmp_B, p) #A=s, B=buffer
         LaminartEqConv.fun_ds!(ff.ds, ff.tmp_A, ff.H_z, ff.tmp_B, p) #A=s, B=buffer
 
@@ -362,39 +415,47 @@ end
 
 
 struct LamFunction_imfil_cpu_a <: Function
-	x_lgn
-	C
-	H_z
-	H_z_temp
-	v_C_temp1
-	v_C_temp2
-	v_C_tempA
-	W_temp
+    x_lgn::Any
+    C::Any
+    H_z::Any
+    H_z_temp::Any
+    v_C_temp1::Any
+    v_C_temp2::Any
+    v_C_tempA::Any
+    W_temp::Any
 end
 
 function (ff::LamFunction_imfil_cpu_a)(du, u, p, t)
     @inbounds begin
         x = @view u[:, :, 1:p.K]
-        y = @view u[:, :, p.K + 1:2 * p.K]
-        m = @view u[:, :, 2 * p.K + 1:3 * p.K]
-        z = @view u[:, :, 3 * p.K + 1:4 * p.K]
-        s = @view u[:, :, 4 * p.K + 1:5 * p.K]
+        y = @view u[:, :, p.K+1:2*p.K]
+        m = @view u[:, :, 2*p.K+1:3*p.K]
+        z = @view u[:, :, 3*p.K+1:4*p.K]
+        s = @view u[:, :, 4*p.K+1:5*p.K]
 
-        v_p = @view u[:, :, 5 * p.K + 1]
-        v_m = @view u[:, :, 5 * p.K + 2]
+        v_p = @view u[:, :, 5*p.K+1]
+        v_m = @view u[:, :, 5*p.K+2]
 
         dx = @view du[:, :, 1:p.K]
-        dy = @view du[:, :, p.K + 1:2 * p.K]
-        dm = @view du[:, :, 2 * p.K + 1:3 * p.K]
-        dz = @view du[:, :, 3 * p.K + 1:4 * p.K]
-        ds = @view du[:, :, 4 * p.K + 1:5 * p.K]
+        dy = @view du[:, :, p.K+1:2*p.K]
+        dm = @view du[:, :, 2*p.K+1:3*p.K]
+        dz = @view du[:, :, 3*p.K+1:4*p.K]
+        ds = @view du[:, :, 4*p.K+1:5*p.K]
 
-        dv_p = @view du[:, :, 5 * p.K + 1]
-        dv_m = @view du[:, :, 5 * p.K + 2]
+        dv_p = @view du[:, :, 5*p.K+1]
+        dv_m = @view du[:, :, 5*p.K+2]
 
 
         LaminartEqImfilter.fun_x_lgn!(ff.x_lgn, x, p)
-        LaminartEqImfilter.fun_v_C!(ff.C, v_p, v_m, ff.v_C_temp1, ff.v_C_temp2, ff.v_C_tempA, p)
+        LaminartEqImfilter.fun_v_C!(
+            ff.C,
+            v_p,
+            v_m,
+            ff.v_C_temp1,
+            ff.v_C_temp2,
+            ff.v_C_tempA,
+            p,
+        )
         LaminartEqImfilter.fun_H_z!(ff.H_z, z, ff.H_z_temp, p)
 
         LaminartEqImfilter.fun_dv!(dv_p, v_p, p.r, ff.x_lgn, p)
@@ -410,39 +471,47 @@ end
 
 
 struct LamFunction_imfil_gpu_iir <: Function
-	x_lgn
-	C
-	H_z
-	H_z_temp
-	v_C_temp1
-	v_C_temp2
-	v_C_tempA
-	W_temp
+    x_lgn::Any
+    C::Any
+    H_z::Any
+    H_z_temp::Any
+    v_C_temp1::Any
+    v_C_temp2::Any
+    v_C_tempA::Any
+    W_temp::Any
 end
 
 function (ff::LamFunction_imfil_gpu_iir)(du, u, p, t)
     @inbounds begin
         x = @view u[:, :, 1:p.K]
-        y = @view u[:, :, p.K + 1:2 * p.K]
-        m = @view u[:, :, 2 * p.K + 1:3 * p.K]
-        z = @view u[:, :, 3 * p.K + 1:4 * p.K]
-        s = @view u[:, :, 4 * p.K + 1:5 * p.K]
+        y = @view u[:, :, p.K+1:2*p.K]
+        m = @view u[:, :, 2*p.K+1:3*p.K]
+        z = @view u[:, :, 3*p.K+1:4*p.K]
+        s = @view u[:, :, 4*p.K+1:5*p.K]
 
-        v_p = @view u[:, :, 5 * p.K + 1]
-        v_m = @view u[:, :, 5 * p.K + 2]
+        v_p = @view u[:, :, 5*p.K+1]
+        v_m = @view u[:, :, 5*p.K+2]
 
         dx = @view du[:, :, 1:p.K]
-        dy = @view du[:, :, p.K + 1:2 * p.K]
-        dm = @view du[:, :, 2 * p.K + 1:3 * p.K]
-        dz = @view du[:, :, 3 * p.K + 1:4 * p.K]
-        ds = @view du[:, :, 4 * p.K + 1:5 * p.K]
+        dy = @view du[:, :, p.K+1:2*p.K]
+        dm = @view du[:, :, 2*p.K+1:3*p.K]
+        dz = @view du[:, :, 3*p.K+1:4*p.K]
+        ds = @view du[:, :, 4*p.K+1:5*p.K]
 
-        dv_p = @view du[:, :, 5 * p.K + 1]
-        dv_m = @view du[:, :, 5 * p.K + 2]
+        dv_p = @view du[:, :, 5*p.K+1]
+        dv_m = @view du[:, :, 5*p.K+2]
 
 
         LaminartEqImfilterGPU_IIR.fun_x_lgn!(ff.x_lgn, x, p)
-        LaminartEqImfilterGPU_IIR.fun_v_C!(ff.C, v_p, v_m, ff.v_C_temp1, ff.v_C_temp2, ff.v_C_tempA, p)
+        LaminartEqImfilterGPU_IIR.fun_v_C!(
+            ff.C,
+            v_p,
+            v_m,
+            ff.v_C_temp1,
+            ff.v_C_temp2,
+            ff.v_C_tempA,
+            p,
+        )
         LaminartEqImfilterGPU_IIR.fun_H_z!(ff.H_z, z, ff.H_z_temp, p)
 
         LaminartEqImfilterGPU_IIR.fun_dv!(dv_p, v_p, p.r, ff.x_lgn, p)
@@ -457,39 +526,47 @@ function (ff::LamFunction_imfil_gpu_iir)(du, u, p, t)
 end
 
 struct LamFunction_imfil_gpu_fir <: Function
-	x_lgn
-	C
-	H_z
-	H_z_temp
-	v_C_temp1
-	v_C_temp2
-	v_C_tempA
-	W_temp
+    x_lgn::Any
+    C::Any
+    H_z::Any
+    H_z_temp::Any
+    v_C_temp1::Any
+    v_C_temp2::Any
+    v_C_tempA::Any
+    W_temp::Any
 end
 
 function (ff::LamFunction_imfil_gpu_fir)(du, u, p, t)
     @inbounds begin
         x = @view u[:, :, 1:p.K]
-        y = @view u[:, :, p.K + 1:2 * p.K]
-        m = @view u[:, :, 2 * p.K + 1:3 * p.K]
-        z = @view u[:, :, 3 * p.K + 1:4 * p.K]
-        s = @view u[:, :, 4 * p.K + 1:5 * p.K]
+        y = @view u[:, :, p.K+1:2*p.K]
+        m = @view u[:, :, 2*p.K+1:3*p.K]
+        z = @view u[:, :, 3*p.K+1:4*p.K]
+        s = @view u[:, :, 4*p.K+1:5*p.K]
 
-        v_p = @view u[:, :, 5 * p.K + 1]
-        v_m = @view u[:, :, 5 * p.K + 2]
+        v_p = @view u[:, :, 5*p.K+1]
+        v_m = @view u[:, :, 5*p.K+2]
 
         dx = @view du[:, :, 1:p.K]
-        dy = @view du[:, :, p.K + 1:2 * p.K]
-        dm = @view du[:, :, 2 * p.K + 1:3 * p.K]
-        dz = @view du[:, :, 3 * p.K + 1:4 * p.K]
-        ds = @view du[:, :, 4 * p.K + 1:5 * p.K]
+        dy = @view du[:, :, p.K+1:2*p.K]
+        dm = @view du[:, :, 2*p.K+1:3*p.K]
+        dz = @view du[:, :, 3*p.K+1:4*p.K]
+        ds = @view du[:, :, 4*p.K+1:5*p.K]
 
-        dv_p = @view du[:, :, 5 * p.K + 1]
-        dv_m = @view du[:, :, 5 * p.K + 2]
+        dv_p = @view du[:, :, 5*p.K+1]
+        dv_m = @view du[:, :, 5*p.K+2]
 
 
         LaminartEqImfilterGPU_FIR.fun_x_lgn!(ff.x_lgn, x, p)
-        LaminartEqImfilterGPU_FIR.fun_v_C!(ff.C, v_p, v_m, ff.v_C_temp1, ff.v_C_temp2, ff.v_C_tempA, p)
+        LaminartEqImfilterGPU_FIR.fun_v_C!(
+            ff.C,
+            v_p,
+            v_m,
+            ff.v_C_temp1,
+            ff.v_C_temp2,
+            ff.v_C_tempA,
+            p,
+        )
         LaminartEqImfilterGPU_FIR.fun_H_z!(ff.H_z, z, ff.H_z_temp, p)
 
         LaminartEqImfilterGPU_FIR.fun_dv!(dv_p, v_p, p.r, ff.x_lgn, p)
@@ -504,39 +581,47 @@ function (ff::LamFunction_imfil_gpu_fir)(du, u, p, t)
 end
 
 struct LamFunction_imfil_gpu_fft <: Function
-	x_lgn
-	C
-	H_z
-	H_z_temp
-	v_C_temp1
-	v_C_temp2
-	v_C_tempA
-	W_temp
+    x_lgn::Any
+    C::Any
+    H_z::Any
+    H_z_temp::Any
+    v_C_temp1::Any
+    v_C_temp2::Any
+    v_C_tempA::Any
+    W_temp::Any
 end
 
 function (ff::LamFunction_imfil_gpu_fft)(du, u, p, t)
     @inbounds begin
         x = @view u[:, :, 1:p.K]
-        y = @view u[:, :, p.K + 1:2 * p.K]
-        m = @view u[:, :, 2 * p.K + 1:3 * p.K]
-        z = @view u[:, :, 3 * p.K + 1:4 * p.K]
-        s = @view u[:, :, 4 * p.K + 1:5 * p.K]
+        y = @view u[:, :, p.K+1:2*p.K]
+        m = @view u[:, :, 2*p.K+1:3*p.K]
+        z = @view u[:, :, 3*p.K+1:4*p.K]
+        s = @view u[:, :, 4*p.K+1:5*p.K]
 
-        v_p = @view u[:, :, 5 * p.K + 1]
-        v_m = @view u[:, :, 5 * p.K + 2]
+        v_p = @view u[:, :, 5*p.K+1]
+        v_m = @view u[:, :, 5*p.K+2]
 
         dx = @view du[:, :, 1:p.K]
-        dy = @view du[:, :, p.K + 1:2 * p.K]
-        dm = @view du[:, :, 2 * p.K + 1:3 * p.K]
-        dz = @view du[:, :, 3 * p.K + 1:4 * p.K]
-        ds = @view du[:, :, 4 * p.K + 1:5 * p.K]
+        dy = @view du[:, :, p.K+1:2*p.K]
+        dm = @view du[:, :, 2*p.K+1:3*p.K]
+        dz = @view du[:, :, 3*p.K+1:4*p.K]
+        ds = @view du[:, :, 4*p.K+1:5*p.K]
 
-        dv_p = @view du[:, :, 5 * p.K + 1]
-        dv_m = @view du[:, :, 5 * p.K + 2]
+        dv_p = @view du[:, :, 5*p.K+1]
+        dv_m = @view du[:, :, 5*p.K+2]
 
 
         LaminartEqImfilterGPU_FFT.fun_x_lgn!(ff.x_lgn, x, p)
-        LaminartEqImfilterGPU_FFT.fun_v_C!(ff.C, v_p, v_m, ff.v_C_temp1, ff.v_C_temp2, ff.v_C_tempA, p)
+        LaminartEqImfilterGPU_FFT.fun_v_C!(
+            ff.C,
+            v_p,
+            v_m,
+            ff.v_C_temp1,
+            ff.v_C_temp2,
+            ff.v_C_tempA,
+            p,
+        )
         LaminartEqImfilterGPU_FFT.fun_H_z!(ff.H_z, z, ff.H_z_temp, p)
 
         LaminartEqImfilterGPU_FFT.fun_dv!(dv_p, v_p, p.r, ff.x_lgn, p)

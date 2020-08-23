@@ -157,7 +157,7 @@ test_name_plt = [
     "\$W^-\$ decreased",
 ]
 
-for file in files[1:end]
+for file in files
     for para_test in enumerate(para_sets)
         try
             p = LaminartInitFunc.parameterInit_conv_gpu(

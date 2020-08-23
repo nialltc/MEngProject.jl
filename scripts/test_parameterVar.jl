@@ -16,11 +16,11 @@ using MEngProject,
 using OrdinaryDiffEq,
     ParameterizedFunctions, LSODA, Sundials, DiffEqDevTools, Noise
 
-batch = 2
+batch = 10
 
 
 
-file = ["kan_sq_cont_l.png"]
+files = ["kan_sq_cont_l.png"]
 
 
 

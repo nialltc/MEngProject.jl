@@ -71,9 +71,9 @@ test_name = ["base", "H_l15", "W_l15", "H_l15W_l15"]
 test_name_plt =
     ["Base", "Length \$H = 15\$", "Length \$W = 15\$", "Length \$H, W = 15\$"]
 
-global benchm = []
+global benchm_k = []
 
-for file in files[1:end]
+for file in files
     for para_test ∈ enumerate(para_sets)
         try
             p = LaminartInitFunc.parameterInit_conv_gpu(
@@ -111,7 +111,7 @@ for file in files[1:end]
                 similar(arr1), #   B_temp
             )
             prob = ODEProblem(f, u0, tspan, p)
-            push!(benchm, @benchmark sol = solve(prob))
+            push!(benchm_k, @benchm_kark sol = solve(prob))
             sol = solve(prob)
 
             @inbounds begin
@@ -202,13 +202,13 @@ for file in files[1:end]
     end
 
 
-    # benchmark plot
+    # benchm_kark plot
 
     fig, ax = plt.subplots()
     for test ∈ 1:para_test[1]
         ax.scatter(
-            median(benchm[para_test[1]].times),
-            benchm[para_test[1]].memory,
+            median(benchm_k[para_test[1]].times),
+            benchm_k[para_test[1]].memory,
             label = test_name_plt,
             alpha = 0.3,
             edgecolors = "none",

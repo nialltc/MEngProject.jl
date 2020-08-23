@@ -31,8 +31,8 @@ end
 function fun_x_lgn!(x_lgn::AbstractArray, x::AbstractArray, p::NamedTuple)
     @. x_lgn = 0.0f0
     # @inbounds begin
-        for k ∈ 1:p.K
-            @. x_lgn += @view x[:, :, k]
+    for k ∈ 1:p.K
+        @. x_lgn += @view x[:, :, k]
         # end
     end
     return nothing
@@ -54,24 +54,19 @@ function func_filter_W!(
 )
     temp_k = similar(W_out[:, :, 1])
     # @inbounds begin
-        for k ∈ 1:p.K
-            #     todo fix W
-            img_k = @view img[:, :, k]
-            out_k = @view W_out[:, :, k]
-            imfilter!(out_k, img_k, centered(W[:, :, k, k]), p.filling)
-            for l ∈ 1:p.K
-                if l ≠ k
-                    img_l = @view img[:, :, l]
-                    imfilter!(
-                        temp_k,
-                        img_l,
-                        centered(W[:, :, k, l]),
-                        p.filling,
-                    )
-                    @. out_k += temp_k
-                end
+    for k ∈ 1:p.K
+        #     todo fix W
+        img_k = @view img[:, :, k]
+        out_k = @view W_out[:, :, k]
+        imfilter!(out_k, img_k, centered(W[:, :, k, k]), p.filling)
+        for l ∈ 1:p.K
+            if l ≠ k
+                img_l = @view img[:, :, l]
+                imfilter!(temp_k, img_l, centered(W[:, :, k, l]), p.filling)
+                @. out_k += temp_k
             end
         end
+    end
     # end
     return nothing
 end
@@ -112,12 +107,12 @@ function fun_v_C!(
     A = similar(v_C)
     #     allocate B to v_C
     # @inbounds begin
-        for k ∈ 1:p.K
-            a = @view A[:, :, k]
-            b = @view v_C[:, :, k]
-            imfilter!(a, V, centered(p.k_C_A[:, :, k]), p.filling)
-            imfilter!(b, V, centered(p.k_C_B[:, :, k]), p.filling)
-        end
+    for k ∈ 1:p.K
+        a = @view A[:, :, k]
+        b = @view v_C[:, :, k]
+        imfilter!(a, V, centered(p.k_C_A[:, :, k]), p.filling)
+        imfilter!(b, V, centered(p.k_C_B[:, :, k]), p.filling)
+    end
     # end
     @. v_C = p.γ * (max(A - abs(v_C), 0f0) + max(-A - abs(v_C), 0f0))
     return nothing
@@ -192,7 +187,8 @@ function fun_dz!(
     imfilter!(dz, s, centered(p.k_T_p), p.filling)
     @. dz =
         p.δ_z * (
-            -z + ((1f0 - z) * ((p.λ * max(y, 0f0)) + H_z + (p.a_23_ex * p.att))) -
+            -z +
+            ((1f0 - z) * ((p.λ * max(y, 0f0)) + H_z + (p.a_23_ex * p.att))) -
             ((z + p.ψ) * dz)
         )
     return nothing
@@ -215,11 +211,11 @@ function fun_H_z!(H_z::AbstractArray, z::AbstractArray, p::NamedTuple)
     temp = similar(z)
     @. temp = max(z - p.Γ, 0f0)
     # @inbounds begin
-        for k ∈ 1:p.K
-            H_z_k = @view H_z[:, :, k]
-            temp_k = @view temp[:, :, k]
-            imfilter!(H_z_k, temp_k, centered(p.k_H[:, :, k]), p.filling)
-        end
+    for k ∈ 1:p.K
+        H_z_k = @view H_z[:, :, k]
+        temp_k = @view temp[:, :, k]
+        imfilter!(H_z_k, temp_k, centered(p.k_H[:, :, k]), p.filling)
+    end
     # end
     return nothing
 end
@@ -261,9 +257,10 @@ function fun_dy_v2!(
     fun_f!(dy, dy, p)
     @. dy =
         p.δ_c * (
-            -y_v2 +
-            ((1.0f0 - y_v2) * ((p.v12_4 * max(z - p.Γ, 0f0)) + (p.η_p * x_v2))) -
-            ((1.0f0 + y_v2) * dy)
+            -y_v2 + (
+                (1.0f0 - y_v2) *
+                ((p.v12_4 * max(z - p.Γ, 0f0)) + (p.η_p * x_v2))
+            ) - ((1.0f0 + y_v2) * dy)
         )
     return nothing
 end
@@ -273,23 +270,37 @@ end
 
 
 # # l6 equilabrium
-function fun_x_equ!(x::AbstractArray, C::AbstractArray, z::AbstractArray, x_v2::AbstractArray, x_temp::AbstractArray, p::NamedTuple)
-# 	@inbounds begin
-        @. x_temp = (p.α * C) + (p.ϕ * max(z - p.Γ, 0f0)) + (p.v_21 * x_v2) + p.att
-        @. x = x_temp /(1f0+x_temp)
-# 	end
+function fun_x_equ!(
+    x::AbstractArray,
+    C::AbstractArray,
+    z::AbstractArray,
+    x_v2::AbstractArray,
+    x_temp::AbstractArray,
+    p::NamedTuple,
+)
+    # 	@inbounds begin
+    @. x_temp = (p.α * C) + (p.ϕ * max(z - p.Γ, 0f0)) + (p.v_21 * x_v2) + p.att
+    @. x = x_temp / (1f0 + x_temp)
+    # 	end
     return nothing
 end
 
 
 # # l4 excit equilabrium
-function fun_y_equ!(y::AbstractArray, C::AbstractArray, x::AbstractArray, m::AbstractArray, dy_temp::AbstractArray, p::NamedTuple)
-# 	@inbounds begin
-        imfilter!(dy_temp, m, p.k_W_p, p.filling)
-        @. dy_temp = m * dy_temp
-        fun_f!(dy_temp, p)
-        @. y = (C + (p.η_p * x) - dy_temp)/(1f0 + C + (p.η_p * x) + dy_temp)
-# 	end
+function fun_y_equ!(
+    y::AbstractArray,
+    C::AbstractArray,
+    x::AbstractArray,
+    m::AbstractArray,
+    dy_temp::AbstractArray,
+    p::NamedTuple,
+)
+    # 	@inbounds begin
+    imfilter!(dy_temp, m, p.k_W_p, p.filling)
+    @. dy_temp = m * dy_temp
+    fun_f!(dy_temp, p)
+    @. y = (C + (p.η_p * x) - dy_temp) / (1f0 + C + (p.η_p * x) + dy_temp)
+    # 	end
     return nothing
 end
 

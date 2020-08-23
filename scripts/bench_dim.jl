@@ -16,7 +16,7 @@ using MEngProject,
 using OrdinaryDiffEq,
     ParameterizedFunctions, LSODA, Sundials, DiffEqDevTools, Noise
 
-batch = 1
+batch = 10
 
 
 # files = readdir(datadir("res_test"))[2:end]
@@ -54,7 +54,7 @@ test_name_plt = [
 ]
 
 
-for file in enumerate(files[1:1])
+for file in enumerate(files)
     try
         p = LaminartInitFunc.parameterInit_conv_gpu(
             datadir("res_test", file[2]),

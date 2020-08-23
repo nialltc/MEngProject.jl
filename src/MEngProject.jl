@@ -9,7 +9,16 @@ include("./LaminartEqConv.jl")
 include("./LaminartKernels.jl")
 include("./Utils.jl")
 include("./Parameters.jl")
-export LaminartFunc, LaminartInitFunc, LaminartEqImfilter, LaminartEqConv, LaminartKernels, Utils, Parameters, LaminartEqImfilterGPU_FFT, LaminartEqImfilterGPU_FIR, LaminartEqImfilterGPU_IIR
+export LaminartFunc,
+    LaminartInitFunc,
+    LaminartEqImfilter,
+    LaminartEqConv,
+    LaminartKernels,
+    Utils,
+    Parameters,
+    LaminartEqImfilterGPU_FFT,
+    LaminartEqImfilterGPU_FIR,
+    LaminartEqImfilterGPU_IIR
 
 
 end

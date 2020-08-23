@@ -17,126 +17,277 @@ using DrWatson
 @quickactivate "MEngProject"
 
 # saving plots
-location=plotsdir()
+location = plotsdir()
 
-layers = ["L6 (\$x\$)","L6(\$x\$)","L4 excit (\$y\$)","L4 excit (\$y\$)","L4 inhib (\$m\$)","L4 inhib (\$m\$)","L2/3 excit (\$z\$)","L2/3 excit (\$z\$)","L2/3 inhib (\$s\$)","L2/3 inhib (\$s\$)","LGN (\$v\$)","LGN (\$v\$)"]
+layers = [
+    "L6 (\$x\$)",
+    "L6(\$x\$)",
+    "L4 excit (\$y\$)",
+    "L4 excit (\$y\$)",
+    "L4 inhib (\$m\$)",
+    "L4 inhib (\$m\$)",
+    "L2/3 excit (\$z\$)",
+    "L2/3 excit (\$z\$)",
+    "L2/3 inhib (\$s\$)",
+    "L2/3 inhib (\$s\$)",
+    "LGN (\$v\$)",
+    "LGN (\$v\$)",
+]
 
-layers_1 = ["\$x_1\$", "\$x_2\$", "\$y_1\$","\$y_2\$","\$m_1\$","\$m_2\$","\$z_1\$","\$z_2\$","\$s_1\$","\$s_2\$","\$v^+\$","\$v^-\$"]
+layers_1 = [
+    "\$x_1\$",
+    "\$x_2\$",
+    "\$y_1\$",
+    "\$y_2\$",
+    "\$m_1\$",
+    "\$m_2\$",
+    "\$z_1\$",
+    "\$z_2\$",
+    "\$s_1\$",
+    "\$s_2\$",
+    "\$v^+\$",
+    "\$v^-\$",
+]
 
-la = ["x","x","y","y","m","m","z","z","s","s","v","v"]
+la = ["x", "x", "y", "y", "m", "m", "z", "z", "s", "s", "v", "v"]
 
-lines = ["b--","g--","r-.","c-.","r:","c:","m-","y-","m:","y:","b-.","g-."]
+lines = [
+    "b--",
+    "g--",
+    "r-.",
+    "c-.",
+    "r:",
+    "c:",
+    "m-",
+    "y-",
+    "m:",
+    "y:",
+    "b-.",
+    "g-.",
+]
 
-colours = ["tab:blue", "tab:orange", "tab:green", "tab:red", "tab:purple", "tab:brown", "tab:pink", "tab:gray", "tab:olive", "tab:cyan"]
-function plot_rb(img::AbstractArray;  name="img", save = false, axMin = -1, axMax = 1, clbar=false,  loc=location, filetype=".png")
-    findmax(img)[1] > axMax && throw(ArgumentError(string("Image has max ", findmax(img)[1], ",outside range")))
-    findmin(img)[1] < axMin && throw(ArgumentError(string("Image has min ", findmin(img)[1], ",outside range")))
+colours = [
+    "tab:blue",
+    "tab:orange",
+    "tab:green",
+    "tab:red",
+    "tab:purple",
+    "tab:brown",
+    "tab:pink",
+    "tab:gray",
+    "tab:olive",
+    "tab:cyan",
+]
+function plot_rb(
+    img::AbstractArray;
+    name = "img",
+    save = false,
+    axMin = -1,
+    axMax = 1,
+    clbar = false,
+    loc = location,
+    filetype = ".png",
+)
+    findmax(img)[1] > axMax && throw(ArgumentError(string(
+        "Image has max ",
+        findmax(img)[1],
+        ",outside range",
+    )))
+    findmin(img)[1] < axMin && throw(ArgumentError(string(
+        "Image has min ",
+        findmin(img)[1],
+        ",outside range",
+    )))
     fig, ax = plt.subplots()
 
-    im = ax.imshow(img, cmap=matplotlib.cm.RdBu_r,
-               vmax=axMax, vmin=axMin)
+    im = ax.imshow(img, cmap = matplotlib.cm.RdBu_r, vmax = axMax, vmin = axMin)
     if clbar
-        cbar = fig.colorbar(im,  shrink=0.9, ax=ax)
+        cbar = fig.colorbar(im, shrink = 0.9, ax = ax)
     end
 
     plt.axis("off")
     fig.tight_layout()
     plt.show()
     if save
-        plt.savefig(string(loc,name,filetype))
+        plt.savefig(string(loc, name, filetype))
     end
 end
 
-function plot_two(img::AbstractArray, k, t;   name="img", save = false, axMin = -1, axMax = 1, clbar=false,  loc=location, filetype=".png")
-    findmax(img)[1] > axMax && throw(ArgumentError(string("Image has max ", findmax(img)[1], ",outside range")))
-    findmin(img)[1] < axMin && throw(ArgumentError(string("Image has min ", findmin(img)[1], ",outside range")))
+function plot_two(
+    img::AbstractArray,
+    k,
+    t;
+    name = "img",
+    save = false,
+    axMin = -1,
+    axMax = 1,
+    clbar = false,
+    loc = location,
+    filetype = ".png",
+)
+    findmax(img)[1] > axMax && throw(ArgumentError(string(
+        "Image has max ",
+        findmax(img)[1],
+        ",outside range",
+    )))
+    findmin(img)[1] < axMin && throw(ArgumentError(string(
+        "Image has min ",
+        findmin(img)[1],
+        ",outside range",
+    )))
     fig, ax = plt.subplots()
 
-    im = ax.imshow(img[:,:,k,1,t], cmap=matplotlib.cm.BrBG,
-               vmax=axMax, vmin=axMin)
-	ax.imshow(img[:,:,k+1,1,t], cmap=matplotlib.cm.BrBG,
-               vmax=axMax, vmin=axMin)
+    im = ax.imshow(
+        img[:, :, k, 1, t],
+        cmap = matplotlib.cm.BrBG,
+        vmax = axMax,
+        vmin = axMin,
+    )
+    ax.imshow(
+        img[:, :, k+1, 1, t],
+        cmap = matplotlib.cm.BrBG,
+        vmax = axMax,
+        vmin = axMin,
+    )
     if clbar
-        cbar = fig.colorbar(im,  shrink=0.9, ax=ax)
+        cbar = fig.colorbar(im, shrink = 0.9, ax = ax)
     end
 
     plt.axis("off")
     fig.tight_layout()
     plt.show()
     if save
-        plt.savefig(string(loc,name,filetype))
+        plt.savefig(string(loc, name, filetype))
     end
 end
 
-function plot_gs(img::AbstractArray;  name="img", save = false, axMin = 0, axMax = 2, clbar=false,  loc=location, filetype=".png")
-    findmax(img)[1] > axMax && throw(ArgumentError(string("Image has max ", findmax(img)[1], ",outside range")))
-    findmin(img)[1] < axMin && throw(ArgumentError(string("Image has min ", findmin(img)[1], ",outside range")))
+function plot_gs(
+    img::AbstractArray;
+    name = "img",
+    save = false,
+    axMin = 0,
+    axMax = 2,
+    clbar = false,
+    loc = location,
+    filetype = ".png",
+)
+    findmax(img)[1] > axMax && throw(ArgumentError(string(
+        "Image has max ",
+        findmax(img)[1],
+        ",outside range",
+    )))
+    findmin(img)[1] < axMin && throw(ArgumentError(string(
+        "Image has min ",
+        findmin(img)[1],
+        ",outside range",
+    )))
     fig, ax = plt.subplots()
 
-    im = ax.imshow(img, cmap=matplotlib.cm.gray,
-               vmax=axMax, vmin=axMin)
+    im = ax.imshow(img, cmap = matplotlib.cm.gray, vmax = axMax, vmin = axMin)
     if clbar
-        cbar = fig.colorbar(im,  shrink=0.9, ax=ax)
+        cbar = fig.colorbar(im, shrink = 0.9, ax = ax)
     end
 
     plt.axis("off")
     fig.tight_layout()
     plt.show()
     if save
-        plt.savefig(string(loc,name,filetype))
+        plt.savefig(string(loc, name, filetype))
     end
 end
 
 
-function save_orientations_rb(A::Array, name::String,  axMin=-1, axMax=1, clbar=false, loc=location, filetype=".png")
-    for k in 1:size(A)[3]
-        fn = string(name,"_",k)
-        plot_rb(A[:,:,k], fn, true, axMin, axMax, clbar,  loc, filetype)
+function save_orientations_rb(
+    A::Array,
+    name::String,
+    axMin = -1,
+    axMax = 1,
+    clbar = false,
+    loc = location,
+    filetype = ".png",
+)
+    for k = 1:size(A)[3]
+        fn = string(name, "_", k)
+        plot_rb(A[:, :, k], fn, true, axMin, axMax, clbar, loc, filetype)
     end
 end
 
 
-function save_orientations_gs(A::Array, name::String,  axMin=0, axMax=1, clbar=false, loc=location, filetype=".png")
-    for k in 1:size(A)[3]
-        fn = string(name,"_",k)
-        plot_gs(A[:,:,k], fn, true, axMin, axMax, clbar,  loc, filetype)
+function save_orientations_gs(
+    A::Array,
+    name::String,
+    axMin = 0,
+    axMax = 1,
+    clbar = false,
+    loc = location,
+    filetype = ".png",
+)
+    for k = 1:size(A)[3]
+        fn = string(name, "_", k)
+        plot_gs(A[:, :, k], fn, true, axMin, axMax, clbar, loc, filetype)
     end
 end
 
 
-function save_2d_list_rb(A::Array, name::String, loc=location, filetype=".png", axMin=-1, axMax=1, clbar=false)
-n=0
+function save_2d_list_rb(
+    A::Array,
+    name::String,
+    loc = location,
+    filetype = ".png",
+    axMin = -1,
+    axMax = 1,
+    clbar = false,
+)
+    n = 0
     for img in A
-        n+=1
-        plot_101_rb(img,  name, true, axMin, axMax, clbar,  loc, filetype)
+        n += 1
+        plot_101_rb(img, name, true, axMin, axMax, clbar, loc, filetype)
     end
 end
 
 
-function save_orientations_gs_(A::Array, name::String, bright=1, loc=location, filetype=".png")
-    for k in 1:size(A)[3]
-        fn = string(loc,name,"_",k,filetype)
-        save(fn, Gray.(bright .*(A[:,:,k])))
+function save_orientations_gs_(
+    A::Array,
+    name::String,
+    bright = 1,
+    loc = location,
+    filetype = ".png",
+)
+    for k = 1:size(A)[3]
+        fn = string(loc, name, "_", k, filetype)
+        save(fn, Gray.(bright .* (A[:, :, k])))
     end
 end
 
 
-function save_2d_gs(A::Array, name::String, bright=1, loc=location, filetype=".png")
-        fn = string(loc,name,filetype)
-        save(fn, Gray.(bright .*(A)))
+function save_2d_gs(
+    A::Array,
+    name::String,
+    bright = 1,
+    loc = location,
+    filetype = ".png",
+)
+    fn = string(loc, name, filetype)
+    save(fn, Gray.(bright .* (A)))
 end
 
-function save_2d_list_gs(A::Array, name::String, bright=1, loc=location, filetype=".png")
-n=0
+function save_2d_list_gs(
+    A::Array,
+    name::String,
+    bright = 1,
+    loc = location,
+    filetype = ".png",
+)
+    n = 0
     for img in A
-        n+=1
-        save_2d(img, string(name,n), bright, loc, filetype)
+        n += 1
+        save_2d(img, string(name, n), bright, loc, filetype)
     end
 end
 
 function testa(x)
-    x*2
-    end
+    x * 2
+end
 
 
 end

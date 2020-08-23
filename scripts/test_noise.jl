@@ -16,7 +16,7 @@ using MEngProject,
 using OrdinaryDiffEq,
     ParameterizedFunctions, LSODA, Sundials, DiffEqDevTools, Noise
 
-batch = 4
+batch = 10
 
 
 # files = readdir(datadir("img"))

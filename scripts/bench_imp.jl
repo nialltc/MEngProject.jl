@@ -16,11 +16,11 @@ using MEngProject,
 using OrdinaryDiffEq,
     ParameterizedFunctions, LSODA, Sundials, DiffEqDevTools, Noise
 
-batch = 1
+batch = 10
 
 
 
-global benches = []
+global benchm_i = []
 
 tspan = (0.0f0, 10f0)
 
@@ -74,7 +74,7 @@ f = LaminartFunc.LamFunction(
 )
 prob = ODEProblem(f, u0, tspan, p)
 bm = @benchmark solve(prob)
-push!(benches, bm)
+push!(benchm_i, bm)
 
 
 
@@ -114,7 +114,7 @@ f = LaminartFunc.LamFunction(
 )
 prob = ODEProblem(f, u0, tspan, p)
 bm = @benchmark solve(prob)
-push!(benches, bm)
+push!(benchm_i, bm)
 
 
 # CPU imfilter
@@ -146,7 +146,7 @@ f = LaminartFunc.LamFunction_imfil_cpu(
 )
 prob = ODEProblem(f, u0, tspan, p)
 bm = @benchmark solve(prob)
-push!(benches, bm)
+push!(benchm_i, bm)
 
 
 
@@ -177,7 +177,7 @@ f = LaminartFunc.LamFunction_imfil_cpu(
 )
 prob = ODEProblem(f, u0, tspan, p)
 bm = @benchmark solve(prob)
-push!(benches, bm)
+push!(benchm_i, bm)
 
 
 
@@ -208,7 +208,7 @@ f = LaminartFunc.LamFunction_imfil_cpu(
 )
 prob = ODEProblem(f, u0, tspan, p)
 bm = @benchmark solve(prob)
-push!(benches, bm)
+push!(benchm_i, bm)
 
 
 
@@ -240,7 +240,7 @@ f = LaminartFunc.LamFunction_imfil_cpu(
 )
 prob = ODEProblem(f, u0, tspan, p)
 bm = @benchmark solve(prob)
-push!(benches, bm)
+push!(benchm_i, bm)
 
 
 # benchmark plot
@@ -250,7 +250,7 @@ fig, ax = plt.subplots()
 for ben in enumerate(test_name_plt)
     ax.scatter(
         ben[2],
-        median(benches[ben[1]].times) * 1e-9,
+        median(benchm_i[ben[1]].times) * 1e-9,
         color = Utils.colours[ben[1]],
         edgecolors = "none",
     )
@@ -273,7 +273,7 @@ fig, ax = plt.subplots()
 for ben in enumerate(test_name_plt)
     ax.scatter(
         ben[2],
-        benches[ben[1]].memory * 1e-6,
+        benchm_i[ben[1]].memory * 1e-6,
         color = Utils.colours[ben[1]],
         edgecolors = "none",
     )
@@ -294,7 +294,7 @@ fig, ax = plt.subplots()
 for ben in enumerate(test_name_plt)
     ax.scatter(
         ben[2],
-        benches[ben[1]].allocs * 1e-6,
+        benchm_i[ben[1]].allocs * 1e-6,
         color = Utils.colours[ben[1]],
         edgecolors = "none",
     )
