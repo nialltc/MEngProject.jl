@@ -16,7 +16,7 @@ using MEngProject,
 using OrdinaryDiffEq,
     ParameterizedFunctions, LSODA, Sundials, DiffEqDevTools, Noise
 
-
+CUDA.allowscalar(false)
 
 try include("test_illusions.jl") catch err; print(err) end
 CUDA.reclaim()
@@ -41,5 +41,5 @@ CUDA.reclaim()
 
 run(`git pull`)
 run(`git add plots/*`)
-run(`git commit -m -a "results"`)
+run(`git commit -m "results"`)
 run(`git push`)
