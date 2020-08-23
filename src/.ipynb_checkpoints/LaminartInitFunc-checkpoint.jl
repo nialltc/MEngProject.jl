@@ -38,7 +38,7 @@ end
 
 function parameterInit_conv_gpu_noise(imgLoc::String, p::NamedTuple, noise::Real)
     img = convert(Array{Float32,2},  load(imgLoc));
-	img = mult_gauss(img, clip=false, σ=0.1, μ=1)
+	img = mult_gauss(img,noise)
     img = reshape2d_4d(img)
     img = cu(img)
 

@@ -19,8 +19,8 @@ using OrdinaryDiffEq,
 batch = 2
 
 
-# files = readdir(datadir("img"))
-files = ["kan_sq_cont_l.png"]
+
+file = ["kan_sq_cont_l.png"]
 
 
 
@@ -31,7 +31,7 @@ batch_ = string(batch, "_", rand(1000:9999))
 mkdir(plotsdir(string("paraVar", batch_)))
 
 
-for file in files[1:end]
+for file in files
     para_sets = [
 #         (
 #             C_1 = 1.5f0,
@@ -385,9 +385,9 @@ for file in files[1:end]
                         ".png",
                     ),
                 ))
-			end
-		finally
-                close("all")
+            end
+        finally
+            close("all")
         end
 
 
@@ -410,13 +410,13 @@ for file in files[1:end]
                 string(file, "_para_", test_name[para_test[1]], "_time.png"),
             ))
             close("all")
-			u0 = nothing
-			p = nothing
-			arr1 = nothing
-			arr2 = nothing
-			f = nothing
-			prob = nothing
-			sol = nothing
+            u0 = nothing
+            p = nothing
+            arr1 = nothing
+            arr2 = nothing
+            f = nothing
+            prob = nothing
+            sol = nothing
         end
     end
 end

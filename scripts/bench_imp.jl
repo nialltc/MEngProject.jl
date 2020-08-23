@@ -1,13 +1,13 @@
 using DrWatson
 @quickactivate "MEngProject"
-using MEngProject, CUDA, DifferentialEquations, PyPlot, NNlib,  ImageFiltering, Images, MEngProject.LaminartKernels, MEngProject.LaminartInitFunc, MEngProject.Utils, BenchmarkTools, Test
+using MEngProject,
+# CUDA,
+DifferentialEquations, PyPlot, NNlib,  ImageFiltering, Images, MEngProject.LaminartKernels, MEngProject.LaminartInitFunc, MEngProject.Utils, BenchmarkTools, Test
 
 using OrdinaryDiffEq, ParameterizedFunctions, LSODA, Sundials, DiffEqDevTools, Noise
 
 batch = 1
 
-
-files = readdir(datadir("img"))
 
 
 global benches = []
@@ -178,13 +178,13 @@ push!(benches, bm)
 
 # benchmark plot
 
+# time
 fig, ax = plt.subplots()
 for ben in enumerate(test_name_plt)
     ax.scatter(
+	    ben[2],
         median(benches[ben[1]].times) * 1e-9,
-        ben[2],
         color = Utils.colours[ben[1]],
-        alpha = 0.3,
         edgecolors = "none",
     )
 end
@@ -192,7 +192,7 @@ end
 
 ax.legend()
 ax.set_ylabel("Time (\$s\$)")
-ax.grid(True)
+ax.grid(true)
 fig.tight_layout()
 plt.savefig(plotsdir(
     string("bench_imp", batch_),
@@ -208,10 +208,9 @@ close("all")
 fig, ax = plt.subplots()
 for ben in enumerate(test_name_plt)
     ax.scatter(
+	    ben[2],
         benches[ben[1]].memory * 1e-6,
-        ben[2],
         color = Utils.colours[ben[1]],
-        alpha = 0.3,
         edgecolors = "none",
     )
 end
@@ -219,7 +218,7 @@ end
 
 ax.legend()
 ax.set_ylabel("Memory (\$MB\$)")
-ax.grid(True)
+ax.grid(true)
 fig.tight_layout()
 plt.savefig(plotsdir(
     string("bench_imp", batch_),
@@ -233,10 +232,9 @@ close("all")
 fig, ax = plt.subplots()
 for ben in enumerate(test_name_plt)
     ax.scatter(
+		ben[2],
         benches[ben[1]].allocs * 1e-6,
-        ben[2],
         color = Utils.colours[ben[1]],
-        alpha = 0.3,
         edgecolors = "none",
     )
 end
@@ -244,7 +242,7 @@ end
 
 ax.legend()
 ax.set_ylabel("Allocations")
-ax.grid(True)
+ax.grid(true)
 fig.tight_layout()
 plt.savefig(plotsdir(
     string("bench_imp", batch_),
