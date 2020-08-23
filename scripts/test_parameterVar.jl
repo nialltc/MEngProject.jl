@@ -315,6 +315,8 @@ for file in files
                         cbar = fig.colorbar(im2, shrink = 0.9, ax = ax)
                         cbar.ax.set_xlabel("\$k=$k2\$")
                         cbar = fig.colorbar(im, shrink = 0.9, ax = ax)
+                        cbar.set_alpha(0.5)
+cbar.draw_all()
                         cbar.ax.set_xlabel("\$k=$k\$")
                         layer = Utils.layers[k]
                         plt.title(string(
@@ -362,6 +364,8 @@ for file in files
                 cbar = fig.colorbar(im2, shrink = 0.9, ax = ax)
                 cbar.ax.set_xlabel("\$v^-\$")
                 cbar = fig.colorbar(im, shrink = 0.9, ax = ax)
+                cbar.set_alpha(0.5)
+cbar.draw_all()
                 cbar.ax.set_xlabel("\$v^+\$")
 
                 layer = Utils.layers[k]
