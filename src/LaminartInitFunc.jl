@@ -435,8 +435,8 @@ function kernels_imfil_cpu(img::AbstractArray, p::NamedTuple)
         #             W_temp[:,:,l,k] =
         #         end
     end
-    W_p_temp[:, :, 1, 1] =
-        reflect(p.W_p_same_fact .* LaminartKernels.gaussian_rot(
+    W_p_temp[:, :, 1, 1] = reflect(
+        p.W_p_same_fact .* LaminartKernels.gaussian_rot(
             p.W_p_σ_x_same_a,
             p.W_p_σ_y_same_a,
             0f0,
@@ -446,10 +446,11 @@ function kernels_imfil_cpu(img::AbstractArray, p::NamedTuple)
             p.W_p_σ_y_same_b,
             0f0,
             p.W_l,
-        ))
+        ),
+    )
 
-    W_p_temp[:, :, 2, 2] =
-        reflect(p.W_p_same_fact .* LaminartKernels.gaussian_rot(
+    W_p_temp[:, :, 2, 2] = reflect(
+        p.W_p_same_fact .* LaminartKernels.gaussian_rot(
             p.W_p_σ_x_same_a,
             p.W_p_σ_y_same_a,
             π / 2f0,
@@ -459,49 +460,48 @@ function kernels_imfil_cpu(img::AbstractArray, p::NamedTuple)
             p.W_p_σ_y_same_b,
             π / 2f0,
             p.W_l,
-        ))
+        ),
+    )
 
-    W_p_temp[:, :, 1, 2] =
-        reflect(relu.(
-            p.W_p_opp_fact_a .*
-            (Kernel.gaussian((p.W_p_σ_opp_a, p.W_p_σ_opp_a), (p.W_l, p.W_l))) .-
-            p.W_p_opp_fact_b .* (
-                LaminartKernels.gaussian_rot(
-                    p.W_p_σ_x_opp_b,
-                    p.W_p_σ_y_opp_b,
-                    0f0,
-                    p.W_l,
-                ) .+ LaminartKernels.gaussian_rot(
-                    p.W_p_σ_x_opp_c,
-                    p.W_p_σ_y_opp_c,
-                    0f0,
-                    p.W_l,
-                )
-            ),
-        ))
+    W_p_temp[:, :, 1, 2] = reflect(relu.(
+        p.W_p_opp_fact_a .*
+        (Kernel.gaussian((p.W_p_σ_opp_a, p.W_p_σ_opp_a), (p.W_l, p.W_l))) .-
+        p.W_p_opp_fact_b .* (
+            LaminartKernels.gaussian_rot(
+                p.W_p_σ_x_opp_b,
+                p.W_p_σ_y_opp_b,
+                0f0,
+                p.W_l,
+            ) .+ LaminartKernels.gaussian_rot(
+                p.W_p_σ_x_opp_c,
+                p.W_p_σ_y_opp_c,
+                0f0,
+                p.W_l,
+            )
+        ),
+    ))
 
-    W_p_temp[:, :, 2, 1] =
-        reflect(relu.(
-            p.W_p_opp_fact_a .*
-            (Kernel.gaussian((p.W_p_σ_opp_a, p.W_p_σ_opp_a), (p.W_l, p.W_l))) .-
-            p.W_p_opp_fact_b .* (
-                LaminartKernels.gaussian_rot(
-                    p.W_p_σ_x_opp_b,
-                    p.W_p_σ_y_opp_b,
-                    0f0,
-                    p.W_l,
-                ) .+ LaminartKernels.gaussian_rot(
-                    p.W_p_σ_x_opp_c,
-                    p.W_p_σ_y_opp_c,
-                    0f0,
-                    p.W_l,
-                )
-            ),
-        ))
+    W_p_temp[:, :, 2, 1] = reflect(relu.(
+        p.W_p_opp_fact_a .*
+        (Kernel.gaussian((p.W_p_σ_opp_a, p.W_p_σ_opp_a), (p.W_l, p.W_l))) .-
+        p.W_p_opp_fact_b .* (
+            LaminartKernels.gaussian_rot(
+                p.W_p_σ_x_opp_b,
+                p.W_p_σ_y_opp_b,
+                0f0,
+                p.W_l,
+            ) .+ LaminartKernels.gaussian_rot(
+                p.W_p_σ_x_opp_c,
+                p.W_p_σ_y_opp_c,
+                0f0,
+                p.W_l,
+            )
+        ),
+    ))
 
 
-    W_m_temp[:, :, 1, 1] =
-        reflect(p.W_m_same_fact .* LaminartKernels.gaussian_rot(
+    W_m_temp[:, :, 1, 1] = reflect(
+        p.W_m_same_fact .* LaminartKernels.gaussian_rot(
             p.W_m_σ_x_same_a,
             p.W_m_σ_y_same_a,
             0f0,
@@ -511,10 +511,11 @@ function kernels_imfil_cpu(img::AbstractArray, p::NamedTuple)
             p.W_m_σ_y_same_b,
             0f0,
             p.W_l,
-        ))
+        ),
+    )
 
-    W_m_temp[:, :, 2, 2] =
-        reflect(p.W_m_same_fact .* LaminartKernels.gaussian_rot(
+    W_m_temp[:, :, 2, 2] = reflect(
+        p.W_m_same_fact .* LaminartKernels.gaussian_rot(
             p.W_m_σ_x_same_a,
             p.W_m_σ_y_same_a,
             π / 2f0,
@@ -524,45 +525,44 @@ function kernels_imfil_cpu(img::AbstractArray, p::NamedTuple)
             p.W_m_σ_y_same_b,
             π / 2f0,
             p.W_l,
-        ))
+        ),
+    )
 
-    W_m_temp[:, :, 1, 2] =
-        reflect(relu.(
-            p.W_m_opp_fact_a .*
-            (Kernel.gaussian((p.W_m_σ_opp_a, p.W_m_σ_opp_a), (p.W_l, p.W_l))) .-
-            p.W_m_opp_fact_b .* (
-                LaminartKernels.gaussian_rot(
-                    p.W_m_σ_x_opp_b,
-                    p.W_m_σ_y_opp_b,
-                    0f0,
-                    p.W_l,
-                ) .+ LaminartKernels.gaussian_rot(
-                    p.W_m_σ_x_opp_c,
-                    p.W_m_σ_y_opp_c,
-                    0f0,
-                    p.W_l,
-                )
-            ),
-        ))
+    W_m_temp[:, :, 1, 2] = reflect(relu.(
+        p.W_m_opp_fact_a .*
+        (Kernel.gaussian((p.W_m_σ_opp_a, p.W_m_σ_opp_a), (p.W_l, p.W_l))) .-
+        p.W_m_opp_fact_b .* (
+            LaminartKernels.gaussian_rot(
+                p.W_m_σ_x_opp_b,
+                p.W_m_σ_y_opp_b,
+                0f0,
+                p.W_l,
+            ) .+ LaminartKernels.gaussian_rot(
+                p.W_m_σ_x_opp_c,
+                p.W_m_σ_y_opp_c,
+                0f0,
+                p.W_l,
+            )
+        ),
+    ))
 
-    W_m_temp[:, :, 2, 1] =
-        reflect(relu.(
-            p.W_p_opp_fact_a .*
-            (Kernel.gaussian((p.W_p_σ_opp_a, p.W_p_σ_opp_a), (p.W_l, p.W_l))) .-
-            p.W_p_opp_fact_b .* (
-                LaminartKernels.gaussian_rot(
-                    p.W_p_σ_x_opp_b,
-                    p.W_p_σ_y_opp_b,
-                    0f0,
-                    p.W_l,
-                ) .+ LaminartKernels.gaussian_rot(
-                    p.W_p_σ_x_opp_c,
-                    p.W_p_σ_y_opp_c,
-                    0f0,
-                    p.W_l,
-                )
-            ),
-        ))
+    W_m_temp[:, :, 2, 1] = reflect(relu.(
+        p.W_p_opp_fact_a .*
+        (Kernel.gaussian((p.W_p_σ_opp_a, p.W_p_σ_opp_a), (p.W_l, p.W_l))) .-
+        p.W_p_opp_fact_b .* (
+            LaminartKernels.gaussian_rot(
+                p.W_p_σ_x_opp_b,
+                p.W_p_σ_y_opp_b,
+                0f0,
+                p.W_l,
+            ) .+ LaminartKernels.gaussian_rot(
+                p.W_p_σ_x_opp_c,
+                p.W_p_σ_y_opp_c,
+                0f0,
+                p.W_l,
+            )
+        ),
+    ))
 
     # todo fix W kernel
     #  W_temp[:,:,1,1] = reflect(LaminartKernels.gaussian_rot(3,0.8,0,19))
