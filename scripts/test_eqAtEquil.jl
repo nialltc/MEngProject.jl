@@ -65,6 +65,8 @@ files = readdir(datadir("img"))
 				cbar = fig.colorbar(im2,  shrink=0.9, ax=ax)
 				cbar.ax.set_xlabel("\$k=$k2\$")
 						cbar = fig.colorbar(im,  shrink=0.9, ax=ax)
+						cbar.set_alpha(0.5)
+cbar.draw_all()
 				cbar.ax.set_xlabel("\$k=$k\$")
 				layer=Utils.layers[k]
 					plt.title("Layer: $layer, \$t=$t\$")
