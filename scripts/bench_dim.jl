@@ -125,7 +125,7 @@ for file in enumerate(files[1:1])
             cbar.ax.set_xlabel("\$k=$k2\$")
             cbar = fig.colorbar(im, shrink = 0.9, ax = ax)
             cbar.set_alpha(0.5)
-cbar.draw_all()
+            cbar.draw_all()
             cbar.ax.set_xlabel("\$k=$k\$")
             layer = Utils.layers[k]
             plt.title(string(
@@ -300,7 +300,7 @@ close("all")
 fig, ax = plt.subplots()
 for bm ∈ enumerate(benchm_gpu)
     ax.scatter(
-    test_name_plt[bm[1]],
+        test_name_plt[bm[1]],
         bm[2].memory * 1e-6,
         color = Utils.colours[1],
         label = "GPU",

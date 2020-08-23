@@ -142,7 +142,7 @@ for file in files[1:end]
                 cbar.ax.set_xlabel("\$k=$k2\$")
                 cbar = fig.colorbar(im, shrink = 0.9, ax = ax)
                 cbar.set_alpha(0.5)
-cbar.draw_all()
+                cbar.draw_all()
                 cbar.ax.set_xlabel("\$k=$k\$")
                 layer = Utils.layers[k]
                 plt.title(string(
@@ -182,12 +182,12 @@ cbar.draw_all()
         fig, axs = plt.subplots()
 
         for k ∈ 1:12
-			@inbounds begin
-	            v3 = @view sol[:, :, k, 1, end]
-	            v4 = @view sol[findmax(v3)[2][1], findmax(v3)[2][2], k, 1, :]
-	            layer = Utils.layers_1[k]
-	            axs.plot(v4, Utils.lines[k], label = "$layer")
-			end
+            @inbounds begin
+                v3 = @view sol[:, :, k, 1, end]
+                v4 = @view sol[findmax(v3)[2][1], findmax(v3)[2][2], k, 1, :]
+                layer = Utils.layers_1[k]
+                axs.plot(v4, Utils.lines[k], label = "$layer")
+            end
         end
         axs.set_xlabel("Time")
         axs.set_ylabel("Activation")

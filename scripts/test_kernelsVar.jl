@@ -230,7 +230,7 @@ for file in files[1:end]
                         cbar.ax.set_xlabel("\$k=$k2\$")
                         cbar = fig.colorbar(im, shrink = 0.9, ax = ax)
                         cbar.set_alpha(0.5)
-cbar.draw_all()
+                        cbar.draw_all()
                         cbar.ax.set_xlabel("\$k=$k\$")
                         layer = Utils.layers[k]
                         plt.title(string(
@@ -278,7 +278,7 @@ cbar.draw_all()
                     cbar.ax.set_xlabel("\$v^-\$")
                     cbar = fig.colorbar(im, shrink = 0.9, ax = ax)
                     cbar.set_alpha(0.5)
-cbar.draw_all()
+                    cbar.draw_all()
                     cbar.ax.set_xlabel("\$v^+\$")
 
                     layer = Utils.layers[k]
@@ -331,17 +331,17 @@ cbar.draw_all()
                         "_time.png",
                     ),
                 ))
-				u0 = nothing
-				p = nothing
-				arr1 = nothing
-				arr2 = nothing
-				f = nothing
-				prob = nothing
-				sol = nothing
-				close("all")
+                u0 = nothing
+                p = nothing
+                arr1 = nothing
+                arr2 = nothing
+                f = nothing
+                prob = nothing
+                sol = nothing
+                close("all")
             end
-		finally
-			nothing
+        finally
+            nothing
         end
     end
 end

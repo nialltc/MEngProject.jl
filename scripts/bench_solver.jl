@@ -87,7 +87,7 @@ end
 fig, ax = plt.subplots()
 for ben in enumerate(test_name_plt)
     ax.scatter(
-		ben[2],
+        ben[2],
         median(benches[ben[1]].times) * 1e-9,
         color = Utils.colours[ben[1]],
         edgecolors = "none",
@@ -110,7 +110,7 @@ close("all")
 fig, ax = plt.subplots()
 for ben in enumerate(test_name_plt)
     ax.scatter(
-		ben[2],
+        ben[2],
         benches[ben[1]].memory * 1e-6,
         color = Utils.colours[ben[1]],
         edgecolors = "none",
@@ -131,7 +131,7 @@ close("all")
 fig, ax = plt.subplots()
 for ben in enumerate(test_name_plt)
     ax.scatter(
-		ben[2],
+        ben[2],
         benches[ben[1]].allocs * 1e-6,
         color = Utils.colours[ben[1]],
         edgecolors = "none",
