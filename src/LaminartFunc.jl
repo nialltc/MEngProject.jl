@@ -46,6 +46,73 @@ mutable struct LamFunction{T<:AbstractArray} <: Function
     B_temp::T
 end
 
+# function (ff::LamFunction)(du, u, p, t)
+
+#     @inbounds begin
+
+# #         @. ff.x = @view u[:, :, 1:p.K, :]
+# #         y = @view u[:, :, p.K+1:2*p.K, :]
+# #         @. ff.m = @view u[:, :, 2*p.K+1:3*p.K, :]
+# #         z = @view u[:, :, 3*p.K+1:4*p.K, :]
+# #         @. ff.s = @view u[:, :, 4*p.K+1:5*p.K, :]
+
+# #         v_p = @view u[:, :, 5*p.K+1:5*p.K+1, :]
+# #         v_m = @view u[:, :, 5*p.K+2:5*p.K+2, :]
+
+# #         dx = @view du[:, :, 1:p.K, :]
+# #         dy = @view du[:, :, p.K+1:2*p.K, :]
+# #         dm = @view du[:, :, 2*p.K+1:3*p.K, :]
+# #         dz = @view du[:, :, 3*p.K+1:4*p.K, :]
+# #         ds = @view du[:, :, 4*p.K+1:5*p.K, :]
+
+# #         dv_p = @view du[:, :, 5*p.K+1:5*p.K+1, :]
+# #         dv_m = @view du[:, :, 5*p.K+2:5*p.K+2, :]
+
+		
+# 		        x = @view u[:, :, 1:p.K, :]
+#         y = @view u[:, :, p.K+1:2*p.K, :]
+#         m = @view u[:, :, 2*p.K+1:3*p.K, :]
+#         z = @view u[:, :, 3*p.K+1:4*p.K, :]
+#         s = @view u[:, :, 4*p.K+1:5*p.K, :]
+
+#         v_p = @view u[:, :, 5*p.K+1:5*p.K+1, :]
+#         v_m = @view u[:, :, 5*p.K+2:5*p.K+2, :]
+
+#         dx = @view du[:, :, 1:p.K, :]
+#         dy = @view du[:, :, p.K+1:2*p.K, :]
+#         dm = @view du[:, :, 2*p.K+1:3*p.K, :]
+#         dz = @view du[:, :, 3*p.K+1:4*p.K, :]
+#         ds = @view du[:, :, 4*p.K+1:5*p.K, :]
+
+#         dv_p = @view du[:, :, 5*p.K+1:5*p.K+1, :]
+#         dv_m = @view du[:, :, 5*p.K+2:5*p.K+2, :]
+		
+		
+#         LaminartEqConv.fun_x_lgn!(ff.x_lgn, x, p)
+#         LaminartEqConv.fun_v_C!(
+#             ff.C,
+#             v_p,
+#             v_m,
+#             ff.V_temp_1,
+#             ff.V_temp_2,
+#             ff.A_temp,
+#             ff.B_temp,
+#             p,
+#         )
+#         LaminartEqConv.fun_H_z!(ff.H_z, z, ff.H_z_temp, p)
+
+#         LaminartEqConv.fun_dv!(dv_p, v_p, p.r, ff.x_lgn, ff.dv_temp, p)
+#         LaminartEqConv.fun_dv!(dv_m, v_m, .-p.r, ff.x_lgn, ff.dv_temp, p)
+#         LaminartEqConv.fun_dx_v1!(dx, x, ff.C, z, p.x_V2, p)
+#         LaminartEqConv.fun_dy!(dy, y, ff.C, x, m, ff.dy_temp, p)
+#         LaminartEqConv.fun_dm!(dm, m, x, ff.dm_temp, p)
+#         LaminartEqConv.fun_dz!(dz, z, y, ff.H_z, s, ff.dz_temp, p)
+#         LaminartEqConv.fun_ds!(ds, s, ff.H_z, ff.ds_temp, p)
+
+#     end
+#     return nothing
+
+# end
 
 function (ff::LamFunction)(du, u, p, t)
 
