@@ -16,12 +16,15 @@ using MEngProject,
 using OrdinaryDiffEq,
     ParameterizedFunctions, LSODA, Sundials, DiffEqDevTools, Noise
 
+global benchm_ke = []
+global prob_ke
+
+
 batch = 1000
 
 
 # files = readdir(datadir("img"))
 files = ["kan_sq_cont_l.png"]
-
 
 
 tspan = (0.0f0, 100f0)
@@ -71,7 +74,7 @@ test_name = ["base", "H_l15", "W_l15", "H_l15W_l15"]
 test_name_plt =
     ["Base", "Length \$H = 15\$", "Length \$W = 15\$", "Length \$H, W = 15\$"]
 
-global benchm_k = []
+
 
 for file in files
     for para_test ∈ enumerate(para_sets)
@@ -110,9 +113,9 @@ for file in files
                 similar(arr1), #  A_temp,
                 similar(arr1), #   B_temp
             )
-            prob = ODEProblem(f, u0, tspan, p)
-            push!(benchm_k, @benchm_kark sol = solve(prob))
-            sol = solve(prob)
+            prob_ke = ODEProblem(f, u0, tspan, p)
+            push!(benchm_ke, @benchmark solve(prob_ke))
+            sol = solve(prob_ke)
 
             @inbounds begin
                 t = 800
@@ -169,7 +172,7 @@ for file in files
                 arr1 = nothing
                 arr2 = nothing
                 f = nothing
-                prob = nothing
+                prob_ke = nothing
                 sol = nothing
                 close("all")
             end
@@ -202,13 +205,13 @@ for file in files
     end
 
 
-    # benchm_kark plot
+    # benchm_keark plot
 
     fig, ax = plt.subplots()
     for test ∈ 1:para_test[1]
         ax.scatter(
-            median(benchm_k[para_test[1]].times),
-            benchm_k[para_test[1]].memory,
+            median(benchm_ke[para_test[1]].times),
+            benchm_ke[para_test[1]].memory,
             label = test_name_plt,
             alpha = 0.3,
             edgecolors = "none",
@@ -224,3 +227,7 @@ for file in files
     close("all")
 
 end
+
+
+benchm_ke = nothing
+prob_ke = nothing

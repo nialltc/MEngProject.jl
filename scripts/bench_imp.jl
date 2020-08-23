@@ -19,8 +19,6 @@ using OrdinaryDiffEq,
 batch = 1000
 
 
-
-global bm_i
 global benchm_i = []
 global prob_i
 
@@ -75,8 +73,7 @@ f = LaminartFunc.LamFunction(
     similar(arr1), #   B_temp
 )
 prob_i = ODEProblem(f, u0, tspan, p)
-bm_i = @benchmark solve(prob_i)
-push!(benchm_i, bm_i)
+push!(benchm_i, @benchmark solve(prob_i))
 
 
 
@@ -115,8 +112,7 @@ f = LaminartFunc.LamFunction(
     similar(arr1), #   B_temp
 )
 prob_i = ODEProblem(f, u0, tspan, p)
-bm_i = @benchmark solve(prob_i)
-push!(benchm_i, bm_i)
+push!(benchm_i, @benchmark solve(prob_i))
 
 
 # CPU imfilter
@@ -145,9 +141,7 @@ similar(arr1), #H_z,
     );
 
 prob = ODEProblem(f, u0, tspan, p)
-solve(prob)
-bm = @benchmark solve(prob)
-push!(benchm_i, bm)
+push!(benchm_i, @benchmark solve(prob))
 
 
 
@@ -177,9 +171,7 @@ similar(arr1), #H_z,
     );
 
 prob = ODEProblem(f, u0, tspan, p)
-solve(prob)
-bm = @benchmark solve(prob)
-push!(benchm_i, bm)
+push!(benchm_i, @benchmark solve(prob))
 
 
 
@@ -209,9 +201,7 @@ similar(arr1), #H_z,
     );
 
 prob = ODEProblem(f, u0, tspan, p)
-solve(prob)
-bm = @benchmark solve(prob)
-push!(benchm_i, bm)
+push!(benchm_i, @benchmark solve(prob))
 
 
 
@@ -241,9 +231,7 @@ similar(arr1), #H_z,
     );
 
 prob = ODEProblem(f, u0, tspan, p)
-solve(prob)
-bm = @benchmark solve(prob)
-push!(benchm_i, bm)
+push!(benchm_i, @benchmark solve(prob))
 
 
 # benchmark plot
@@ -313,6 +301,6 @@ close("all")
 
 
 
-bm_i = nothing
+
 benchm_i = nothing
 prob_i = nothing

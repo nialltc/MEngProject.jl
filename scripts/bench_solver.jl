@@ -19,6 +19,7 @@ using OrdinaryDiffEq,
 batch = 1000
 
 global benchm_s = []
+global prob_s
 
 tspan = (0.0f0, 10f0)
 
@@ -71,11 +72,10 @@ f = LaminartFunc.LamFunction(
     similar(arr1), #  A_temp,
     similar(arr1), #   B_temp
 )
-prob = ODEProblem(f, u0, tspan, p)
+prob_s = ODEProblem(f, u0, tspan, p)
 
 for solv in solvers
-    bm = @benchmark solve(prob)
-    push!(benchm_s, bm)
+    push!(benchm_s, @benchmark solve(prob_s))
 end
 
 
@@ -148,3 +148,6 @@ plt.savefig(plotsdir(
     string("bench_imp_alloc.png"),
 ))
 close("all")
+
+benchm_s = nothing
+prob_s = nothing

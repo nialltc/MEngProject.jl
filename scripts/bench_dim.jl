@@ -35,7 +35,7 @@ global benchm_cpu = []
 global y1Res_gpu = []
 global y1Res_cpu = []
 global prob_d
-global bm_d
+
 
 
 tspan = (0.0f0, 10f0)
@@ -331,4 +331,3 @@ benchm_cpu = nothing
 y1Res_gpu = nothing
 y1Res_cpu = nothing
 prob_d = nothing
-bm_d = nothing
