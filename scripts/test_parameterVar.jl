@@ -19,8 +19,8 @@ using OrdinaryDiffEq,
 batch = 1
 
 
-# files = readdir(datadir("img"))
-files = ["kan_sq_cont_l.png"]
+
+file = ["kan_sq_cont_l.png"]
 
 
 

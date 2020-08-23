@@ -213,7 +213,7 @@ for file in files[1:end]
         )
     end
     ax.legend()
-    ax.grid(True)
+    ax.grid(true)
     fig.tight_layout()
     plt.savefig(plotsdir(
         string("bench_kern", batch_),

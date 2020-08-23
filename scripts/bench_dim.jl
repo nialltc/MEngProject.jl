@@ -265,21 +265,19 @@ close("all")
 fig, ax = plt.subplots()
 for bm ∈ enumerate(benchm_gpu)
     ax.scatter(
-        median(bm[2].times) * 1e-9,
         test_name_plt[bm[1]],
+        median(bm[2].times) * 1e-9,
         label = "GPU",
         color = Utils.colours[1],
-        alpha = 0.3,
         edgecolors = "none",
     )
 end
 
 for bm ∈ enumerate(benchm_cpu)
     ax.scatter(
-        median(bm[2].times) * 1e-9,
         test_name_plt[bm[1]],
+        median(bm[2].times) * 1e-9,
         label = "CPU",
-        alpha = 0.3,
         color = Utils.colours[2],
         edgecolors = "none",
     )
@@ -288,7 +286,7 @@ end
 ax.legend()
 axs.set_xlabel("Resolution (\$px\$)")
 axs.set_ylabel("Time (\$s\$)")
-ax.grid(True)
+ax.grid(true)
 fig.tight_layout()
 plt.savefig(plotsdir(
     string("bench_dim", batch_),
@@ -300,11 +298,10 @@ close("all")
 fig, ax = plt.subplots()
 for bm ∈ enumerate(benchm_gpu)
     ax.scatter(
+    test_name_plt[bm[1]],
         bm[2].memory * 1e-6,
-        test_name_plt[bm[1]],
-        olor = Utils.colours[1],
+        color = Utils.colours[1],
         label = "GPU",
-        alpha = 0.3,
         edgecolors = "none",
     )
 end
@@ -312,7 +309,7 @@ end
 ax.legend()
 axs.set_xlabel("Resolution (\$px\$)")
 axs.set_ylabel("Memory")
-ax.grid(True)
+ax.grid(true)
 fig.tight_layout()
 plt.savefig(plotsdir(
     string("bench_dim", batch_),
