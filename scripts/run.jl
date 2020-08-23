@@ -18,14 +18,24 @@ using OrdinaryDiffEq,
 
 
 
-include("test_illusions.jl")
-include("test_noise.jl")
-# include("test_parameterVar.jl")
-# include("test_kernelsVar.jl")
-# include("test_eqAtEquil.jl")
+try include("test_illusions.jl") catch err end
+print(err)
+try include("test_noise.jl") catch err end
+print(err)
+# try include("test_parameterVar.jl")catch err end
+# print(err)
+# try include("test_kernelsVar.jl")catch err end
+# print(err)
+# try include("test_eqAtEquil.jl")catch err end
+# print(err)
 #
-# include("bench_solver.jl")
-# include("bench_imp.jl")
-# include("bench_eq.jl")
-# include("bench_dim.jl")
-# include("bench_kernels_dim.jl")
+# try include("bench_solver.jl")catch err end
+# print(err)
+# try include("bench_imp.jl")catch err end
+# print(err)
+# try include("bench_eq.jl")catch err end
+# print(err)
+# try include("bench_dim.jl")catch err end
+# print(err)
+# try include("bench_kernels_dim.jl")catch err end
+# print(err)

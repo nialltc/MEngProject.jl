@@ -314,7 +314,7 @@ end
 
 
 # plot two orientantions together for all layers
-function plot_k2(sol, t, name, batch, file, save=true)
+function plot_k2(sol, t, name, batch, file, save = true)
 
     @inbounds begin
 
