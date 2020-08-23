@@ -16,7 +16,7 @@ using MEngProject,
 using OrdinaryDiffEq,
     ParameterizedFunctions, LSODA, Sundials, DiffEqDevTools, Noise
 
-batch = 10
+batch = 1000
 
 
 # files = readdir(datadir("res_test"))[2:end]
@@ -34,6 +34,8 @@ global benchm_gpu = []
 global benchm_cpu = []
 global y1Res_gpu = []
 global y1Res_cpu = []
+global prob_d
+global bm_d
 
 
 tspan = (0.0f0, 10f0)
@@ -91,9 +93,9 @@ for file in enumerate(files)
             similar(arr1), #   B_temp
         )
 
-        prob = ODEProblem(f, u0, tspan, p)
-        push!(benchm_gpu, @benchmark solve(prob))
-        sol = solve(prob)
+        prob_d = ODEProblem(f, u0, tspan, p)
+        push!(benchm_gpu, @benchmark solve(prob_d))
+        sol = solve(prob_d)
 
         @inbounds begin
             t = 10
@@ -156,7 +158,7 @@ for file in enumerate(files)
             arr1 = nothing
             arr2 = nothing
             f = nothing
-            prob = nothing
+            prob_d = nothing
             sol = nothing
         end
     end
@@ -199,9 +201,9 @@ for file in enumerate(files)
             similar(arr1), #   B_temp
         )
 
-        prob = ODEProblem(f, u0, tspan, p)
-        push!(benchm_cpu, @benchmark solve(prob))
-        sol = solve(prob)
+        prob_d = ODEProblem(f, u0, tspan, p)
+        push!(benchm_cpu, @benchmark solve(prob_d))
+        sol = solve(prob_d)
 
         push!(y1Res_cpu, sol[:, :, 7:7, :, :])
     finally
@@ -210,7 +212,7 @@ for file in enumerate(files)
         arr1 = nothing
         arr2 = nothing
         f = nothing
-        prob = nothing
+        prob_d = nothing
         sol = nothing
     end
 end
@@ -231,6 +233,7 @@ for result ∈ enumerate(y1Res_gpu)
         c = Utils.Colour[result[1]],
         "--",
         label = "$lab GPU",
+        alpha=0.8
     )
 end
 
@@ -247,9 +250,10 @@ for result ∈ enumerate(y1Res_cpu)
         c = Utils.Colour[result[1]],
         ":",
         label = "$lab CPU",
+        alpha=0.8
     )
 end
-axs.set_xlabel("Time")
+axs.set_xlabel("Steps")
 axs.set_ylabel("Activation")
 plt.title("L2/3, \$k=1\$")
 plt.legend()
@@ -265,20 +269,20 @@ close("all")
 # benchmark plot
 
 fig, ax = plt.subplots()
-for bm ∈ enumerate(benchm_gpu)
+for bm_d ∈ enumerate(benchm_gpu)
     ax.scatter(
-        test_name_plt[bm[1]],
-        median(bm[2].times) * 1e-9,
+        test_name_plt[bm_d[1]],
+        median(bm_d[2].times) * 1e-9,
         label = "GPU",
         color = Utils.colours[1],
         edgecolors = "none",
     )
 end
 
-for bm ∈ enumerate(benchm_cpu)
+for bm_d ∈ enumerate(benchm_cpu)
     ax.scatter(
-        test_name_plt[bm[1]],
-        median(bm[2].times) * 1e-9,
+        test_name_plt[bm_d[1]],
+        median(bm_d[2].times) * 1e-9,
         label = "CPU",
         color = Utils.colours[2],
         edgecolors = "none",
@@ -289,6 +293,7 @@ ax.legend()
 axs.set_xlabel("Resolution (\$px\$)")
 axs.set_ylabel("Time (\$s\$)")
 ax.grid(true)
+ax.set_ylim(ymin=0)
 fig.tight_layout()
 plt.savefig(plotsdir(
     string("bench_dim", batch_),
@@ -298,10 +303,10 @@ close("all")
 
 # memory
 fig, ax = plt.subplots()
-for bm ∈ enumerate(benchm_gpu)
+for bm_d ∈ enumerate(benchm_gpu)
     ax.scatter(
-        test_name_plt[bm[1]],
-        bm[2].memory * 1e-6,
+        test_name_plt[bm_d[1]],
+        bm_d[2].memory * 1e-6,
         color = Utils.colours[1],
         label = "GPU",
         edgecolors = "none",
@@ -312,9 +317,18 @@ ax.legend()
 axs.set_xlabel("Resolution (\$px\$)")
 axs.set_ylabel("Memory")
 ax.grid(true)
+ax.set_ylim(ymin=0)
 fig.tight_layout()
 plt.savefig(plotsdir(
     string("bench_dim", batch_),
     string(file[2], "_para_", test_name[file[1]], "_time.png"),
 ))
 close("all")
+
+
+benchm_gpu = nothing
+benchm_cpu = nothing
+y1Res_gpu = nothing
+y1Res_cpu = nothing
+prob_d = nothing
+bm_d = nothing

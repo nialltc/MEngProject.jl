@@ -17,7 +17,7 @@ using OrdinaryDiffEq,
     ParameterizedFunctions, LSODA, Sundials, DiffEqDevTools, Noise
 
 
-batch = 100
+batch = 1000
 
 
 # files = readdir(datadir("img"))
