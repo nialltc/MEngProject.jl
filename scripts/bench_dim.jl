@@ -102,7 +102,7 @@ for file in enumerate(files)
 
 
             k = 7
-            k2 = 8
+
             fig, ax = plt.subplots()
 
             v1 = @view sol(t)[:, :, k, 1]
@@ -122,11 +122,11 @@ for file in enumerate(files)
             )
 
             cbar = fig.colorbar(im2, shrink = 0.9, ax = ax)
-            cbar.ax.set_xlabel("\$k=$k2\$")
+            cbar.ax.set_xlabel("\$k=2\$")
             cbar = fig.colorbar(im, shrink = 0.9, ax = ax)
             cbar.set_alpha(0.5)
             cbar.draw_all()
-            cbar.ax.set_xlabel("\$k=$k\$")
+            cbar.ax.set_xlabel("\$k=1\$")
             layer = Utils.layers[k]
             plt.title(string(
                 "Layer: $layer, \$t=$t\$, resolution=",

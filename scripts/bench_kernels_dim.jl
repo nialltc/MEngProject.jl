@@ -139,11 +139,11 @@ for file in files
                 )
 
                 cbar = fig.colorbar(im2, shrink = 0.9, ax = ax)
-                cbar.ax.set_xlabel("\$k=$k2\$")
+                cbar.ax.set_xlabel("\$k=2\$")
                 cbar = fig.colorbar(im, shrink = 0.9, ax = ax)
                 cbar.set_alpha(0.5)
                 cbar.draw_all()
-                cbar.ax.set_xlabel("\$k=$k\$")
+                cbar.ax.set_xlabel("\$k=1\$")
                 layer = Utils.layers[k]
                 plt.title(string(
                     "Layer: $layer, \$t=$t\$, ",
@@ -186,7 +186,7 @@ for file in files
                 v3 = @view sol[:, :, k, 1, end]
                 v4 = @view sol[findmax(v3)[2][1], findmax(v3)[2][2], k, 1, :]
                 layer = Utils.layers_1[k]
-                axs.plot(v4, Utils.lines[k], label = "$layer")
+                axs.plot(sol.t, v4, Utils.lines[k], label = "$layer")
             end
         end
         axs.set_xlabel("Time")

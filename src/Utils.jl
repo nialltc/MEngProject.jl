@@ -285,8 +285,121 @@ function save_2d_list_gs(
     end
 end
 
-function testa(x)
-    x * 2
+
+# time  activation plot
+
+function plot_t_act(sol, name, batch, file, save = true)
+    fig, axs = plt.subplots()
+    @inbounds begin
+        for k ∈ 1:12
+            v1 = @view sol[:, :, k, 1, end]
+            v2 = @view sol[findmax(v1)[2][1], findmax(v1)[2][2], k, 1, :]
+            layer = Utils.layers_1[k]
+            axs.plot(sol.t, v2, Utils.lines[k], label = "$layer", alpha = 0.8)
+        end
+        axs.set_xlabel("Time")
+        axs.set_ylabel("Activation")
+        plt.legend()
+        fig.tight_layout()
+        if save
+            plt.savefig(plotsdir(
+                string(name, batch),
+                string(file, "_time.png"),
+            ))
+        end
+        close("all")
+    end
+    return nothing
+end
+
+
+# plot two orientantions together for all layers
+function plot_k2(sol, t, name, batch, file, save=true)
+
+    @inbounds begin
+
+        v0 = @view sol(t)[:, :, :, 1]
+        axMax = findmax(v0)[1]
+
+        # plot x, y, z, m, s
+        for k ∈ 1:2:10
+            k2 = k + 1
+            fig, ax = plt.subplots()
+
+            v1 = @view sol(t)[:, :, k, 1]
+            v2 = @view sol(t)[:, :, k+1, 1]
+            im = ax.imshow(
+                v1,
+                cmap = matplotlib.cm.PRGn,
+                vmax = axMax,
+                vmin = -axMax,
+            )
+            im2 = ax.imshow(
+                v2,
+                cmap = matplotlib.cm.RdBu_r,
+                vmax = axMax,
+                vmin = -axMax,
+                alpha = 0.5,
+            )
+
+            cbar = fig.colorbar(im2, shrink = 0.9, ax = ax)
+            cbar.ax.set_xlabel("\$k=2\$")
+            cbar = fig.colorbar(im, shrink = 0.9, ax = ax)
+            cbar.set_alpha(0.5)
+            cbar.draw_all()
+            cbar.ax.set_xlabel("\$k=1\$")
+            layer = Utils.layers[k]
+            plt.title("Layer: $layer, \$t=$t\$")
+            plt.axis("off")
+            fig.tight_layout()
+            if save
+                plt.savefig(plotsdir(
+                    string(name, batch),
+                    string(file, "_", t, "_", Utils.la[k], ".png"),
+                ))
+            end
+            close("all")
+        end
+
+        # plot lgn
+        k = 11
+        fig, ax = plt.subplots()
+        v1 = @view sol(t)[:, :, k, 1]
+        v2 = @view sol(t)[:, :, k+1, 1]
+        im = ax.imshow(
+            v1,
+            cmap = matplotlib.cm.PRGn,
+            vmax = axMax,
+            vmin = -axMax,
+        )
+        im2 = ax.imshow(
+            v2,
+            cmap = matplotlib.cm.RdBu_r,
+            vmax = axMax,
+            vmin = -axMax,
+            alpha = 0.5,
+        )
+
+        cbar = fig.colorbar(im2, shrink = 0.9, ax = ax)
+        cbar.ax.set_xlabel("\$v^-\$")
+        cbar = fig.colorbar(im, shrink = 0.9, ax = ax)
+        cbar.ax.set_xlabel("\$v^+\$")
+        cbar.set_alpha(0.5)
+        cbar.draw_all()
+
+        layer = Utils.layers[k]
+        plt.title("Layer: $layer, \$t=$t\$")
+        plt.axis("off")
+        fig.tight_layout()
+        if save
+            plt.savefig(plotsdir(
+                string(name, batch),
+                string(file, "_", t, "_", Utils.la[k], ".png"),
+            ))
+        end
+        close("all")
+    end
+    return nothing
 end
 
 
