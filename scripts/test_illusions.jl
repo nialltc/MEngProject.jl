@@ -7,7 +7,34 @@ using OrdinaryDiffEq, ParameterizedFunctions, LSODA, Sundials, DiffEqDevTools, N
 batch = 1
 
 
-files = readdir(datadir("img"))
+# files = readdir(datadir("img"))
+
+files = [
+# 	"Iine_gap_1_100_gs.png",
+#  "Iine_gap_2_100_gs.png",
+#  "Iine_gap_3_100_gs.png",
+#  "Iine_gap_4_100_gs.png",
+#  "Iines_gaps_100_gs.png",
+#  "diag_dots_100_gs.png",
+#  "diag_gap_100_gs.png",
+#  "kan_sq_cont.png",
+#  "kan_sq_cont_l.png",
+#  "mo05709.png",
+#  "stairs_100gs.png",
+#  "stairs_200gs.png",
+ "viper00187.png",
+ "viper00661.jpg",
+ "viper00715.png",
+ "viper00717.png",
+ "viper00720.png",
+ "viper00721.png",
+ "viper00842.jpg",
+ "viper00891.jpg",
+ "viper00904.jpg",
+ "viper00921.jpg",
+ "viper01006.jpg",
+ "viper01333.jpg"
+]
 
 	tspan = (0.0f0,800f0)
 
