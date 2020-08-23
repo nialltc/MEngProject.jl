@@ -18,24 +18,16 @@ using OrdinaryDiffEq,
 
 
 
-try include("test_illusions.jl") catch err end
-print(err)
-try include("test_noise.jl") catch err end
-print(err)
-# try include("test_parameterVar.jl")catch err end
-# print(err)
-# try include("test_kernelsVar.jl")catch err end
-# print(err)
-# try include("test_eqAtEquil.jl")catch err end
-# print(err)
-#
-# try include("bench_solver.jl")catch err end
-# print(err)
-# try include("bench_imp.jl")catch err end
-# print(err)
-# try include("bench_eq.jl")catch err end
-# print(err)
-# try include("bench_dim.jl")catch err end
-# print(err)
-# try include("bench_kernels_dim.jl")catch err end
-# print(err)
+try include("test_illusions.jl") catch err; print(err) end
+try include("test_noise.jl") catch err; print(err) end
+# try include("test_parameterVar.jl")catch err; print(err)end
+# try include("test_kernelsVar.jl")catch err; print(err)end
+# try include("test_eqAtEquil.jl")catch err; print(err) end
+
+
+
+# try include("bench_solver.jl")catch err; print(err) end
+# try include("bench_imp.jl")catch err; print(err) end
+# try include("bench_eq.jl")catch err; print(err) end
+# try include("bench_dim.jl")catch err; print(err) end
+# try include("bench_kernels_dim.jl")catch err; print(err) end

@@ -16,7 +16,7 @@ using MEngProject,
 using OrdinaryDiffEq,
     ParameterizedFunctions, LSODA, Sundials, DiffEqDevTools, Noise
 
-batch = 10
+batch = 100
 
 
 
