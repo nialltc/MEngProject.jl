@@ -19,8 +19,8 @@ using OrdinaryDiffEq,
 batch = 100
 
 
-# files = readdir(datadir("img"))
-files = ["stairs_100gs.png"]
+# files = ["stairs_100gs.png"]
+files = ["kan_sq_cont_l.png"]
 # files = ["kan_sq_cont_l.png", "stairs_100gs.png"]
 
 tspan = (0.0f0, 800f0)
