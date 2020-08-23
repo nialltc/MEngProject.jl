@@ -16,22 +16,23 @@ using MEngProject,
 using OrdinaryDiffEq,
     ParameterizedFunctions, LSODA, Sundials, DiffEqDevTools, Noise
 
-batch = 1
+
+batch = 1001
 
 
 # files = readdir(datadir("img"))
 
 files = [
-    	"Iine_gap_1_100_gs.png",
-     "Iine_gap_2_100_gs.png",
-     "Iine_gap_3_100_gs.png",
-     "Iine_gap_4_100_gs.png",
-     "Iines_gaps_100_gs.png",
-     "diag_dots_100_gs.png",
-     "diag_gap_100_gs.png",
-     "kan_sq_cont.png",
-     "kan_sq_cont_l.png",
-     "mo05709.png",
+#     	"Iine_gap_1_100_gs.png",
+#      "Iine_gap_2_100_gs.png",
+#      "Iine_gap_3_100_gs.png",
+#      "Iine_gap_4_100_gs.png",
+#      "Iines_gaps_100_gs.png",
+#      "diag_dots_100_gs.png",
+#      "diag_gap_100_gs.png",
+#      "kan_sq_cont.png",
+#      "kan_sq_cont_l.png",
+#      "mo05709.png",
      "stairs_100gs.png",
      "stairs_200gs.png",
     "viper00187.png",
@@ -96,106 +97,12 @@ for file in files
 
         # plots
         for t ∈ [25, 50, 100, 200, 400, 800]
-            # 				for t ∈ [25,50,100]
-            @inbounds begin
-
-                v0 = @view sol(t)[:, :, :, 1]
-                axMax = findmax(v0)[1]
-
-                # plot x, y, z, m, s
-                for k ∈ 1:2:10
-                    k2 = k + 1
-                    fig, ax = plt.subplots()
-
-                    v1 = @view sol(t)[:, :, k, 1]
-                    v2 = @view sol(t)[:, :, k+1, 1]
-                    im = ax.imshow(
-                        v1,
-                        cmap = matplotlib.cm.PRGn,
-                        vmax = axMax,
-                        vmin = -axMax,
-                    )
-                    im2 = ax.imshow(
-                        v2,
-                        cmap = matplotlib.cm.RdBu_r,
-                        vmax = axMax,
-                        vmin = -axMax,
-                        alpha = 0.5,
-                    )
-
-                    cbar = fig.colorbar(im2, shrink = 0.9, ax = ax)
-                    cbar.ax.set_xlabel("\$k=$k2\$")
-                    cbar = fig.colorbar(im, shrink = 0.9, ax = ax)
-                    cbar.set_alpha(0.5)
-                    cbar.draw_all()
-                    cbar.ax.set_xlabel("\$k=$k\$")
-                    layer = Utils.layers[k]
-                    plt.title("Layer: $layer, \$t=$t\$")
-                    plt.axis("off")
-                    fig.tight_layout()
-                    plt.savefig(plotsdir(
-                        string("illusions", batch_),
-                        string(file, "_", t, "_", Utils.la[k], ".png"),
-                    ))
-                    close("all")
-                end
-
-                # plot lgn
-                k = 11
-                fig, ax = plt.subplots()
-                v1 = @view sol(t)[:, :, k, 1]
-                v2 = @view sol(t)[:, :, k+1, 1]
-                im = ax.imshow(
-                    v1,
-                    cmap = matplotlib.cm.PRGn,
-                    vmax = axMax,
-                    vmin = -axMax,
-                )
-                im2 = ax.imshow(
-                    v2,
-                    cmap = matplotlib.cm.RdBu_r,
-                    vmax = axMax,
-                    vmin = -axMax,
-                    alpha = 0.5,
-                )
-
-                cbar = fig.colorbar(im2, shrink = 0.9, ax = ax)
-                cbar.ax.set_xlabel("\$v^-\$")
-                cbar = fig.colorbar(im, shrink = 0.9, ax = ax)
-                cbar.ax.set_xlabel("\$v^+\$")
-                cbar.set_alpha(0.5)
-                cbar.draw_all()
-
-                layer = Utils.layers[k]
-                plt.title("Layer: $layer, \$t=$t\$")
-                plt.axis("off")
-                fig.tight_layout()
-
-                plt.savefig(plotsdir(
-                    string("illusions", batch_),
-                    string(file, "_", t, "_", Utils.la[k], ".png"),
-                ))
-                close("all")
-            end
+            Utils.plot_k2(sol, t, "illusions", batch_, file)
         end
 
-        # time plot
-        fig, axs = plt.subplots()
 
-        for k ∈ 1:12
-            v3 = @view sol[:, :, k, 1, end]
-            v4 = @view sol[findmax(v3)[2][1], findmax(v3)[2][2], k, 1, :]
-            layer = Utils.layers_1[k]
-            axs.plot(v4, Utils.lines[k], label = "$layer")
-        end
-        axs.set_xlabel("Time")
-        axs.set_ylabel("Activation")
-        plt.legend()
-        fig.tight_layout()
-        plt.savefig(plotsdir(
-            string("illusions", batch_),
-            string(file, "_time.png"),
-        ))
+        Utils.plot_t_act(sol, "illusions", batch_, file)
+
     finally
         u0 = nothing
         p = nothing
@@ -204,6 +111,6 @@ for file in files
         f = nothing
         prob = nothing
         sol = nothing
-        close("all")
+
     end
 end

@@ -153,14 +153,17 @@ for file in enumerate(files)
 
             v3 = @view sol[:, :, 7:7, :, :]
             push!(y1Res, Array(v3))
-            u0 = nothing
+            
+        end
+		catch err
+	finally
+		u0 = nothing
             p = nothing
             arr1 = nothing
             arr2 = nothing
             f = nothing
             prob_d = nothing
             sol = nothing
-        end
     end
 
 
@@ -206,6 +209,7 @@ for file in enumerate(files)
         sol = solve(prob_d)
 
         push!(y1Res_cpu, sol[:, :, 7:7, :, :])
+	catch
     finally
         u0 = nothing
         p = nothing
@@ -331,3 +335,4 @@ benchm_cpu = nothing
 y1Res_gpu = nothing
 y1Res_cpu = nothing
 prob_d = nothing
+CUDA.reclaim()

@@ -16,44 +16,48 @@ using MEngProject,
 using OrdinaryDiffEq,
     ParameterizedFunctions, LSODA, Sundials, DiffEqDevTools, Noise
 
-batch = 1
+batch = 1000
 
 
 # files = readdir(datadir("res_test"))[2:end]
-files = ["ver_lines_025_gs.png",
- "ver_lines_050_gs.png",
- "ver_lines_075_gs.png",
- "ver_lines_100_gs.png",
- "ver_lines_200_gs.png",
- "ver_lines_300_gs.png",
- "ver_lines_400_gs.png",]
+files = [
+    "ver_lines_025_gs.png",
+    "ver_lines_050_gs.png",
+    "ver_lines_075_gs.png",
+    "ver_lines_100_gs.png",
+    "ver_lines_200_gs.png",
+    "ver_lines_300_gs.png",
+    "ver_lines_400_gs.png",
+]
 
 global benchm_gpu = []
 global benchm_cpu = []
 global y1Res_gpu = []
 global y1Res_cpu = []
+global prob_d
 
 
-    tspan = (0.0f0, 10f0)
 
-    batch_ = string(batch, "_", rand(1000:9999))
-    mkdir(plotsdir(string("bench_dim", batch_)))
+tspan = (0.0f0, 10f0)
 
-
-    test_name = ["025", "050", "075", "100", "200", "300", "400"]
-    test_name_plt = [
-        "\$25×25\$",
-        "\$50×50\$",
-        "\$75×75\$",
-        "\$100×100\$",
-        "\$200×200\$",
-        "\$300×300\$",
-        "\$400×400\$",
-    ]
+batch_ = string(batch, "_", rand(1000:9999))
+mkdir(plotsdir(string("bench_dim", batch_)))
 
 
-    for file in enumerate(files[1:1])
-		try
+test_name = ["025", "050", "075", "100", "200", "300", "400"]
+test_name_plt = [
+    "\$25×25\$",
+    "\$50×50\$",
+    "\$75×75\$",
+    "\$100×100\$",
+    "\$200×200\$",
+    "\$300×300\$",
+    "\$400×400\$",
+]
+
+
+for file in enumerate(files)
+    try
         p = LaminartInitFunc.parameterInit_conv_gpu(
             datadir("res_test", file[2]),
             Parameters.parameters_f32,
@@ -89,77 +93,83 @@ global y1Res_cpu = []
             similar(arr1), #   B_temp
         )
 
-        prob = ODEProblem(f, u0, tspan, p)
-        push!(benchm_gpu, @benchmark solve(prob))
-        sol = solve(prob)
+        prob_d = ODEProblem(f, u0, tspan, p)
+        push!(benchm_gpu, @benchmark solve(prob_d))
+        sol = solve(prob_d)
 
-		@inbounds begin
-        t = 10
-        v0 = @view sol(t)[:, :, :, 1]
-        axMax = findmax(v0)[1]
+        @inbounds begin
+            t = 10
+            v0 = @view sol(t)[:, :, :, 1]
+            axMax = findmax(v0)[1]
 
 
-        k = 7
-		k2 = 8
-        fig, ax = plt.subplots()
+            k = 7
 
-        v1 = @view sol(t)[:, :, k, 1]
-        v2 = @view sol(t)[:, :, k+1, 1]
-        im = ax.imshow(
-            v1,
-            cmap = matplotlib.cm.PRGn,
-            vmax = axMax,
-            vmin = -axMax,
-        )
-        im2 = ax.imshow(
-            v2,
-            cmap = matplotlib.cm.RdBu_r,
-            vmax = axMax,
-            vmin = -axMax,
-            alpha = 0.5,
-        )
+            fig, ax = plt.subplots()
 
-        cbar = fig.colorbar(im2, shrink = 0.9, ax = ax)
-        cbar.ax.set_xlabel("\$k=$k2\$")
-        cbar = fig.colorbar(im, shrink = 0.9, ax = ax)
-        cbar.ax.set_xlabel("\$k=$k\$")
-        layer = Utils.layers[k]
-        plt.title(string(
-            "Layer: $layer, \$t=$t\$, resolution=",
-            test_name_plt[file[1]],
-        ))
-        plt.axis("off")
-        fig.tight_layout()
-        plt.savefig(plotsdir(
-            string("bench_dim", batch_),
-            string(
-                file[2],
-                "_res_",
-                test_name[file[1]],
-                "_t",
-                t,
-                "_",
-                Utils.la[k],
-                ".png",
-            ),
-        ))
-        close("all")
+            v1 = @view sol(t)[:, :, k, 1]
+            v2 = @view sol(t)[:, :, k+1, 1]
+            im = ax.imshow(
+                v1,
+                cmap = matplotlib.cm.PRGn,
+                vmax = axMax,
+                vmin = -axMax,
+            )
+            im2 = ax.imshow(
+                v2,
+                cmap = matplotlib.cm.RdBu_r,
+                vmax = axMax,
+                vmin = -axMax,
+                alpha = 0.5,
+            )
 
-		v3 = @view sol[:,:,7:7,:,:]
-		push!(y1Res, Array(v3))
+            cbar = fig.colorbar(im2, shrink = 0.9, ax = ax)
+            cbar.ax.set_xlabel("\$k=2\$")
+            cbar = fig.colorbar(im, shrink = 0.9, ax = ax)
+            cbar.set_alpha(0.5)
+            cbar.draw_all()
+            cbar.ax.set_xlabel("\$k=1\$")
+            layer = Utils.layers[k]
+            plt.title(string(
+                "Layer: $layer, \$t=$t\$, resolution=",
+                test_name_plt[file[1]],
+            ))
+            plt.axis("off")
+            fig.tight_layout()
+            plt.savefig(plotsdir(
+                string("bench_dim", batch_),
+                string(
+                    file[2],
+                    "_res_",
+                    test_name[file[1]],
+                    "_t",
+                    t,
+                    "_",
+                    Utils.la[k],
+                    ".png",
+                ),
+            ))
+            close("all")
+
+            v3 = @view sol[:, :, 7:7, :, :]
+            push!(y1Res, Array(v3))
+            
+        end
+		catch err
+	finally
 		u0 = nothing
-		p = nothing
-		arr1 = nothing
-		arr2 = nothing
-		f = nothing
-		prob = nothing
-		sol = nothing
-		end
-	end
-		
-		try
+            p = nothing
+            arr1 = nothing
+            arr2 = nothing
+            f = nothing
+            prob_d = nothing
+            sol = nothing
+    end
 
-		p = LaminartInitFunc.parameterInit_conv_cpu(
+
+    try
+
+        p = LaminartInitFunc.parameterInit_conv_cpu(
             datadir("res_test", file[2]),
             Parameters.parameters_f32,
         )
@@ -194,104 +204,135 @@ global y1Res_cpu = []
             similar(arr1), #   B_temp
         )
 
-        prob = ODEProblem(f, u0, tspan, p)
-        push!(benchm_cpu, @benchmark solve(prob))
-        sol = solve(prob)
+        prob_d = ODEProblem(f, u0, tspan, p)
+        push!(benchm_cpu, @benchmark solve(prob_d))
+        sol = solve(prob_d)
 
-		push!(y1Res_cpu, sol[:,:,7:7,:,:])
-		u0 = nothing
-		p = nothing
-		arr1 = nothing
-		arr2 = nothing
-		f = nothing
-		prob = nothing
-		sol = nothing
-		end
-	end
-
-    # time plot
-    fig, axs = plt.subplots()
-
-    for result ∈ enumerate(y1Res_gpu)
-		lab = "$test_name[result[1]]"
-        axs.plot(result[2][findmax(result[2][:, :, 1, 1, end])[2][1], findmax(result[2][:, :, 1, 1, end])[2][2], k, 1, :], c = Utils.Colour[result[1]], "--", label = "$lab GPU")
+        push!(y1Res_cpu, sol[:, :, 7:7, :, :])
+	catch
+    finally
+        u0 = nothing
+        p = nothing
+        arr1 = nothing
+        arr2 = nothing
+        f = nothing
+        prob_d = nothing
+        sol = nothing
     end
-
-	for result ∈ enumerate(y1Res_cpu)
-		lab = "$test_name[result[1]]"
-		axs.plot(result[2][findmax(result[2][:, :, 1, 1, end])[2][1], findmax(result[2][:, :, 1, 1, end])[2][2], k, 1, :], c = Utils.Colour[result[1]],":", label = "$lab CPU")
-	end
-    axs.set_xlabel("Time")
-    axs.set_ylabel("Activation")
-    plt.title("L2/3, \$k=1\$")
-    plt.legend()
-    fig.tight_layout()
-    plt.savefig(plotsdir(
-        string("bench_dim", batch_),
-        string(file[2], "_para_", test_name[file[1]], "_time.png"),
-    ))
-    close("all")
-
-
-
-    # benchmark plot
-
-    fig, ax = plt.subplots()
-    for bm ∈ enumerate(benchm_gpu)
-        ax.scatter(
-		median(bm[2].times) * 1e-9,
-		test_name_plt[bm[1]],
-            label = "GPU",
-			color=Utils.colours[1],
-            alpha = 0.3,
-            edgecolors = "none",
-        )
-    end
-
-	for bm ∈ enumerate(benchm_cpu)
-		ax.scatter(
-            median(bm[2].times) * 1e-9,
-			test_name_plt[bm[1]],
-			label = "CPU",
-			alpha = 0.3,
-			color=Utils.colours[2],
-			edgecolors = "none",
-		)
-	end
-
-    ax.legend()
-	axs.set_xlabel("Resolution (\$px\$)")
-    axs.set_ylabel("Time (\$s\$)")
-    ax.grid(True)
-    fig.tight_layout()
-    plt.savefig(plotsdir(
-        string("bench_dim", batch_),
-        string(file[2], "_para_", test_name[file[1]], "_time.png"),
-    ))
-    close("all")
-
-	# memory
-	fig, ax = plt.subplots()
-    for bm ∈ enumerate(benchm_gpu)
-        ax.scatter(
-            bm[2].memory * 1e-6,
-            test_name_plt[bm[1]],
-			olor=Utils.colours[1],
-            label = "GPU",
-            alpha = 0.3,
-            edgecolors = "none",
-        )
-    end
-
-    ax.legend()
-	axs.set_xlabel("Resolution (\$px\$)")
-    axs.set_ylabel("Memory")
-    ax.grid(True)
-    fig.tight_layout()
-    plt.savefig(plotsdir(
-        string("bench_dim", batch_),
-        string(file[2], "_para_", test_name[file[1]], "_time.png"),
-    ))
-    close("all")
 end
+
+# time plot
+fig, axs = plt.subplots()
+
+for result ∈ enumerate(y1Res_gpu)
+    lab = "$test_name[result[1]]"
+    axs.plot(
+        result[2][
+            findmax(result[2][:, :, 1, 1, end])[2][1],
+            findmax(result[2][:, :, 1, 1, end])[2][2],
+            k,
+            1,
+            :,
+        ],
+        c = Utils.Colour[result[1]],
+        "--",
+        label = "$lab GPU",
+        alpha=0.8
+    )
 end
+
+for result ∈ enumerate(y1Res_cpu)
+    lab = "$test_name[result[1]]"
+    axs.plot(
+        result[2][
+            findmax(result[2][:, :, 1, 1, end])[2][1],
+            findmax(result[2][:, :, 1, 1, end])[2][2],
+            k,
+            1,
+            :,
+        ],
+        c = Utils.Colour[result[1]],
+        ":",
+        label = "$lab CPU",
+        alpha=0.8
+    )
+end
+axs.set_xlabel("Steps")
+axs.set_ylabel("Activation")
+plt.title("L2/3, \$k=1\$")
+plt.legend()
+fig.tight_layout()
+plt.savefig(plotsdir(
+    string("bench_dim", batch_),
+    string(file[2], "_para_", test_name[file[1]], "_time.png"),
+))
+close("all")
+
+
+
+# benchmark plot
+
+fig, ax = plt.subplots()
+for bm_d ∈ enumerate(benchm_gpu)
+    ax.scatter(
+        test_name_plt[bm_d[1]],
+        median(bm_d[2].times) * 1e-9,
+        label = "GPU",
+        color = Utils.colours[1],
+        edgecolors = "none",
+    )
+end
+
+for bm_d ∈ enumerate(benchm_cpu)
+    ax.scatter(
+        test_name_plt[bm_d[1]],
+        median(bm_d[2].times) * 1e-9,
+        label = "CPU",
+        color = Utils.colours[2],
+        edgecolors = "none",
+    )
+end
+
+ax.legend()
+axs.set_xlabel("Resolution (\$px\$)")
+axs.set_ylabel("Time (\$s\$)")
+ax.grid(true)
+ax.set_ylim(ymin=0)
+fig.tight_layout()
+plt.savefig(plotsdir(
+    string("bench_dim", batch_),
+    string(file[2], "_para_", test_name[file[1]], "_time.png"),
+))
+close("all")
+
+# memory
+fig, ax = plt.subplots()
+for bm_d ∈ enumerate(benchm_gpu)
+    ax.scatter(
+        test_name_plt[bm_d[1]],
+        bm_d[2].memory * 1e-6,
+        color = Utils.colours[1],
+        label = "GPU",
+        edgecolors = "none",
+    )
+end
+
+ax.legend()
+axs.set_xlabel("Resolution (\$px\$)")
+axs.set_ylabel("Memory")
+ax.grid(true)
+ax.set_ylim(ymin=0)
+fig.tight_layout()
+plt.savefig(plotsdir(
+    string("bench_dim", batch_),
+    string(file[2], "_para_", test_name[file[1]], "_time.png"),
+))
+close("all")
+
+
+benchm_gpu = nothing
+benchm_cpu = nothing
+y1Res_gpu = nothing
+y1Res_cpu = nothing
+prob_d = nothing
+CUDA.reclaim()

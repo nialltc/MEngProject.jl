@@ -16,11 +16,11 @@ using MEngProject,
 using OrdinaryDiffEq,
     ParameterizedFunctions, LSODA, Sundials, DiffEqDevTools, Noise
 
-batch = 1000
+batch = 1001
 
 
-# files = ["stairs_100gs.png"]
-files = ["kan_sq_cont_l.png"]
+files = ["stairs_100gs.png"]
+# files = ["kan_sq_cont_l.png"]
 # files = ["kan_sq_cont_l.png", "stairs_100gs.png"]
 
 tspan = (0.0f0, 800f0)
@@ -224,5 +224,6 @@ for file in files[1:end]
         prob = nothing
         sol = nothing
         close("all")
+		CUDA.reclaim()
     end
 end

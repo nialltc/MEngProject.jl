@@ -231,3 +231,4 @@ end
 
 benchm_ke = nothing
 prob_ke = nothing
+CUDA.reclaim()

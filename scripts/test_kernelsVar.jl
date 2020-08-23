@@ -338,7 +338,9 @@ for file in files
                 prob = nothing
                 sol = nothing
                 close("all")
+				CUDA.reclaim()
             end
+		catch
         finally
             nothing
         end
