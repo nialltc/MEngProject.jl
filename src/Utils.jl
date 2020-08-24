@@ -351,12 +351,14 @@ function plot_t_act_mean(sol, name, batch, file; save = true)
         for k ∈ 1:12
             # v1 = @view sol[:, :, k, 1, end]
             # v2 = @view sol[findmax(v1)[2][1], findmax(v1)[2][2], k, 1, :]
-            v2 = []
-            for s in size(sol, 4)
-                push!(v2, mean(@view sol[:,:, k, 1, s]))
+            let
+                v2 = []
+                for s in size(sol, 4)
+                    push!(v2, mean(@view sol[:,:, k, 1, s]))
+                end
+                layer = Utils.layers_1[k]
+                axs.plot(sol.t, v2, Utils.lines[k], label = "$layer", alpha = 0.8)
             end
-            layer = Utils.layers_1[k]
-            axs.plot(sol.t, v2, Utils.lines[k], label = "$layer", alpha = 0.8)
         end
         axs.set_xlabel("Time")
         axs.set_ylabel("Activation")
