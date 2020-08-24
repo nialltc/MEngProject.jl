@@ -47,6 +47,7 @@ mutable struct LamFunction{T<:AbstractArray} <: Function
 end
 
 
+
 function (ff::LamFunction)(du, u, p, t)
 
     @inbounds begin
