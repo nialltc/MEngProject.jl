@@ -56,7 +56,7 @@ CUDA.reclaim()
 try include("bench_dim.jl")catch err; print(err) end
 CUDA.reclaim()
 
-run(`git pull`)
 run(`git add plots/*`)
 run(`git commit -m "results"`)
+run(`git pull`)
 run(`git push`)
