@@ -165,10 +165,10 @@ test_name_plt = [
     "\$H\$ halfed",
     "\$T=[1,0]\$ ",
     "\$T=[0.5,0.5]\$",
-    "\$T^-\$ halfed",
+    "\$T^-\$ halved",
     "\$T^+\$ doubled",
     "\$W^+\$ increased",
-    "\$W^+\$ halfed",
+    "\$W^+\$ halved",
     "\$W^-\$ increased",
     "\$W^-\$ decreased",
 ]
