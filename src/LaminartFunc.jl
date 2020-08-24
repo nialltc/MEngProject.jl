@@ -68,7 +68,7 @@ end
 # #         dv_p = @view du[:, :, 5*p.K+1:5*p.K+1, :]
 # #         dv_m = @view du[:, :, 5*p.K+2:5*p.K+2, :]
 
-		
+
 # 		        x = @view u[:, :, 1:p.K, :]
 #         y = @view u[:, :, p.K+1:2*p.K, :]
 #         m = @view u[:, :, 2*p.K+1:3*p.K, :]
@@ -86,8 +86,8 @@ end
 
 #         dv_p = @view du[:, :, 5*p.K+1:5*p.K+1, :]
 #         dv_m = @view du[:, :, 5*p.K+2:5*p.K+2, :]
-		
-		
+
+
 #         LaminartEqConv.fun_x_lgn!(ff.x_lgn, x, p)
 #         LaminartEqConv.fun_v_C!(
 #             ff.C,
@@ -390,7 +390,7 @@ function (ff::LamFunction_equ)(du, u, p, t)
 
 end
 
-mutable struct LamFunction_all_struct_reuse_1{T<:AbstractArray} <: Function
+mutable struct LamFunction_all_struct_reuse{T<:AbstractArray} <: Function
 
     x_lgn::T
     C::T
@@ -417,7 +417,7 @@ mutable struct LamFunction_all_struct_reuse_1{T<:AbstractArray} <: Function
 end
 
 
-function (ff::LamFunction_all_struct_reuse_1)(du, u, p, t)
+function (ff::LamFunction_all_struct_reuse)(du, u, p, t)
 
     @inbounds begin
 
