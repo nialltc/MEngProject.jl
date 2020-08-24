@@ -13,7 +13,7 @@ julia>
 ```
 """
 module Utils
-using PyPlot, Images
+using PyPlot, Images, Statistics
 using DrWatson
 @quickactivate "MEngProject"
 
@@ -321,6 +321,68 @@ function plot_t_act(sol, name, batch, file, save = true)
     @inbounds begin
         for k ∈ 1:12
             v1 = @view sol[:, :, k, 1, end]
+            v2 = @view sol[findmax(v1)[2][1], findmax(v1)[2][2], k, 1, :]
+            layer = Utils.layers_1[k]
+            axs.plot(sol.t, v2, Utils.lines[k], label = "$layer", alpha = 0.8)
+        end
+        axs.set_xlabel("Time")
+        axs.set_ylabel("Activation")
+        plt.legend()
+        fig.tight_layout()
+        if save
+            plt.savefig(plotsdir(
+                string(name, batch),
+                string(file, "_time.png"),
+            ))
+        end
+        close("all")
+    end
+    return nothing
+end
+
+
+"""
+Plots mean activation vs time with all layers and orientations.
+Uses mean for each layer/orientation.
+"""
+function plot_t_act_mean(sol, name, batch, file, save = true)
+    fig, axs = plt.subplots()
+    @inbounds begin
+        for k ∈ 1:12
+            # v1 = @view sol[:, :, k, 1, end]
+            # v2 = @view sol[findmax(v1)[2][1], findmax(v1)[2][2], k, 1, :]
+            for s in size(sol, 4)
+                v2 = mean(@view sol[:,:, k, 1, s])
+            end
+            layer = Utils.layers_1[k]
+            axs.plot(sol.t, v2, Utils.lines[k], label = "$layer", alpha = 0.8)
+        end
+        axs.set_xlabel("Time")
+        axs.set_ylabel("Activation")
+        plt.legend()
+        fig.tight_layout()
+        if save
+            plt.savefig(plotsdir(
+                string(name, batch),
+                string(file, "_time.png"),
+            ))
+        end
+        close("all")
+    end
+    return nothing
+end
+
+
+"""
+Plots activation vs time with all layers and orientations.
+Uses highest value pixel at end of specified layer/orient.
+Default is z, k=1
+"""
+function plot_t_act(sol, name, batch, file; d=7, save = true)
+    fig, axs = plt.subplots()
+    @inbounds begin
+        v1 = @view sol[:, :, d, 1, end]
+        for k ∈ 1:12
             v2 = @view sol[findmax(v1)[2][1], findmax(v1)[2][2], k, 1, :]
             layer = Utils.layers_1[k]
             axs.plot(sol.t, v2, Utils.lines[k], label = "$layer", alpha = 0.8)
