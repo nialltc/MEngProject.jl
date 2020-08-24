@@ -351,7 +351,7 @@ function plot_t_act_mean(sol, name, batch, file; save = true)
         for k ∈ 1:12
             # v1 = @view sol[:, :, k, 1, end]
             # v2 = @view sol[findmax(v1)[2][1], findmax(v1)[2][2], k, 1, :]
-            v2 = Array{eltype(float32)}(undef, sizeof(sol.t))
+            v2 = Array{eltype(float32)}(undef, size(sol, 4))
             for s in size(sol, 4)
                 v2[s] = mean(@view sol[:,:, k, 1, s]))
             end
