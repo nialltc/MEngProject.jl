@@ -1,3 +1,19 @@
+"""
+# script test_parameterVar
+
+- Julia version: 1.4
+- Author: niallcullinane
+- Date: 2020-08-20
+
+
+Script to vary parameter of LAMINART and plot layers and activation.
+# Examples
+
+```jldoctest
+julia>
+```
+"""
+
 using DrWatson
 @quickactivate "MEngProject"
 using MEngProject,

@@ -5,6 +5,16 @@
 - Author: niallcullinane
 - Date: 2020-06-07
 
+Laminart parameters saved as named tuple, in float32 or float64
+
+Values from:
+
+R. D. S. Raizada and S. Grossberg, ‘Context-sensitive binding by the laminar circuits of V1 and V2: A unified model of perceptual grouping, attention, and orientation contrast’, Visual Cognition, vol. 8, no. 3–5, p. 431, Jun. 2001, doi: 10/d8phhc.
+
+unless stated otherwise.
+
+
+Functions para_var and para_var_k to replace parameters for testing
 # Examples
 
 ```jldoctest
@@ -55,7 +65,7 @@ parameters_f32 = (
     # W, H sizes
     H_size = 19,
     W_size = 19,
-    # W σ
+    # W σ, estimated
     W_p_σ_x_same_a = 6f0,
     W_p_σ_x_same_b = 3f0,
     W_p_σ_y_same_a = 2f0,

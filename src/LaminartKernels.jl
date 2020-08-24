@@ -5,6 +5,7 @@
 - Author: niallcullinane
 - Date: 2020-06-07
 
+functions to create LAMINART kernels for lgn -> L6, L4 and W kernel
 # Examples
 
 ```jldoctest
@@ -71,7 +72,10 @@ end
 
 
 
-
+"""
+used to make W kernels
+returns 2D kernel with elongated Gaussian rotated
+"""
 function gaussian_rot(
     σ_x::Real,
     σ_y::Real,

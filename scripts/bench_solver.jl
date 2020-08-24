@@ -1,3 +1,19 @@
+"""
+# script bench_solver
+
+- Julia version: 1.4
+- Author: niallcullinane
+- Date: 2020-08-20
+
+
+Script to benchmark ODE solvers.
+# Examples
+
+```jldoctest
+julia>
+```
+"""
+
 using DrWatson
 @quickactivate "MEngProject"
 using MEngProject,

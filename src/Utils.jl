@@ -5,6 +5,7 @@
 - Author: niallcullinane
 - Date: 2020-06-07
 
+Functions for plotting.
 # Examples
 
 ```jldoctest
@@ -19,6 +20,7 @@ using DrWatson
 # saving plots
 location = plotsdir()
 
+# pretty layer names
 layers = [
     "L6 (\$x\$)",
     "L6(\$x\$)",
@@ -34,6 +36,7 @@ layers = [
     "LGN (\$v\$)",
 ]
 
+# bare layer names
 layers_1 = [
     "\$x_1\$",
     "\$x_2\$",
@@ -49,8 +52,10 @@ layers_1 = [
     "\$v^-\$",
 ]
 
+# short layer names
 la = ["x", "x", "y", "y", "m", "m", "z", "z", "s", "s", "v", "v"]
 
+# line types for matplotlib
 lines = [
     "b--",
     "g--",
@@ -66,6 +71,7 @@ lines = [
     "g-.",
 ]
 
+# colours for matplotlib
 colours = [
     "tab:blue",
     "tab:orange",
@@ -78,6 +84,11 @@ colours = [
     "tab:olive",
     "tab:cyan",
 ]
+
+
+"""
+Creates image plot with blue-red cmap.
+"""
 function plot_rb(
     img::AbstractArray;
     name = "img",
@@ -113,6 +124,10 @@ function plot_rb(
     end
 end
 
+
+"""
+Creates image plot with two images overlayed.
+"""
 function plot_two(
     img::AbstractArray,
     k,
@@ -161,6 +176,10 @@ function plot_two(
     end
 end
 
+
+"""
+Creates image plot with grey cmap.
+"""
 function plot_gs(
     img::AbstractArray;
     name = "img",
@@ -197,6 +216,9 @@ function plot_gs(
 end
 
 
+"""
+Plots all orientations with blue-red cmap.
+"""
 function save_orientations_rb(
     A::Array,
     name::String,
@@ -213,6 +235,9 @@ function save_orientations_rb(
 end
 
 
+"""
+Plots all orientations with gray cmap.
+"""
 function save_orientations_gs(
     A::Array,
     name::String,
@@ -229,65 +254,68 @@ function save_orientations_gs(
 end
 
 
-function save_2d_list_rb(
-    A::Array,
-    name::String,
-    loc = location,
-    filetype = ".png",
-    axMin = -1,
-    axMax = 1,
-    clbar = false,
-)
-    n = 0
-    for img in A
-        n += 1
-        plot_101_rb(img, name, true, axMin, axMax, clbar, loc, filetype)
-    end
-end
+
+# function save_2d_list_rb(
+#     A::Array,
+#     name::String,
+#     loc = location,
+#     filetype = ".png",
+#     axMin = -1,
+#     axMax = 1,
+#     clbar = false,
+# )
+#     n = 0
+#     for img in A
+#         n += 1
+#         plot_101_rb(img, name, true, axMin, axMax, clbar, loc, filetype)
+#     end
+# end
+#
+#
+# function save_orientations_gs_(
+#     A::Array,
+#     name::String,
+#     bright = 1,
+#     loc = location,
+#     filetype = ".png",
+# )
+#     for k = 1:size(A)[3]
+#         fn = string(loc, name, "_", k, filetype)
+#         save(fn, Gray.(bright .* (A[:, :, k])))
+#     end
+# end
+#
+#
+# function save_2d_gs(
+#     A::Array,
+#     name::String,
+#     bright = 1,
+#     loc = location,
+#     filetype = ".png",
+# )
+#     fn = string(loc, name, filetype)
+#     save(fn, Gray.(bright .* (A)))
+# end
+#
+# function save_2d_list_gs(
+#     A::Array,
+#     name::String,
+#     bright = 1,
+#     loc = location,
+#     filetype = ".png",
+# )
+#     n = 0
+#     for img in A
+#         n += 1
+#         save_2d(img, string(name, n), bright, loc, filetype)
+#     end
+# end
 
 
-function save_orientations_gs_(
-    A::Array,
-    name::String,
-    bright = 1,
-    loc = location,
-    filetype = ".png",
-)
-    for k = 1:size(A)[3]
-        fn = string(loc, name, "_", k, filetype)
-        save(fn, Gray.(bright .* (A[:, :, k])))
-    end
-end
-
-
-function save_2d_gs(
-    A::Array,
-    name::String,
-    bright = 1,
-    loc = location,
-    filetype = ".png",
-)
-    fn = string(loc, name, filetype)
-    save(fn, Gray.(bright .* (A)))
-end
-
-function save_2d_list_gs(
-    A::Array,
-    name::String,
-    bright = 1,
-    loc = location,
-    filetype = ".png",
-)
-    n = 0
-    for img in A
-        n += 1
-        save_2d(img, string(name, n), bright, loc, filetype)
-    end
-end
-
-
-# time  activation plot
-
+"""
+Plots activation vs time with all layers and orientations.
+Uses highest value pixel for each layer/orientation at end.
+"""
 function plot_t_act(sol, name, batch, file, save = true)
     fig, axs = plt.subplots()
     @inbounds begin
@@ -313,7 +341,11 @@ function plot_t_act(sol, name, batch, file, save = true)
 end
 
 
-# plot two orientantions together for all layers
+"""
+Plots two orientantions together for all layers.
+v^+ and v^- plotted together
+Cbar alpha for lower image adjusted.
+"""
 function plot_k2(sol, t, name, batch, file, save = true)
 
     @inbounds begin

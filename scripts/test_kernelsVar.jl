@@ -1,3 +1,19 @@
+"""
+# script test_kernelsVar
+
+- Julia version: 1.4
+- Author: niallcullinane
+- Date: 2020-08-20
+
+
+Script to vary kernel parameters of LAMINART and plot layers and activation.
+# Examples
+
+```jldoctest
+julia>
+```
+"""
+
 using DrWatson
 @quickactivate "MEngProject"
 using MEngProject,

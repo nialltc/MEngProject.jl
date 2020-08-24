@@ -20,6 +20,11 @@ include("./LaminartKernels.jl")
 
 using NNlib, ImageFiltering, Images, OffsetArrays, CUDA, Noise
 
+
+"""
+Returns named tuple with input image, retina, kernels and parameters.
+For use with equations with NNlib conv on GPU.
+"""
 function parameterInit_conv_gpu(imgLoc::String, p::NamedTuple)
     img = convert(Array{Float32,2}, load(imgLoc))
     img = reshape2d_4d(img)
@@ -36,6 +41,12 @@ function parameterInit_conv_gpu(imgLoc::String, p::NamedTuple)
 end
 
 
+"""
+Adds multiply Gaussian noise to input image
+
+Returns named tuple for GPU with input image, retina, kernels and parameters.
+For use with equations with NNlib conv on GPU.
+"""
 function parameterInit_conv_gpu_noise(
     imgLoc::String,
     p::NamedTuple,
@@ -56,6 +67,11 @@ function parameterInit_conv_gpu_noise(
     return parameters
 end
 
+
+"""
+Returns named tuple  with input image, retina, kernels and parameters.
+For use with equations with NNlib conv on CPU.
+"""
 function parameterInit_conv_cpu(imgLoc::String, p::NamedTuple)
     img = convert(Array{Float32,2}, load(imgLoc))
     img = reshape2d_4d(img)
@@ -71,6 +87,10 @@ function parameterInit_conv_cpu(imgLoc::String, p::NamedTuple)
 end
 
 
+"""
+Returns named tuple  with input image, retina, kernels and parameters.
+For use with equations with imfilter on CPU.
+"""
 function parameterInit_imfil_cpu(imgLoc::String, p::NamedTuple)
     img = convert(Array{Float32,2}, load(imgLoc))
 
@@ -85,6 +105,9 @@ function parameterInit_imfil_cpu(imgLoc::String, p::NamedTuple)
 end
 
 
+"""
+Reshapes ixj array to ixjx1x1 array.
+"""
 function reshape2d_4d(img::AbstractArray)
     reshape(img, size(img)[1], size(img)[2], 1, 1)
 end
@@ -101,6 +124,9 @@ function add_I_u_p(I::AbstractArray, p::NamedTuple)
 end
 
 
+"""
+Generates kernels for use with NNLib conv and GPU.
+"""
 function kernels_conv_gpu(img::AbstractArray, p::NamedTuple)
     C_A_temp = reshape(
         Array{eltype(img)}(undef, p.C_AB_l, p.C_AB_l * p.K),
@@ -305,6 +331,10 @@ function kernels_conv_gpu(img::AbstractArray, p::NamedTuple)
     merge(p, temp_out)
 end
 
+
+"""
+Generates kernels for use with NNLib conv and CPU.
+"""
 function kernels_conv_cpu(img::AbstractArray, p::NamedTuple)
     C_A_temp = reshape(
         Array{eltype(img)}(undef, p.C_AB_l, p.C_AB_l * p.K),
@@ -398,6 +428,9 @@ function kernels_conv_cpu(img::AbstractArray, p::NamedTuple)
 end
 
 
+"""
+Generates kernels for use with imfilter equations.
+"""
 function kernels_imfil_cpu(img::AbstractArray, p::NamedTuple)
     C_A_temp = reshape(
         Array{eltype(img)}(undef, p.C_AB_l, p.C_AB_l * p.K),

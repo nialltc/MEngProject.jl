@@ -1,3 +1,18 @@
+"""
+# script bench_eq
+
+- Julia version: 1.4
+- Author: niallcullinane
+- Date: 2020-08-20
+
+
+Script to microbenchmark model equations.
+# Examples
+
+```jldoctest
+julia>
+```
+"""
 using DrWatson
 @quickactivate "MEngProject"
 using MEngProject, CUDA, DifferentialEquations, PyPlot, NNlib,  ImageFiltering, Images, MEngProject.LaminartKernels, MEngProject.LaminartInitFunc, MEngProject.Utils, BenchmarkTools, Test

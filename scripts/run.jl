@@ -1,3 +1,20 @@
+"""
+# script run
+
+- Julia version: 1.4
+- Author: niallcullinane
+- Date: 2020-08-20
+
+
+Runs set of tests and benchmarks.
+Commits and pushes results to Git.
+# Examples
+
+```jldoctest
+julia>
+```
+"""
+
 using DrWatson
 @quickactivate "MEngProject"
 using MEngProject,

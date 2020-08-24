@@ -1,3 +1,19 @@
+"""
+# script bench_dim
+
+- Julia version: 1.4
+- Author: niallcullinane
+- Date: 2020-08-20
+
+
+Script to benchmark model with different input sizes for CPU and GPU.
+# Examples
+
+```jldoctest
+julia>
+```
+"""
+
 using DrWatson
 @quickactivate "MEngProject"
 using MEngProject,
