@@ -316,7 +316,7 @@ end
 Plots activation vs time with all layers and orientations.
 Uses highest value pixel for each layer/orientation at end.
 """
-function plot_t_act(sol, name, batch, file, save = true)
+function plot_t_act(sol, name, batch, file; save = true)
     fig, axs = plt.subplots()
     @inbounds begin
         for k ∈ 1:12
@@ -345,7 +345,7 @@ end
 Plots mean activation vs time with all layers and orientations.
 Uses mean for each layer/orientation.
 """
-function plot_t_act_mean(sol, name, batch, file, save = true)
+function plot_t_act_mean(sol, name, batch, file; save = true)
     fig, axs = plt.subplots()
     @inbounds begin
         for k ∈ 1:12
@@ -408,7 +408,7 @@ Plots two orientantions together for all layers.
 v^+ and v^- plotted together
 Cbar alpha for lower image adjusted.
 """
-function plot_k2(sol, t, name, batch, file, save = true)
+function plot_k2(sol, t, name, batch, file; save = true)
 
     @inbounds begin
 
