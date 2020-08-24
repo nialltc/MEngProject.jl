@@ -228,7 +228,7 @@ function para_var_k(va::NamedTuple)
         H_fact = va.H_fact,
         # H_l =  4*ceil(Int, max(p_temp.H_σ_x, p_temp.H_σ_y))+1,
         H_l = va.H_l,
-        T_fact = va.T_fac,       #avg TP same orient, other orient
+        T_fact = va.T_fact,       #avg TP same orient, other orient
         T_p_m = va.T_p_m,    #avg TM/TP
         T_v2_fact = 0.625f0,     #T in V2 = T*
         # W, H sizes
