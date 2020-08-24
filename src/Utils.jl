@@ -314,7 +314,7 @@ end
 
 """
 Plots activation vs time with all layers and orientations.
-Uses highest value pixel for each layer/orientation at end.
+Uses highest value pixel at end k=1 orientation for each layer.
 """
 function plot_t_act(sol, name, batch, file; save = true)
     fig, axs = plt.subplots()
