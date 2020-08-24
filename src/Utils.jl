@@ -344,7 +344,7 @@ end
 """
 Plots mean activation vs time with all layers and orientations.
 Uses mean for each layer/orientation.
-Very slow.
+Currently very slow.
 """
 function plot_t_act_mean(sol, name, batch, file; save = true)
     fig, axs = plt.subplots()
