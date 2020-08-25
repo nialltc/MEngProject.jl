@@ -26,7 +26,7 @@ filter_resource = CUDALibs(Algorithm.FIR())
 # retina
 
 function I_u!(r::AbstractArray, I::AbstractArray, p::NamedTuple)
-    imfilter!(filter_resource, r, I, p.k_gauss_1, Fill(0f0))
+    imfilter!(filter_resource, r, I, p.k_gauss_1)
     @. r = I - r
     return nothing
 end
@@ -101,7 +101,7 @@ function fun_dv!(
     x_lgn::AbstractArray,
     p::NamedTuple,
 )
-    imfilter!(filter_resource, dv, x_lgn, centered(p.k_gauss_1), Fill(0f0))
+    imfilter!(filter_resource, dv, x_lgn, centered(p.k_gauss_1))
     @. dv =
         p.δ_v * (
             -v + ((1f0 - v) * max(u, 0f0) * (1f0 + p.C_1 * x_lgn)) -
@@ -228,7 +228,7 @@ function fun_dz!(
     s::AbstractArray,
     p::NamedTuple,
 )
-    imfilter!(filter_resource, dz, s, centered(p.k_T_p), Fill(0f0))
+    imfilter!(filter_resource, dz, s, centered(p.k_T_p))
     @. dz =
         p.δ_z * (
             -z +
@@ -245,7 +245,7 @@ function fun_ds!(
     H_z::AbstractArray,
     p::NamedTuple,
 )
-    imfilter!(filter_resource, ds, s, centered(p.k_T_m), Fill(0f0))
+    imfilter!(filter_resource, ds, s, centered(p.k_T_m))
     @. ds = p.δ_s * (-s + H_z + (p.a_23_in * p.att) - (s * ds))
     return nothing
 end
@@ -351,7 +351,7 @@ function fun_y_equ!(
     p::NamedTuple,
 )
     # 	@inbounds begin
-    imfilter!(filter_resource, dy_temp, m, p.k_W_p, Fill(0f0))
+    imfilter!(filter_resource, dy_temp, m, p.k_W_p)
     @. dy_temp = m * dy_temp
     fun_f!(dy_temp, p)
     @. y = (C + (p.η_p * x) - dy_temp) / (1f0 + C + (p.η_p * x) + dy_temp)
