@@ -33,7 +33,7 @@ using MEngProject,
 using OrdinaryDiffEq,
     ParameterizedFunctions, LSODA, Sundials, DiffEqDevTools, Noise
 
-batch = 1000
+batch = 2000
 
 
 global benchm_i
@@ -109,6 +109,8 @@ u0 = reshape(
     1,
 )
 
+arr1 = similar(@view u0[:, :, 1:p.K, :])
+arr2 = similar(@view u0[:, :, 1:1, :])
 
 f = LaminartFunc.LamFunction(
     arr1, #x
@@ -146,7 +148,7 @@ arr1 = u0[:, :, 1:p.K]
 arr2 = u0[:, :, 1:1];
 
 
-f = LaminartFunc.LamFunction_imfil_gpu(
+f = LaminartFunc.LamFunction_imfil_cpu(
  arr2, #x_lgn,
 arr1, #C,
 similar(arr1), #H_z,
