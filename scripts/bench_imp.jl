@@ -13,6 +13,7 @@ Script to benchmark GPU and CPU implementions of model.
 julia>
 ```
 """
+
 using DrWatson
 @quickactivate "MEngProject"
 using MEngProject,

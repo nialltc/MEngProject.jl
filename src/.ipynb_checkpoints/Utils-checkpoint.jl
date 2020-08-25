@@ -314,7 +314,7 @@ end
 
 """
 Plots activation vs time with all layers and orientations.
-Uses highest value pixel for each layer/orientation at end.
+Uses highest value pixel at end k=1 orientation for each layer.
 """
 function plot_t_act(sol, name, batch, file; save = true)
     fig, axs = plt.subplots()
@@ -335,7 +335,7 @@ function plot_t_act(sol, name, batch, file; save = true)
                 string(file, "_time.png"),
             ))
         end
-#         close("all")
+        close("all")
     end
     return nothing
 end
@@ -344,6 +344,7 @@ end
 """
 Plots mean activation vs time with all layers and orientations.
 Uses mean for each layer/orientation.
+Currently very slow.
 """
 function plot_t_act_mean(sol, name, batch, file; save = true)
     fig, axs = plt.subplots()
@@ -368,7 +369,7 @@ function plot_t_act_mean(sol, name, batch, file; save = true)
                 string(file, "_time.png"),
             ))
         end
-#         close("all")
+        close("all")
     end
     return nothing
 end
@@ -398,7 +399,7 @@ function plot_t_act_px(sol, name, batch, file; d=7, save = true)
                 string(file, "_time.png"),
             ))
         end
-#         close("all")
+        close("all")
     end
     return nothing
 end
@@ -430,7 +431,7 @@ function plot_t_act_spec(sol, name, batch, file; px=(50,50), save = true)
                 string(file, "_time.png"),
             ))
         end
-#         close("all")
+        close("all")
     end
     return nothing
 end
