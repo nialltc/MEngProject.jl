@@ -5,6 +5,8 @@
 - Author: niallcullinane
 - Date: 2020-08-20
 
+
+Functions for DiffEq to call LAMINART equations and hold values.
 # Examples
 
 ```jldoctest
@@ -18,6 +20,7 @@ include("./LaminartEqImfilter.jl")
 include("./LaminartEqImfilterGPU_FFT.jl")
 include("./LaminartEqImfilterGPU_FIR.jl")
 include("./LaminartEqImfilterGPU_IIR.jl")
+include("./LaminartEqImfilter_old.jl")
 include("./LaminartEqConv.jl")
 
 
@@ -45,8 +48,6 @@ mutable struct LamFunction{T<:AbstractArray} <: Function
     A_temp::T
     B_temp::T
 end
-
-
 
 function (ff::LamFunction)(du, u, p, t)
 
@@ -96,7 +97,9 @@ function (ff::LamFunction)(du, u, p, t)
 
 end
 
-
+"""
+All arrays held in struct.
+"""
 mutable struct LamFunction_allStruct <: Function
     x::AbstractArray
     y::AbstractArray
@@ -173,15 +176,15 @@ function (ff::LamFunction_allStruct)(du, u, p, t)
         LaminartEqConv.fun_dm!(ff.dm, ff.m, ff.x, ff.dm_temp, p)
         LaminartEqConv.fun_dz!(ff.dz, ff.z, ff.y, ff.H_z, ff.s, ff.dz_temp, p)
         LaminartEqConv.fun_ds!(ff.ds, ff.s, ff.H_z, ff.ds_temp, p)
-
-
     end
     return nothing
 
 end
 
 
-
+"""
+Temp arrays resused for differiant function.
+"""
 mutable struct LamFunction_gpu_reuse{T<:AbstractArray} <: Function
 
     x_lgn::T
@@ -252,6 +255,10 @@ function (ff::LamFunction_gpu_reuse)(du, u, p, t)
 
 end
 
+
+"""
+Uses equations solved at equilibrum for L6 (x) and L4 (y).
+"""
 mutable struct LamFunction_equ{T<:AbstractArray} <: Function
     x::T
     m::T
@@ -324,7 +331,11 @@ function (ff::LamFunction_equ)(du, u, p, t)
 
 end
 
-mutable struct LamFunction_all_struct_reuse_1{T<:AbstractArray} <: Function
+
+"""
+All arrays held in struct and temp arrays reused for different equations.
+"""
+mutable struct LamFunction_all_struct_reuse{T<:AbstractArray} <: Function
 
     x_lgn::T
     C::T
@@ -351,7 +362,7 @@ mutable struct LamFunction_all_struct_reuse_1{T<:AbstractArray} <: Function
 end
 
 
-function (ff::LamFunction_all_struct_reuse_1)(du, u, p, t)
+function (ff::LamFunction_all_struct_reuse)(du, u, p, t)
 
     @inbounds begin
 
@@ -415,6 +426,9 @@ function (ff::LamFunction_all_struct_reuse_1)(du, u, p, t)
 end
 
 
+"""
+Uses equations with JuliaImage's imfilter for convolution on CPU.
+"""
 struct LamFunction_imfil_cpu <: Function
     x_lgn::Any
     C::Any
@@ -471,6 +485,10 @@ function (ff::LamFunction_imfil_cpu)(du, u, p, t)
 end
 
 
+
+"""
+Uses equations with JuliaImage's imfilter for convolution on GPU with IIR algorithom.
+"""
 struct LamFunction_imfil_gpu_iir <: Function
     x_lgn::Any
     C::Any
@@ -526,6 +544,10 @@ function (ff::LamFunction_imfil_gpu_iir)(du, u, p, t)
     return nothing
 end
 
+
+"""
+Uses equations with JuliaImage's imfilter for convolution on GPU with FIR algorithom.
+"""
 struct LamFunction_imfil_gpu_fir <: Function
     x_lgn::Any
     C::Any
@@ -581,6 +603,10 @@ function (ff::LamFunction_imfil_gpu_fir)(du, u, p, t)
     return nothing
 end
 
+
+"""
+Uses equations with JuliaImage's imfilter for convolution on GPU with FFT algorithom.
+"""
 struct LamFunction_imfil_gpu_fft <: Function
     x_lgn::Any
     C::Any
@@ -635,6 +661,67 @@ function (ff::LamFunction_imfil_gpu_fft)(du, u, p, t)
     end
     return nothing
 end
+
+
+
+"""
+Old version using imfilter
+"""
+struct LamFunction_imfil_old <: Function
+    x_lgn::Any
+    C::Any
+    H_z::Any
+    H_z_temp::Any
+    v_C_temp1::Any
+    v_C_temp2::Any
+    v_C_tempA::Any
+    W_temp::Any
+end
+
+function (ff::LamFunction_imfil_old)(du, u, p, t)
+    @inbounds begin
+        x = @view u[:, :, 1:p.K]
+        y = @view u[:, :, p.K+1:2*p.K]
+        m = @view u[:, :, 2*p.K+1:3*p.K]
+        z = @view u[:, :, 3*p.K+1:4*p.K]
+        s = @view u[:, :, 4*p.K+1:5*p.K]
+
+        v_p = @view u[:, :, 5*p.K+1]
+        v_m = @view u[:, :, 5*p.K+2]
+
+        dx = @view du[:, :, 1:p.K]
+        dy = @view du[:, :, p.K+1:2*p.K]
+        dm = @view du[:, :, 2*p.K+1:3*p.K]
+        dz = @view du[:, :, 3*p.K+1:4*p.K]
+        ds = @view du[:, :, 4*p.K+1:5*p.K]
+
+        dv_p = @view du[:, :, 5*p.K+1]
+        dv_m = @view du[:, :, 5*p.K+2]
+
+
+        LaminartEqImfilter_old.fun_x_lgn!(ff.x_lgn, x, p)
+        LaminartEqImfilter_old.fun_v_C!(
+            ff.C,
+            v_p,
+            v_m,
+#             ff.v_C_temp1,
+#             ff.v_C_temp2,
+#             ff.v_C_tempA,
+            p,
+        )
+        LaminartEqImfilter_old.fun_H_z!(ff.H_z, z,  p)
+
+        LaminartEqImfilter_old.fun_dv!(dv_p, v_p, p.r, ff.x_lgn, p)
+        LaminartEqImfilter_old.fun_dv!(dv_m, v_m, .-p.r, ff.x_lgn, p)
+        LaminartEqImfilter_old.fun_dx_v1!(dx, x, ff.C, z, p.x_V2, p)
+        LaminartEqImfilter_old.fun_dy!(dy, y, ff.C, x, m, p)
+        LaminartEqImfilter_old.fun_dm!(dm, m, x,  p)
+        LaminartEqImfilter_old.fun_dz!(dz, z, y, ff.H_z, s, p)
+        LaminartEqImfilter_old.fun_ds!(ds, s, ff.H_z, p)
+    end
+    return nothing
+end
+
 
 # mutable struct LamFunction_gpu30 <: Function
 # 	x_lgn::AbstractArray
