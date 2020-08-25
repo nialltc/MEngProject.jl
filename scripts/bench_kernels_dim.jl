@@ -97,7 +97,7 @@ for file in files
         try
             p = LaminartInitFunc.parameterInit_conv_gpu(
                 datadir("img", file),
-                Parameters.para_var(para_test[2]),
+                Parameters.para_var_k(para_test[2]),
             )
 
             u0 = cu(reshape(
@@ -190,10 +190,11 @@ for file in files
                 f = nothing
                 prob_ke = nothing
                 sol = nothing
+                GC.gc
                 close("all")
             end
-        finally
-            nothing
+        catch err
+            print(err)
         end
 
 
@@ -247,4 +248,5 @@ end
 
 benchm_ke = nothing
 prob_ke = nothing
+GC.gc
 CUDA.reclaim()

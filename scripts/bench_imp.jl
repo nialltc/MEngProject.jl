@@ -319,4 +319,5 @@ close("all")
 
 benchm_i = nothing
 prob_i = nothing
+GC.gc
 CUDA.reclaim()
