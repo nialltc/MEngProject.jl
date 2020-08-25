@@ -352,7 +352,14 @@ function kernels_conv_cpu(img::AbstractArray, p::NamedTuple)
         p.K,
     )
     T_temp = reshape(Array{eltype(img)}(undef, p.K * p.K), 1, 1, p.K, p.K)
-    W_temp = reshape(
+    W_p_temp = reshape(
+        Array{eltype(img)}(undef, p.W_l, p.W_l * p.K * p.K),
+        p.W_l,
+        p.W_l,
+        p.K,
+        p.K,
+    )
+	W_m_temp = reshape(
         Array{eltype(img)}(undef, p.W_l, p.W_l * p.K * p.K),
         p.W_l,
         p.W_l,
@@ -556,13 +563,20 @@ function kernels_imfil_cpu(img::AbstractArray, p::NamedTuple)
         p.K,
     )
     T_temp = reshape(Array{eltype(img)}(undef, 1, 1 * p.K), 1, 1, p.K)     #ijk,  1x1xk,   ijk
-    W_temp = reshape(
+    W_p_temp = reshape(
         Array{eltype(img)}(undef, p.W_l, p.W_l * p.K * p.K),
         p.W_l,
         p.W_l,
         p.K,
         p.K,
-    )     #ijk,  1x1xk,   ijk
+    )
+	W_m_temp = reshape(
+        Array{eltype(img)}(undef, p.W_l, p.W_l * p.K * p.K),
+        p.W_l,
+        p.W_l,
+        p.K,
+        p.K,
+    )    #ijk,  1x1xk,   ijk
     for k ∈ 1:p.K
         θ = π * (k - 1) / p.K
         C_A_temp[:, :, k] = reflect(centered(LaminartKernels.kern_A(p.σ_2, θ)))           #ij ijk ijk
