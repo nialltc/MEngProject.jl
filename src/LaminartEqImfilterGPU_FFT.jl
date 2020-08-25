@@ -74,7 +74,7 @@ function func_filter_W!(
             out_k,
             img_k,
             centered(W[:, :, k, k]),
-            Fill(0f0),
+
         )
         for l ∈ 1:p.K
             if l ≠ k
@@ -84,7 +84,7 @@ function func_filter_W!(
                     W_temp,
                     img_l,
                     centered(W[:, :, k, l]),
-                    Fill(0f0),
+                    
                 )
                 @. out_k += W_temp
             end
@@ -133,7 +133,7 @@ function fun_v_C!(
         v_C_temp1,
         v_C_temp2,
         centered(p.k_gauss_2),
-        Fill(0f0),
+
     )
 
     #     A = similar(v_C)
@@ -147,14 +147,14 @@ function fun_v_C!(
             a,
             v_C_temp1,
             centered(p.k_C_A[:, :, k]),
-            Fill(0f0),
+
         )
         imfilter!(
             filter_resource,
             b,
             v_C_temp1,
             centered(p.k_C_B[:, :, k]),
-            Fill(0f0),
+
         )
     end
     # end
@@ -271,7 +271,7 @@ function fun_H_z!(
             H_z_k,
             temp_k,
             centered(p.k_H[:, :, k]),
-            Fill(0f0),
+
         )
     end
     # end
