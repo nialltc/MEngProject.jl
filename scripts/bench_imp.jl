@@ -145,7 +145,7 @@ arr1 = u0[:, :, 1:p.K]
 arr2 = u0[:, :, 1:1];
 
 
-f = LaminartFunc.LamFunction_imfil_cpu(
+f = LaminartFunc.LamFunction_imfil_gpu(
  arr2, #x_lgn,
 arr1, #C,
 similar(arr1), #H_z,
@@ -175,7 +175,7 @@ arr1 = u0[:, :, 1:p.K]
 arr2 = u0[:, :, 1:1];
 
 
-f = LaminartFunc.LamFunction_imfil_cpu_fft(
+f = LaminartFunc.LamFunction_imfil_gpu_fft(
  arr2, #x_lgn,
 arr1, #C,
 similar(arr1), #H_z,
@@ -205,7 +205,7 @@ arr1 = u0[:, :, 1:p.K]
 arr2 = u0[:, :, 1:1];
 
 
-f = LaminartFunc.LamFunction_imfil_cpu_iir(
+f = LaminartFunc.LamFunction_imfil_gpu_iir(
  arr2, #x_lgn,
 arr1, #C,
 similar(arr1), #H_z,
@@ -235,7 +235,7 @@ arr1 = u0[:, :, 1:p.K]
 arr2 = u0[:, :, 1:1];
 
 
-f = LaminartFunc.LamFunction_imfil_cpu_fir(
+f = LaminartFunc.LamFunction_imfil_gpu_fir(
  arr2, #x_lgn,
 arr1, #C,
 similar(arr1), #H_z,
