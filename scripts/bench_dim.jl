@@ -46,12 +46,16 @@ files = [
     "ver_lines_400_gs.png",
 ]
 
-global benchm_gpu = []
-global benchm_cpu = []
-global y1Res_gpu = []
-global y1Res_cpu = []
+global benchm_gpu
+global benchm_cpu
+global y1Res_gpu
+global y1Res_cpu
 global prob_d
 
+benchm_gpu = []
+benchm_cpu = []
+y1Res_gpu = []
+y1Res_cpu = []
 
 
 tspan = (0.0f0, 10f0)

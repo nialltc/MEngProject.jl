@@ -34,7 +34,7 @@ using OrdinaryDiffEq,
     ParameterizedFunctions, LSODA, Sundials, DiffEqDevTools, Noise
 
 global benchm_ke
-global prob_ke
+# global prob_ke
 
 
 batch = 1000
@@ -97,7 +97,7 @@ benchm_ke = []
 file = files[1]
 
 for para_test ∈ enumerate(para_sets)
-    try
+    # try
         p = LaminartInitFunc.parameterInit_conv_gpu(
             datadir("img", file),
             Parameters.para_var_k(para_test[2]),
@@ -132,107 +132,107 @@ for para_test ∈ enumerate(para_sets)
             similar(arr1), #  A_temp,
             similar(arr1), #   B_temp
         )
-        prob_ke = ODEProblem(f, u0, tspan, p)
+        global prob_ke = ODEProblem(f, u0, tspan, p)
         push!(benchm_ke, @benchmark solve(prob_ke))
         sol = solve(prob_ke)
 
-        @inbounds begin
-            t = 800
-            v0 = @view sol(t)[:, :, :, 1]
-            axMax = findmax(v0)[1]
+    #     @inbounds begin
+    #         t = 800
+    #         v0 = @view sol(t)[:, :, :, 1]
+    #         axMax = findmax(v0)[1]
+    #
+    #         k = 7
+    #         fig, ax = plt.subplots()
+    #
+    #         v1 = @view sol(t)[:, :, k, 1]
+    #         v2 = @view sol(t)[:, :, k+1, 1]
+    #         im = ax.imshow(
+    #             v1,
+    #             cmap = matplotlib.cm.PRGn,
+    #             vmax = axMax,
+    #             vmin = -axMax,
+    #         )
+    #         im2 = ax.imshow(
+    #             v2,
+    #             cmap = matplotlib.cm.RdBu_r,
+    #             vmax = axMax,
+    #             vmin = -axMax,
+    #             alpha = 0.5,
+    #         )
+    #
+    #         cbar = fig.colorbar(im2, shrink = 0.9, ax = ax)
+    #         cbar.ax.set_xlabel("\$k=2\$")
+    #         cbar = fig.colorbar(im, shrink = 0.9, ax = ax)
+    #         cbar.set_alpha(0.5)
+    #         cbar.draw_all()
+    #         cbar.ax.set_xlabel("\$k=1\$")
+    #         layer = Utils.layers[k]
+    #         plt.title(string(
+    #             "Layer: $layer, \$t=$t\$, ",
+    #             test_name_plt[para_test[1]],
+    #         ))
+    #         plt.axis("off")
+    #         fig.tight_layout()
+    #         plt.savefig(plotsdir(
+    #             string("bench_kern", batch_),
+    #             string(
+    #                 file,
+    #                 "_para_",
+    #                 test_name[para_test[1]],
+    #                 "_t",
+    #                 t,
+    #                 "_",
+    #                 Utils.la[k],
+    #                 ".png",
+    #             ),
+    #         ))
+    #         # u0 = nothing
+    #         # p = nothing
+    #         # arr1 = nothing
+    #         # arr2 = nothing
+    #         # f = nothing
+    #         # prob_ke = nothing
+    #         # sol = nothing
+    #         # GC.gc
+    #         close("all")
+    #     end
+    # catch err
+    #     print(err)
+    # end
 
-            k = 7
-            fig, ax = plt.subplots()
 
-            v1 = @view sol(t)[:, :, k, 1]
-            v2 = @view sol(t)[:, :, k+1, 1]
-            im = ax.imshow(
-                v1,
-                cmap = matplotlib.cm.PRGn,
-                vmax = axMax,
-                vmin = -axMax,
-            )
-            im2 = ax.imshow(
-                v2,
-                cmap = matplotlib.cm.RdBu_r,
-                vmax = axMax,
-                vmin = -axMax,
-                alpha = 0.5,
-            )
-
-            cbar = fig.colorbar(im2, shrink = 0.9, ax = ax)
-            cbar.ax.set_xlabel("\$k=2\$")
-            cbar = fig.colorbar(im, shrink = 0.9, ax = ax)
-            cbar.set_alpha(0.5)
-            cbar.draw_all()
-            cbar.ax.set_xlabel("\$k=1\$")
-            layer = Utils.layers[k]
-            plt.title(string(
-                "Layer: $layer, \$t=$t\$, ",
-                test_name_plt[para_test[1]],
-            ))
-            plt.axis("off")
-            fig.tight_layout()
-            plt.savefig(plotsdir(
-                string("bench_kern", batch_),
-                string(
-                    file,
-                    "_para_",
-                    test_name[para_test[1]],
-                    "_t",
-                    t,
-                    "_",
-                    Utils.la[k],
-                    ".png",
-                ),
-            ))
-            u0 = nothing
-            p = nothing
-            arr1 = nothing
-            arr2 = nothing
-            f = nothing
-            prob_ke = nothing
-            sol = nothing
-            GC.gc
-            close("all")
-        end
-    catch err
-        print(err)
-    end
-
-
-    # time plot
-    fig, axs = plt.subplots()
-
-    for k ∈ 1:12
-        @inbounds begin
-            v3 = @view sol[:, :, k, 1, end]
-            v4 = @view sol[findmax(v3)[2][1], findmax(v3)[2][2], k, 1, :]
-            layer = Utils.layers_1[k]
-            axs.plot(sol.t, v4, Utils.lines[k], label = "$layer")
-        end
-    end
-    axs.set_xlabel("Time")
-    axs.set_ylabel("Activation")
-    plt.title(test_name_plt[para_test[1]])
-    plt.legend()
-    fig.tight_layout()
-    plt.savefig(plotsdir(
-        string("bench_kern", batch_),
-        string(file, "_para_", test_name[para_test[1]], "_time.png"),
-    ))
-    close("all")
+    # # time plot
+    # fig, axs = plt.subplots()
+    #
+    # for k ∈ 1:12
+    #     @inbounds begin
+    #         v3 = @view sol[:, :, k, 1, end]
+    #         v4 = @view sol[findmax(v3)[2][1], findmax(v3)[2][2], k, 1, :]
+    #         layer = Utils.layers_1[k]
+    #         axs.plot(sol.t, v4, Utils.lines[k], label = "$layer")
+    #     end
+    # end
+    # axs.set_xlabel("Time")
+    # axs.set_ylabel("Activation")
+    # plt.title(test_name_plt[para_test[1]])
+    # plt.legend()
+    # fig.tight_layout()
+    # plt.savefig(plotsdir(
+    #     string("bench_kern", batch_),
+    #     string(file, "_para_", test_name[para_test[1]], "_time.png"),
+    # ))
+    # close("all")
 end
 
 
 # benchmark plot
 
 fig, ax = plt.subplots()
-for test ∈ 1:para_test[1]
+for test ∈ 1:4
     ax.scatter(
-        median(benchm_ke[para_test[1]].times),
-        benchm_ke[para_test[1]].memory,
-        label = test_name_plt,
+        median(benchm_ke[test].times),
+        benchm_ke[test].memory,
+        label = test_name_plt[test],
         alpha = 0.3,
         edgecolors = "none",
     )
@@ -242,7 +242,7 @@ ax.grid(true)
 fig.tight_layout()
 plt.savefig(plotsdir(
     string("bench_kern", batch_),
-    string(file, "_para_", test_name[para_test[1]], "_time.png"),
+    string(file, "_bench_kern_dim.png"),
 ))
 close("all")
 

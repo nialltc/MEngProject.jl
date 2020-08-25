@@ -428,7 +428,7 @@ end
 """
 Uses equations with JuliaImage's imfilter for convolution on CPU.
 """
-struct LamFunction_imfil_cpu <: Function
+mutable struct LamFunction_imfil_cpu <: Function
     x_lgn::Any
     C::Any
     H_z::Any
@@ -488,7 +488,7 @@ end
 """
 Uses equations with JuliaImage's imfilter for convolution on GPU with IIR algorithom.
 """
-struct LamFunction_imfil_gpu_iir <: Function
+mutable struct LamFunction_imfil_gpu_iir <: Function
     x_lgn::Any
     C::Any
     H_z::Any
@@ -547,7 +547,7 @@ end
 """
 Uses equations with JuliaImage's imfilter for convolution on GPU with FIR algorithom.
 """
-struct LamFunction_imfil_gpu_fir <: Function
+mutable struct LamFunction_imfil_gpu_fir <: Function
     x_lgn::Any
     C::Any
     H_z::Any
@@ -606,7 +606,7 @@ end
 """
 Uses equations with JuliaImage's imfilter for convolution on GPU with FFT algorithom.
 """
-struct LamFunction_imfil_gpu_fft <: Function
+mutable struct LamFunction_imfil_gpu_fft <: Function
     x_lgn::Any
     C::Any
     H_z::Any
