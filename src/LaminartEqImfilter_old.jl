@@ -11,7 +11,7 @@
 julia>
 ```
 """
-module LaminartEqImfilter
+module LaminartEqImfilter_old
 
 using NNlib, ImageFiltering, Images, OffsetArrays
 
