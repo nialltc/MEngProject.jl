@@ -38,6 +38,7 @@ batch = 2000
 
 global benchm_i
 global prob_i
+
 benchm_i = []
 tspan = (0.0f0, 10f0)
 

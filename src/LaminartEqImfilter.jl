@@ -113,7 +113,7 @@ function fun_v_C!(
     #     temp = similar(v_p)
 
     @. v_C_temp2 = exp(-1.0f0 / 8.0f0) * (max(v_p, 0f0) - max(v_m, 0f0))
-    imfilter!(v_C_temp1[:,:,1], v_C_temp2[:,:,1], centered(p.k_gauss_2), )
+    imfilter!(v_C_temp1, v_C_temp2, centered(p.k_gauss_2), )
 
     #     A = similar(v_C)
     #     allocate B to v_C
@@ -121,8 +121,8 @@ function fun_v_C!(
     for k ∈ 1:p.K
         a = @view v_C_tempA[:, :, k]
         b = @view v_C[:, :, k]
-        imfilter!(a, v_C_temp1[:,:,1], centered(p.k_C_A[:, :, k]), )
-        imfilter!(b, v_C_temp1[:,:,1], centered(p.k_C_B[:, :, k]), )
+        imfilter!(a, v_C_temp1, centered(p.k_C_A[:, :, k]), )
+        imfilter!(b, v_C_temp1, centered(p.k_C_B[:, :, k]), )
     end
     # end
     @. v_C =
