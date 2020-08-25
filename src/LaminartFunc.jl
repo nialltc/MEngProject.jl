@@ -428,7 +428,7 @@ end
 """
 Uses equations with JuliaImage's imfilter for convolution on CPU.
 """
-struct LamFunction_imfil_cpu <: Function
+mutable struct LamFunction_imfil_cpu <: Function
     x_lgn::Any
     C::Any
     H_z::Any
