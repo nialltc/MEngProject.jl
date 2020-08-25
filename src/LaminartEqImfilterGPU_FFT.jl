@@ -84,7 +84,7 @@ function func_filter_W!(
                     W_temp,
                     img_l,
                     centered(W[:, :, k, l]),
-                    
+
                 )
                 @. out_k += W_temp
             end
@@ -130,8 +130,8 @@ function fun_v_C!(
     @. v_C_temp2 = exp(-1.0f0 / 8.0f0) * (max(v_p, 0f0) - max(v_m, 0f0))
     imfilter!(
         filter_resource,
-        v_C_temp1,
-        v_C_temp2,
+        v_C_temp1[:,:,1],
+        v_C_temp2[:,:,1],
         centered(p.k_gauss_2),
 
     )
@@ -145,14 +145,14 @@ function fun_v_C!(
         imfilter!(
             filter_resource,
             a,
-            v_C_temp1,
+            v_C_temp1[:,:,1],
             centered(p.k_C_A[:, :, k]),
 
         )
         imfilter!(
             filter_resource,
             b,
-            v_C_temp1,
+            v_C_temp1[:,:,1],
             centered(p.k_C_B[:, :, k]),
 
         )
