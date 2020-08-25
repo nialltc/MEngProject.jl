@@ -22,6 +22,7 @@ using MEngProject,
     NNlib,
     ImageFiltering,
     Images,
+    ImageIO,
     MEngProject.LaminartKernels,
     MEngProject.LaminartInitFunc,
     MEngProject.Utils,
@@ -52,12 +53,12 @@ solvers = [
     AutoTsit5(Rosenbrock23()),
     Tsit5(),
     lsoda(),
-    VCAB4,
+    VCAB4(),
     ImplicitHairerWannerExtrapolation(),
     AutoDP5(Rosenbrock23()),
     AutoVern6(Rosenbrock23()),
 ]
-
+# alg=lsoda()
 
 # GPU
 p = LaminartInitFunc.parameterInit_conv_gpu(

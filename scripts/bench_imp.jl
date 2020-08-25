@@ -16,12 +16,13 @@ julia>
 using DrWatson
 @quickactivate "MEngProject"
 using MEngProject,
-    # CUDA,
+    CUDA,
     DifferentialEquations,
     PyPlot,
     NNlib,
     ImageFiltering,
     Images,
+    ImageIO,
     MEngProject.LaminartKernels,
     MEngProject.LaminartInitFunc,
     MEngProject.Utils,
@@ -34,9 +35,9 @@ using OrdinaryDiffEq,
 batch = 1000
 
 
-global benchm_i = []
+global benchm_i
 global prob_i
-
+benchm_i = []
 tspan = (0.0f0, 10f0)
 
 batch_ = string(batch, "_", rand(1000:9999))
@@ -44,8 +45,8 @@ mkdir(plotsdir(string("bench_imp", batch_)))
 file = "kan_sq_cont_l.png"
 
 test_name_plt = [
-    "CPU conv",
     "GPU conv",
+    "CPU conv",
     "CPU imfilter",
     "GPU imfilter FFT",
     "GPU imfilter IIR",
@@ -66,7 +67,7 @@ u0 = cu(reshape(
     1,
 ))
 
-arr1 = similar(@view u0[:, :, 1:2, :])
+arr1 = similar(@view u0[:, :, 1:p.K, :])
 arr2 = similar(@view u0[:, :, 1:1, :])
 
 f = LaminartFunc.LamFunction(
@@ -141,7 +142,7 @@ u0 = reshape(zeros(Float32, p.dim_i, p.dim_j*(5*p.K+2)), p.dim_i, p.dim_j, 5*p.K
 
 
 arr1 = u0[:, :, 1:p.K]
-arr2 = u0[:, :, 1];
+arr2 = u0[:, :, 1:1];
 
 
 f = LaminartFunc.LamFunction_imfil_cpu(
@@ -171,7 +172,7 @@ u0 = reshape(zeros(Float32, p.dim_i, p.dim_j*(5*p.K+2)), p.dim_i, p.dim_j, 5*p.K
 
 
 arr1 = u0[:, :, 1:p.K]
-arr2 = u0[:, :, 1];
+arr2 = u0[:, :, 1:1];
 
 
 f = LaminartFunc.LamFunction_imfil_cpu_fft(
@@ -201,7 +202,7 @@ u0 = reshape(zeros(Float32, p.dim_i, p.dim_j*(5*p.K+2)), p.dim_i, p.dim_j, 5*p.K
 
 
 arr1 = u0[:, :, 1:p.K]
-arr2 = u0[:, :, 1];
+arr2 = u0[:, :, 1:1];
 
 
 f = LaminartFunc.LamFunction_imfil_cpu_iir(
@@ -231,7 +232,7 @@ u0 = reshape(zeros(Float32, p.dim_i, p.dim_j*(5*p.K+2)), p.dim_i, p.dim_j, 5*p.K
 
 
 arr1 = u0[:, :, 1:p.K]
-arr2 = u0[:, :, 1];
+arr2 = u0[:, :, 1:1];
 
 
 f = LaminartFunc.LamFunction_imfil_cpu_fir(

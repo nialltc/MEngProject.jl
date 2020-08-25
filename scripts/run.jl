@@ -24,6 +24,7 @@ using MEngProject,
     NNlib,
     ImageFiltering,
     Images,
+    ImageIO,
     MEngProject.LaminartKernels,
     MEngProject.LaminartInitFunc,
     MEngProject.Utils,
@@ -60,3 +61,19 @@ CUDA.reclaim()
 # run(`git add plots/*`)
 # run(`git commit -m "test"`)
 # run(`git push`)
+
+
+
+
+# include("scripts/test_illusions.jl")
+# include("scripts/test_noise.jl")
+# include("scripts/test_parameterVar.jl")
+# include("scripts/test_kernelsVar.jl")
+# # include("scripts/test_eqAtEquil.jl")
+# #
+# #
+# # include("scripts/bench_solver.jl")
+# include("scripts/bench_imp.jl")
+# # include("scripts/bench_eq.jl")
+# include("scripts/bench_kernels_dim.jl")
+# include("scripts/bench_dim.jl")
