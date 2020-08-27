@@ -17,7 +17,7 @@ julia>
 using DrWatson
 @quickactivate "MEngProject"
 using MEngProject,
-    # CUDA,
+    CUDA,
     DifferentialEquations,
     PyPlot,
     NNlib,
@@ -33,16 +33,21 @@ using MEngProject,
 using OrdinaryDiffEq,
     ParameterizedFunctions, LSODA, Sundials, DiffEqDevTools, Noise
 
-batch = 1000
+batch = 9000
 
 
-global benchm_s = []
-global benchm_sname = []
-global alg_ = []
-global stats_ = []
-global benchm_sc = []
-global benchm_snamec = []
-global prob_s
+# global benchm_s = []
+# global benchm_sname = []
+# global alg_ = []
+# global stats_ = []
+# global gpu_ = []
+# let
+
+benchm_s = []
+alg_ = []
+stats_ = []
+gpu_ = []
+
 
 tspan = (0.0f0, 800f0)
 
@@ -50,7 +55,13 @@ batch_ = string(batch, "_", rand(1000:9999))
 mkdir(plotsdir(string("bench_solver", batch_)))
 file = "kan_sq_cont_l.png"
 
-solvers = [AutoTsit5(Rosenbrock23()), Tsit5(), BS3()lsoda(), Vern7()]
+solvers = [
+    #             AutoTsit5(Rosenbrock23()),
+    Tsit5(),
+    BS3(),
+    lsoda(),
+    #             Vern7(),
+]
 # alg=lsoda()
 
 # GPU
@@ -87,16 +98,19 @@ f = LaminartFunc.LamFunction(
     similar(arr1), #  A_temp,
     similar(arr1), #   B_temp
 )
-prob_i = ODEProblem(f, u0, tspan, p)
+global prob_s = ODEProblem(f, u0, tspan, p)
 
-
-for alg in solvers
+# alg = solvers[1]
+for algg in solvers
     @. u0 = 0.0f0
     try
-        sol = solve(prob_s, alg)
+        global algg_ = algg
+        sol = solve(prob_s, algg)
         push!(alg_, sol.alg)
         push!(stats_, sol.destats)
-        push!(benchm_s, @benchmark solve(prob_s, alg))
+        print(sol.destats)
+        push!(benchm_s, @benchmark solve(prob_s, algg_))
+        push!(gpu_, "GPU")
     catch err
         print(err)
     end
@@ -109,30 +123,42 @@ end
 
 # CPU conv
 
-# p = LaminartInitFunc.parameterInit_imfil_cpu(
-#     datadir("img", file),
-#     Parameters.parameters_f32,
-# );
-#
-# u0 = reshape(
-#     zeros(Float32, p.dim_i, p.dim_j * (5 * p.K + 2)),
-#     p.dim_i,
-#     p.dim_j,
-#     5 * p.K + 2,
-#     1,
-# )
-#
-#
-# f = LaminartFunc.LamFunction_imfil_cpu(
-#     similar(arr1), # H_z_temp,
-#     similar(arr2[:,:,1]), # v_C_temp1,
-#     similar(arr2[:,:,1]), # v_C_temp2,
-#     similar(arr1), # v_C_tempA,
-#     similar(arr1[:,:,1]), #W_temp
-# )
-# prob_s = ODEProblem(f, u0, tspan, p)
-# push!(benchm_i, @benchmark solve(prob_s))
+p = LaminartInitFunc.parameterInit_imfil_cpu(
+    datadir("img", file),
+    Parameters.parameters_f32,
+);
 
+u0 = reshape(
+    zeros(Float32, p.dim_i, p.dim_j * (5 * p.K + 2)),
+    p.dim_i,
+    p.dim_j,
+    5 * p.K + 2,
+    1,
+)
+
+
+f = LaminartFunc.LamFunction_imfil_cpu(
+    similar(arr1), # H_z_temp,
+    similar(arr2[:, :, 1]), # v_C_temp1,
+    similar(arr2[:, :, 1]), # v_C_temp2,
+    similar(arr1), # v_C_tempA,
+    similar(arr1[:, :, 1]), #W_temp
+)
+global prob_sc = ODEProblem(f, u0, tspan, p)
+for algg in solvers
+    @. u0 = 0.0f0
+    try
+        global algg_ = algg
+        sol = solve(prob_sc, algg)
+        push!(alg_, sol.alg)
+        push!(stats_, sol.destats)
+        print(sol.destats)
+        push!(benchm_s, @benchmark solve(prob_s, algg_))
+        push!(gpu_, "CPU")
+    catch err
+        print(err)
+    end
+end
 
 
 
@@ -140,10 +166,10 @@ end
 
 # time
 fig, ax = plt.subplots()
-for ben in enumerate(test_name_plt)
+for ben in enumerate(gpu_)
     ax.scatter(
-        ben[2],
-        median(benchm_i[ben[1]].times) * 1e-9,
+        string(ben[2], " ", alg_[ben[1]]),
+        median(benchm_s[ben[1]].times) * 1e-9,
         color = Utils.colours[ben[1]],
         edgecolors = "none",
     )
@@ -165,10 +191,10 @@ close("all")
 # memory
 
 fig, ax = plt.subplots()
-for ben in enumerate(test_name_plt)
+for ben in enumerate(gpu_)
     ax.scatter(
-        ben[2],
-        benchm_i[ben[1]].memory * 1e-6,
+        string(ben[2], " ", alg_[ben[1]]),
+        benchm_s[ben[1]].memory * 1e-6,
         color = Utils.colours[ben[1]],
         edgecolors = "none",
     )
@@ -188,10 +214,10 @@ close("all")
 # alloc
 
 fig, ax = plt.subplots()
-for ben in enumerate(test_name_plt)
+for ben in enumerate(gpu_)
     ax.scatter(
-        ben[2],
-        benchm_i[ben[1]].allocs,
+        string(ben[2], " ", alg_[ben[1]]),
+        benchm_s[ben[1]].allocs,
         color = Utils.colours[ben[1]],
         edgecolors = "none",
     )
@@ -208,9 +234,4 @@ plt.savefig(plotsdir(
 close("all")
 
 
-
-
-# benchm_i = nothing
-# prob_i = nothing
-# GC.gc
-# CUDA.reclaim()
+# end
