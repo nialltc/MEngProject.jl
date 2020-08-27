@@ -52,11 +52,9 @@ file = "kan_sq_cont_l.png"
 solvers = [
     AutoTsit5(Rosenbrock23()),
     Tsit5(),
+    BS3()
     lsoda(),
-    VCAB4(),
-    ImplicitHairerWannerExtrapolation(),
-    AutoDP5(Rosenbrock23()),
-    AutoVern6(Rosenbrock23()),
+    Vern7(),
 ]
 # alg=lsoda()
 
