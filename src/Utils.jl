@@ -442,7 +442,7 @@ Plots two orientantions together for all layers.
 v^+ and v^- plotted together
 Cbar alpha for lower image adjusted.
 """
-function plot_k2(sol, t, name, batch, file; save = true)
+function plot_k2(sol, t, name, batch, file; save = true, cb = true)
 
     @inbounds begin
 
@@ -469,13 +469,14 @@ function plot_k2(sol, t, name, batch, file; save = true)
                 vmin = -axMax,
                 alpha = 0.5,
             )
-
-            cbar = fig.colorbar(im2, shrink = 0.9, ax = ax)
-            cbar.ax.set_xlabel("\$k=2\$")
-            cbar = fig.colorbar(im, shrink = 0.9, ax = ax)
-            cbar.set_alpha(0.5)
-            cbar.draw_all()
-            cbar.ax.set_xlabel("\$k=1\$")
+            if cb
+                cbar = fig.colorbar(im2, shrink = 0.9, ax = ax)
+                cbar.ax.set_xlabel("\$k=2\$")
+                cbar = fig.colorbar(im, shrink = 0.9, ax = ax)
+                cbar.set_alpha(0.5)
+                cbar.draw_all()
+                cbar.ax.set_xlabel("\$k=1\$")
+            end
             layer = Utils.layers[k]
             plt.title("Layer: $layer, \$t=$t\$")
             plt.axis("off")
@@ -530,5 +531,97 @@ function plot_k2(sol, t, name, batch, file; save = true)
     return nothing
 end
 
+"""
+Plots two orientantions together for all layers.
+v^+ and v^- plotted sep in gs
+Cbar alpha for lower image adjusted.
+"""
+function plot_k2_vsep(sol, t, name, batch, file; save = true, cb = true)
 
+    @inbounds begin
+
+        v0 = @view sol(t)[:, :, :, 1]
+        axMax = findmax(v0)[1]
+
+        # plot x, y, z, m, s
+        for k ∈ 1:2:10
+            k2 = k + 1
+            fig, ax = plt.subplots()
+
+            v1 = @view sol(t)[:, :, k, 1]
+            v2 = @view sol(t)[:, :, k+1, 1]
+            im = ax.imshow(
+                v1,
+                cmap = matplotlib.cm.PRGn,
+                vmax = axMax,
+                vmin = -axMax,
+            )
+            im2 = ax.imshow(
+                v2,
+                cmap = matplotlib.cm.RdBu_r,
+                vmax = axMax,
+                vmin = -axMax,
+                alpha = 0.5,
+            )
+            if cb
+                cbar = fig.colorbar(im2, shrink = 0.9, ax = ax)
+                cbar.ax.set_xlabel("\$k=2\$")
+                cbar = fig.colorbar(im, shrink = 0.9, ax = ax)
+                cbar.set_alpha(0.5)
+                cbar.draw_all()
+                cbar.ax.set_xlabel("\$k=1\$")
+            end
+            layer = Utils.layers[k]
+            plt.title("Layer: $layer, \$t=$t\$")
+            plt.axis("off")
+            fig.tight_layout()
+            if save
+                plt.savefig(plotsdir(
+                    string(name, batch),
+                    string(file, "_", t, "_", Utils.la[k], ".png"),
+                ))
+            end
+            close("all")
+        end
+
+        # plot lgn
+        k = 11
+        fig, (ax1, ax2) = plt.subplots(1,2)
+        v1 = @view sol(t)[:, :, k, 1]
+        v2 = @view sol(t)[:, :, k+1, 1]
+        im = ax1.imshow(
+            v1,
+            cmap = matplotlib.cm.gray,
+            vmax = axMax,
+            vmin = 0,
+        )
+        im2 = ax2.imshow(
+            v2,
+            cmap = matplotlib.cm.gray,
+            vmax = axMax,
+            vmin = 0,
+            # alpha = 0.5,
+        )
+
+        cbar = fig.colorbar(im2, shrink = 0.9, ax = ax2)
+        cbar.ax.set_xlabel("\$v^-\$")
+        # cbar = fig.colorbar(im, shrink = 0.9, ax = ax)
+        cbar.ax2.set_xlabel("\$v^+\$")
+        cbar.set_alpha(0.5)
+        cbar.draw_all()
+
+        layer = Utils.layers[k]
+        plt.title("Layer: $layer, \$t=$t\$")
+        plt.axis("off")
+        fig.tight_layout()
+        if save
+            plt.savefig(plotsdir(
+                string(name, batch),
+                string(file, "_", t, "_", Utils.la[k], ".png"),
+            ))
+        end
+        close("all")
+    end
+    return nothing
+end
 end

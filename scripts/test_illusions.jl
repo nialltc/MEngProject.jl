@@ -68,6 +68,7 @@ files = [
 
 batch_ = string(batch, "_", rand(1000:9999))
 mkdir(plotsdir(string("illusions", batch_)))
+mkdir(plotsdir(string("illusions_nocb", batch_)))
 
 tspan = (0.0f0, 800f0)
 
@@ -110,11 +111,12 @@ for file in files
 
         prob = ODEProblem(f, u0, tspan, p)
         # 	@benchmark sol = solve(prob)
-        sol = solve(prob)
+        sol = solve(prob, BS3())
 
         # plots
         for t ∈ [25, 50, 100, 200, 400, 800]
             Utils.plot_k2(sol, t, "illusions", batch_, file)
+            Utils.plot_k2(sol, t, "illusions_nocb", batch_, file)
         end
 
 
