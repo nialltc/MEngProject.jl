@@ -115,8 +115,8 @@ for file in files
 
         # plots
         for t ∈ [25, 50, 100, 200, 400, 800]
-            Utils.plot_k2(sol, t, "illusions", batch_, file)
-            Utils.plot_k2(sol, t, "illusions_nocb", batch_, file)
+            Utils.plot_k2_vsep(sol, t, "illusions", batch_, file)
+            Utils.plot_k2_vsep(sol, t, "illusions_nocb", batch_, file, cb=false)
         end
 
 
