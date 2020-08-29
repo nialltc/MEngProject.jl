@@ -586,7 +586,7 @@ function plot_k2_vsep(sol, t, name, batch, file; save = true, cb = true)
 
         # plot lgn
         k = 11
-        fig, (ax1, ax2) = plt.subplots(1,2)
+        fig, (ax, ax2) = plt.subplots(1,2)
         v1 = @view sol(t)[:, :, k, 1]
         v2 = @view sol(t)[:, :, k+1, 1]
         im = ax1.imshow(
@@ -603,10 +603,10 @@ function plot_k2_vsep(sol, t, name, batch, file; save = true, cb = true)
             # alpha = 0.5,
         )
 
-        cbar = fig.colorbar(im2, shrink = 0.9, ax = ax2)
-        cbar.ax.set_xlabel("\$v^-\$")
+        cbar = fig.colorbar(im2, shrink = 0.9, ax = ax)
+        cbar.ax.set_xlabel("\$v^+, v^-\$")
         # cbar = fig.colorbar(im, shrink = 0.9, ax = ax)
-        cbar.ax2.set_xlabel("\$v^+\$")
+        # cbar.ax2.set_xlabel("\$v^+\$")
         cbar.set_alpha(0.5)
         cbar.draw_all()
 

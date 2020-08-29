@@ -34,7 +34,7 @@ using OrdinaryDiffEq,
     ParameterizedFunctions, LSODA, Sundials, DiffEqDevTools, Noise
 
 
-batch = 1002
+batch = 1003
 
 
 # files = readdir(datadir("img"))
@@ -79,7 +79,7 @@ for file in files
             Parameters.parameters_f32,
         )
 
-        Utils.plot_gs(p.I, "input_plot", batch_, file, clbar=true, axMax=1)
+        Utils.plot_gs(p.I[:,:,1,1], "input_plot", batch_, file, clbar=true, axMax=1)
         # u0 = cu(reshape(
         #     zeros(Float32, p.dim_i, p.dim_j * (5 * p.K + 2)),
         #     p.dim_i,
@@ -125,13 +125,13 @@ for file in files
     catch err
         print(err)
     finally
-        u0 = nothing
-        p = nothing
-        arr1 = nothing
-        arr2 = nothing
-        f = nothing
-        prob = nothing
-        sol = nothing
-        CUDA.reclaim()
+        # u0 = nothing
+        # p = nothing
+        # arr1 = nothing
+        # arr2 = nothing
+        # f = nothing
+        # prob = nothing
+        # sol = nothing
+        # CUDA.reclaim()
     end
 end
