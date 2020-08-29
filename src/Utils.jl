@@ -536,7 +536,7 @@ Plots two orientantions together for all layers.
 v^+ and v^- plotted sep in gs
 Cbar alpha for lower image adjusted.
 """
-function plot_k2_vsep(sol, t, name, batch, file; save = true, cb = true)
+function plot_k2_vsep1(sol, t, name, batch, file; save = true, cb = true)
 
     @inbounds begin
 
@@ -584,40 +584,74 @@ function plot_k2_vsep(sol, t, name, batch, file; save = true, cb = true)
             close("all")
         end
 
-        # plot lgn
         k = 11
-        fig, (ax, ax2) = plt.subplots(1,2)
+        fig, ax = plt.subplots()
         v1 = @view sol(t)[:, :, k, 1]
         v2 = @view sol(t)[:, :, k+1, 1]
-        im = ax1.imshow(
+        im = ax.imshow(
             v1,
-            cmap = matplotlib.cm.gray,
+            cmap = matplotlib.cm.RdBu_r,
             vmax = axMax,
-            vmin = 0,
+            vmin = -axMax,
+            alpha = 0.5
         )
-        im2 = ax2.imshow(
-            v2,
-            cmap = matplotlib.cm.gray,
-            vmax = axMax,
-            vmin = 0,
-            # alpha = 0.5,
-        )
+        # im2 = ax.imshow(
+        #     v2,
+        #     cmap = matplotlib.cm.RdBu_r,
+        #     vmax = axMax,
+        #     vmin = -axMax,
+        #     alpha = 0.5,
+        # )
 
-        cbar = fig.colorbar(im2, shrink = 0.9, ax = ax)
-        cbar.ax.set_xlabel("\$v^+, v^-\$")
+        # cbar = fig.colorbar(im2, shrink = 0.9, ax = ax)
+        # cbar.ax.set_xlabel("\$v^-\$")
         # cbar = fig.colorbar(im, shrink = 0.9, ax = ax)
-        # cbar.ax2.set_xlabel("\$v^+\$")
-        cbar.set_alpha(0.5)
-        cbar.draw_all()
+        # cbar.ax.set_xlabel("\$v^+\$")
+        # cbar.set_alpha(0.5)
+        # cbar.draw_all()
 
         layer = Utils.layers[k]
-        plt.title("Layer: $layer, \$t=$t\$")
+        plt.title("Layer: \$v^+\$, \$t=$t\$")
         plt.axis("off")
         fig.tight_layout()
         if save
             plt.savefig(plotsdir(
                 string(name, batch),
-                string(file, "_", t, "_", Utils.la[k], ".png"),
+                string(file, "_", t, "_vp", Utils.la[k], ".png"),
+            ))
+        end
+        close("all")
+
+        # im = ax.imshow(
+        #     v1,
+        #     cmap = matplotlib.cm.gray,
+        #     vmax = axMax,
+        #     vmin = -axMax,
+        # )
+        fig, ax = plt.subplots()
+        im2 = ax.imshow(
+            v2,
+            cmap = matplotlib.cm.gray,
+            vmax = axMax,
+            vmin = -axMax,
+            alpha = 0.5,
+        )
+
+        cbar = fig.colorbar(im2, shrink = 0.9, ax = ax)
+        cbar.ax.set_xlabel("\$v^+, v^-\$")
+        # cbar = fig.colorbar(im, shrink = 0.9, ax = ax)
+        # cbar.ax.set_xlabel("\$v^+\$")
+        cbar.set_alpha(0.5)
+        cbar.draw_all()
+
+        layer = Utils.layers[k]
+        plt.title("Layer: \$v^-\$, \$t=$t\$")
+        plt.axis("off")
+        fig.tight_layout()
+        if save
+            plt.savefig(plotsdir(
+                string(name, batch),
+                string(file, "_", t, "_vm", Utils.la[k], ".png"),
             ))
         end
         close("all")
