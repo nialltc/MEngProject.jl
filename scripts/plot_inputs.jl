@@ -66,20 +66,20 @@ files = [
     "viper01333.jpg",
 ]
 
-batch_ = string(batch, "_", rand(1000:9999))
-mkdir(plotsdir(string("input_plot", batch_)))
+batch_ = string(batch, "_", rand(1000:9999));
+mkdir(plotsdir(string("input_plot", batch_)));
 # mkdir(plotsdir(string("illusions_nocb", batch_)))
 
-tspan = (0.0f0, 800f0)
+tspan = (0.0f0, 800f0);
 
 for file in files
     try
         p = LaminartInitFunc.parameterInit_conv_gpu(
             datadir("img", file),
             Parameters.parameters_f32,
-        )
+        );
 
-        Utils.plot_gs(p.I[:,:,1,1], "input_plot", batch_, file, clbar=true, axMax=1)
+        Utils.plot_gs(p.I[:,:,1,1], "input_plot", batch_, file, clbar=true, axMax=1);
         # u0 = cu(reshape(
         #     zeros(Float32, p.dim_i, p.dim_j * (5 * p.K + 2)),
         #     p.dim_i,
