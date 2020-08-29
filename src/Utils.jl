@@ -631,7 +631,7 @@ function plot_k2_vsep1(sol, t, name, batch, file; save = true, cb = true)
         fig, ax = plt.subplots()
         im2 = ax.imshow(
             v2,
-            cmap = matplotlib.cm.gray,
+            cmap = matplotlib.cm.RdBu_r,
             vmax = axMax,
             vmin = -axMax,
             alpha = 0.5,
