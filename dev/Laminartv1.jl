@@ -67,15 +67,15 @@ end
 
 
 function kernels(img::AbstractArray, p::NamedTuple)
-    C_A_temp = reshape(Array{eltype(img)}(undef, p.C_AB_l, p.C_AB_l * p.K), p.C_AB_l, p.C_AB_l, p.K)
-    C_B_temp = copy(C_A_temp)
+    C_Q_temp = reshape(Array{eltype(img)}(undef, p.C_AB_l, p.C_AB_l * p.K), p.C_AB_l, p.C_AB_l, p.K)
+    C_P_temp = copy(C_Q_temp)
     H_temp = reshape(Array{eltype(img)}(undef, p.H_l, p.H_l * p.K), p.H_l, p.H_l, p.K)
     T_temp = reshape(Array{eltype(img)}(undef, 1, 1 * p.K), 1, 1, p.K)     #ijk,  1x1xk,   ijk
     W_temp = reshape(Array{eltype(img)}(undef, 19, 19 * p.K * p.K), 19, 19, p.K, p.K)     #ijk,  1x1xk,   ijk
     for k ∈ 1:p.K
         θ = π*(k-1)/p.K
-        C_A_temp[:,:,k] = reflect(centered(LamKernels.kern_d(p.σ_2, θ)))           #ij ijk ijk
-        C_B_temp[:,:,k] = reflect(centered(LamKernels.kern_b(p.σ_2, θ)))               #ij ijk ijk
+        C_Q_temp[:,:,k] = reflect(centered(LamKernels.kern_d(p.σ_2, θ)))           #ij ijk ijk
+        C_P_temp[:,:,k] = reflect(centered(LamKernels.kern_b(p.σ_2, θ)))               #ij ijk ijk
         H_temp[:,:,k] = reflect(p.H_fact .* LamKernels.gaussian_rot(p.H_σ_x, p.H_σ_y, θ, p.H_l))  #ijk, ij for each k; ijk
         T_temp[:,:,k] = reshape([p.T_fact[k]],1,1)
 #todo: generalise T and W for higher K
@@ -104,8 +104,8 @@ function kernels(img::AbstractArray, p::NamedTuple)
     temp_out = (
     k_gauss_1 = reflect(Kernel.gaussian(p.σ_1)),
     k_gauss_2 = reflect(Kernel.gaussian(p.σ_2)),
-    k_C_A = C_A_temp,
-    k_C_B = C_B_temp,
+    k_C_d = C_Q_temp,
+    k_C_b = C_P_temp,
     k_W_p = OffsetArray(W_temp, W_range, W_range, 1:p.K, 1:p.K),
     k_W_m = OffsetArray(W_temp, W_range, W_range, 1:p.K, 1:p.K),
     k_H = OffsetArray(H_temp, H_range, H_range, 1:p.K),
@@ -318,10 +318,10 @@ function fun_v_C(v_p::AbstractArray, v_m::AbstractArray, p::NamedTuple)
 
     for k ∈ 1:p.K
 #         θ = π*(k-1)/p.K
-        A[:,:,k] = imfilter(V, (centered(p.k_C_A[:,:,k]),), p.filling)
-        B[:,:,k] = abs.(imfilter(V, (centered(p.k_C_B[:,:,k]),), p.filling))
-#         A[:,:,k] = conv(V, p.k_C_A[:,:,k])
-#         B[:,:,k] = abs.(conv(V, p.k_C_B[:,:,k]))
+        A[:,:,k] = imfilter(V, (centered(p.k_C_d[:,:,k]),), p.filling)
+        B[:,:,k] = abs.(imfilter(V, (centered(p.k_C_b[:,:,k]),), p.filling))
+#         A[:,:,k] = conv(V, p.k_C_d[:,:,k])
+#         B[:,:,k] = abs.(conv(V, p.k_C_b[:,:,k]))
     end
 
     return p.γ .* (max.(A .- B, 0) .+ max.(.- A .- B, 0))

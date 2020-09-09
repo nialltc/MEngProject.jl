@@ -139,14 +139,14 @@ function fun_v_C!(
             filter_resource,
             a,
             v_C_temp1[:,:,1],
-            centered(p.k_C_A[:, :, k]),
+            centered(p.k_C_d[:, :, k]),
 
         )
         imfilter!(
             filter_resource,
             b,
             v_C_temp1[:,:,1],
-            centered(p.k_C_B[:, :, k]),
+            centered(p.k_C_b[:, :, k]),
 
         )
     end

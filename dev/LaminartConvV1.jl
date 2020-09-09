@@ -143,14 +143,14 @@ end
 
 
 function kernels(img::AbstractArray, p::NamedTuple)
-       C_A_temp = reshape(
+       C_Q_temp = reshape(
         Array{eltype(img)}(undef, p.C_AB_l, p.C_AB_l * p.K),
         p.C_AB_l,
         p.C_AB_l,
         1,
 		p.K
     )
-C_B_temp = similar(C_A_temp)
+C_P_temp = similar(C_Q_temp)
 	    H_temp = reshape(
         zeros(eltype(img), p.H_l, p.H_l * p.K * p.K),
         p.H_l,
@@ -162,8 +162,8 @@ C_B_temp = similar(C_A_temp)
         reshape(Array{eltype(img)}(undef, p.W_l, p.W_l * p.K * p.K), p.W_l, p.W_l, p.K, p.K)
     for k ∈ 1:p.K
         θ = π * (k - 1.0f0) / p.K
-        C_A_temp[:, :, 1,k] = LamKernels.kern_d(p.σ_2, θ)          
-        C_B_temp[:, :, 1,k] = LamKernels.kern_b(p.σ_2, θ)               
+        C_Q_temp[:, :, 1,k] = LamKernels.kern_d(p.σ_2, θ)          
+        C_P_temp[:, :, 1,k] = LamKernels.kern_b(p.σ_2, θ)               
         H_temp[:, :, k,k] = p.H_fact .* LamKernels.gaussian_rot(p.H_σ_x, p.H_σ_y, θ, p.H_l)  
 # 		todo make T kernel more general for higher K
         T_temp[1, 1, k,1] = p.T_fact[k]
@@ -208,8 +208,8 @@ C_B_temp = similar(C_A_temp)
 temp_out = (
         k_gauss_1 = reshape2d_4d(Kernel.gaussian(p.σ_1)),
         k_gauss_2 = reshape2d_4d(Kernel.gaussian(p.σ_2)),
-        k_C_A = C_A_temp,
-        k_C_B = C_B_temp,
+        k_C_d = C_Q_temp,
+        k_C_b = C_P_temp,
 		
 # 		todo use mean of x_lgn?
 		k_x_lgn = reshape(ones(Float32,1,p.K),1,1,p.K,1),
@@ -451,8 +451,8 @@ function fun_v_C!(
     A = similar(v_C)
     #     allocate B to v_C
     
-	conv!(A, V, p.k_C_A, p)
-	conv!(v_C, V, p.k_C_B, p)
+	conv!(A, V, p.k_C_d, p)
+	conv!(v_C, V, p.k_C_b, p)
  
     @. v_C = p.γ * (max(A - abs(v_C), 0) + max(-A - abs(v_C), 0))
     return nothing

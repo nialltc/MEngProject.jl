@@ -89,8 +89,8 @@ for file in enumerate(files)
             similar(arr1), # H_z_temp,
             similar(arr2), #  V_temp_1,
             similar(arr2), #  V_temp_2,
-            similar(arr1), #  A_temp,
-            similar(arr1), #   B_temp
+            similar(arr1), #  Q_temp,
+            similar(arr1), #   P_temp
         )
 
         prob_d = ODEProblem(f, u0, tspan, p)
@@ -200,8 +200,8 @@ for file in enumerate(files)
             similar(arr1), # H_z_temp,
             similar(arr2), #  V_temp_1,
             similar(arr2), #  V_temp_2,
-            similar(arr1), #  A_temp,
-            similar(arr1), #   B_temp
+            similar(arr1), #  Q_temp,
+            similar(arr1), #   P_temp
         )
 
         prob_d = ODEProblem(f, u0, tspan, p)

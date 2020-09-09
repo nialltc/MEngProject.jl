@@ -128,14 +128,14 @@ end
 Generates kernels for use with NNLib conv and GPU.
 """
 function kernels_conv_gpu(img::AbstractArray, p::NamedTuple)
-    C_A_temp = reshape(
+    C_Q_temp = reshape(
         Array{eltype(img)}(undef, p.C_AB_l, p.C_AB_l * p.K),
         p.C_AB_l,
         p.C_AB_l,
         1,
         p.K,
     )
-    C_B_temp = similar(C_A_temp)
+    C_P_temp = similar(C_Q_temp)
     H_temp = reshape(
         zeros(eltype(img), p.H_l, p.H_l * p.K * p.K),
         p.H_l,
@@ -155,8 +155,8 @@ function kernels_conv_gpu(img::AbstractArray, p::NamedTuple)
 
     for k ∈ 1:p.K
         θ = π * (k - 1.0f0) / p.K
-        C_A_temp[:, :, 1, k] = LaminartKernels.kern_d(p.σ_2, θ)
-        C_B_temp[:, :, 1, k] = LaminartKernels.kern_b(p.σ_2, θ)
+        C_Q_temp[:, :, 1, k] = LaminartKernels.kern_d(p.σ_2, θ)
+        C_P_temp[:, :, 1, k] = LaminartKernels.kern_b(p.σ_2, θ)
         H_temp[:, :, k, k] =
             p.H_fact .* LaminartKernels.gaussian_rot(p.H_σ_x, p.H_σ_y, θ, p.H_l)
         # 		todo make T kernel more general for higher K
@@ -303,8 +303,8 @@ function kernels_conv_gpu(img::AbstractArray, p::NamedTuple)
     temp_out = (
         k_gauss_1 = cu(reshape2d_4d(Kernel.gaussian(p.σ_1))),
         k_gauss_2 = cu(reshape2d_4d(Kernel.gaussian(p.σ_2))),
-        k_C_A = cu(C_A_temp),
-        k_C_B = cu(C_B_temp),
+        k_C_d = cu(C_Q_temp),
+        k_C_b = cu(C_P_temp),
 
         # 		todo use mean of x_lgn?
         k_x_lgn = cu(reshape(ones(Float32, 1, p.K), 1, 1, p.K, 1)),
@@ -336,14 +336,14 @@ end
 Generates kernels for use with NNLib conv and CPU.
 """
 function kernels_conv_cpu(img::AbstractArray, p::NamedTuple)
-    C_A_temp = reshape(
+    C_Q_temp = reshape(
         Array{eltype(img)}(undef, p.C_AB_l, p.C_AB_l * p.K),
         p.C_AB_l,
         p.C_AB_l,
         1,
         p.K,
     )
-    C_B_temp = similar(C_A_temp)
+    C_P_temp = similar(C_Q_temp)
     H_temp = reshape(
         zeros(eltype(img), p.H_l, p.H_l * p.K * p.K),
         p.H_l,
@@ -368,8 +368,8 @@ function kernels_conv_cpu(img::AbstractArray, p::NamedTuple)
     )
     for k ∈ 1:p.K
         θ = π * (k - 1.0f0) / p.K
-        C_A_temp[:, :, 1, k] = LaminartKernels.kern_d(p.σ_2, θ)
-        C_B_temp[:, :, 1, k] = LaminartKernels.kern_b(p.σ_2, θ)
+        C_Q_temp[:, :, 1, k] = LaminartKernels.kern_d(p.σ_2, θ)
+        C_P_temp[:, :, 1, k] = LaminartKernels.kern_b(p.σ_2, θ)
         H_temp[:, :, k, k] =
             p.H_fact .* LaminartKernels.gaussian_rot(p.H_σ_x, p.H_σ_y, θ, p.H_l)
         # 		todo make T kernel more general for higher K
@@ -517,8 +517,8 @@ function kernels_conv_cpu(img::AbstractArray, p::NamedTuple)
     temp_out = (
         k_gauss_1 = reshape2d_4d(Kernel.gaussian(p.σ_1)),
         k_gauss_2 = reshape2d_4d(Kernel.gaussian(p.σ_2)),
-        k_C_A = C_A_temp,
-        k_C_B = C_B_temp,
+        k_C_d = C_Q_temp,
+        k_C_b = C_P_temp,
 
         # 		todo use mean of x_lgn?
         k_x_lgn = reshape(ones(Float32, 1, p.K), 1, 1, p.K, 1),
@@ -549,13 +549,13 @@ end
 Generates kernels for use with imfilter equations.
 """
 function kernels_imfil_cpu(img::AbstractArray, p::NamedTuple)
-    C_A_temp = reshape(
+    C_Q_temp = reshape(
         Array{eltype(img)}(undef, p.C_AB_l, p.C_AB_l * p.K),
         p.C_AB_l,
         p.C_AB_l,
         p.K,
     )
-    C_B_temp = copy(C_A_temp)
+    C_P_temp = copy(C_Q_temp)
     H_temp = reshape(
         Array{eltype(img)}(undef, p.H_l, p.H_l * p.K),
         p.H_l,
@@ -579,8 +579,8 @@ function kernels_imfil_cpu(img::AbstractArray, p::NamedTuple)
     )    #ijk,  1x1xk,   ijk
     for k ∈ 1:p.K
         θ = π * (k - 1) / p.K
-        C_A_temp[:, :, k] = reflect(centered(LaminartKernels.kern_d(p.σ_2, θ)))           #ij ijk ijk
-        C_B_temp[:, :, k] = reflect(centered(LaminartKernels.kern_b(p.σ_2, θ)))               #ij ijk ijk
+        C_Q_temp[:, :, k] = reflect(centered(LaminartKernels.kern_d(p.σ_2, θ)))           #ij ijk ijk
+        C_P_temp[:, :, k] = reflect(centered(LaminartKernels.kern_b(p.σ_2, θ)))               #ij ijk ijk
         H_temp[:, :, k] = reflect(
             p.H_fact .*
             LaminartKernels.gaussian_rot(p.H_σ_x, p.H_σ_y, θ, p.H_l),
@@ -736,8 +736,8 @@ function kernels_imfil_cpu(img::AbstractArray, p::NamedTuple)
     temp_out = (
         k_gauss_1 = reflect(Kernel.gaussian(p.σ_1)),
         k_gauss_2 = reflect(Kernel.gaussian(p.σ_2)),
-        k_C_A = C_A_temp,
-        k_C_B = C_B_temp,
+        k_C_d = C_Q_temp,
+        k_C_b = C_P_temp,
         k_W_p = W_p_temp,
         k_W_m = W_m_temp,
         # k_W_m = OffsetArray(W_temp, W_range, W_range, 1:p.K, 1:p.K),

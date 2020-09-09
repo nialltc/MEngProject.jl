@@ -78,13 +78,13 @@ end
 
 
 function kernels(img::AbstractArray, p::NamedTuple)
-    C_A_temp = reshape(
+    C_Q_temp = reshape(
         Array{eltype(img)}(undef, p.C_AB_l, p.C_AB_l * p.K),
         p.C_AB_l,
         p.C_AB_l,
         p.K,
     )
-    C_B_temp = copy(C_A_temp)
+    C_P_temp = copy(C_Q_temp)
     H_temp = reshape(
         Array{eltype(img)}(undef, p.H_l, p.H_l * p.K),
         p.H_l,
@@ -96,8 +96,8 @@ function kernels(img::AbstractArray, p::NamedTuple)
         reshape(Array{eltype(img)}(undef, p.W_l, p.W_l * p.K * p.K), p.W_l, p.W_l, p.K, p.K)     #ijk,  1x1xk,   ijk
     for k ∈ 1:p.K
         θ = π * (k - 1) / p.K
-        C_A_temp[:, :, k] = reflect(centered(LamKernels.kern_d(p.σ_2, θ)))           #ij ijk ijk
-        C_B_temp[:, :, k] = reflect(centered(LamKernels.kern_b(p.σ_2, θ)))               #ij ijk ijk
+        C_Q_temp[:, :, k] = reflect(centered(LamKernels.kern_d(p.σ_2, θ)))           #ij ijk ijk
+        C_P_temp[:, :, k] = reflect(centered(LamKernels.kern_b(p.σ_2, θ)))               #ij ijk ijk
         H_temp[:, :, k] = reflect(
             p.H_fact .* LamKernels.gaussian_rot(p.H_σ_x, p.H_σ_y, θ, p.H_l),
         )  #ijk, ij for each k; ijk
@@ -140,8 +140,8 @@ function kernels(img::AbstractArray, p::NamedTuple)
     temp_out = (
         k_gauss_1 = reflect(Kernel.gaussian(p.σ_1)),
         k_gauss_2 = reflect(Kernel.gaussian(p.σ_2)),
-        k_C_A = C_A_temp,
-        k_C_B = C_B_temp,
+        k_C_d = C_Q_temp,
+        k_C_b = C_P_temp,
         k_W_p = W_temp,
         k_W_m = W_temp,
         # k_W_m = OffsetArray(W_temp, W_range, W_range, 1:p.K, 1:p.K),
@@ -364,8 +364,8 @@ function fun_v_C!(
         for k ∈ 1:p.K
             a = @view A[:, :, k]
             b = @view v_C[:, :, k]
-            imfilter!(a, V, centered(p.k_C_A[:, :, k]), p.filling)
-            imfilter!(b, V, centered(p.k_C_B[:, :, k]), p.filling)
+            imfilter!(a, V, centered(p.k_C_d[:, :, k]), p.filling)
+            imfilter!(b, V, centered(p.k_C_b[:, :, k]), p.filling)
         end
     # end
     @. v_C = p.γ * (max(A - abs(v_C), 0) + max(-A - abs(v_C), 0))

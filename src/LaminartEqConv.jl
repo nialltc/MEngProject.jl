@@ -99,18 +99,18 @@ function fun_v_C!(
     v_m::AbstractArray,
     V_temp_1::AbstractArray,
     V_temp_2::AbstractArray,
-    A_temp::AbstractArray,
-    B_temp::AbstractArray,
+    Q_temp::AbstractArray,
+    P_temp::AbstractArray,
     p::NamedTuple,
 )
 
     @inbounds begin
         @. V_temp_2 = exp(-1.0f0 / 8.0f0) * (max(v_p, 0f0) - max(v_m, 0f0))
         conv!(V_temp_1, V_temp_2, p.k_gauss_2, p)
-        conv!(A_temp, V_temp_1, p.k_C_A, p)
-        conv!(B_temp, V_temp_1, p.k_C_B, p)
-        @. B_temp = abs(B_temp)
-        @. v_C = p.γ * (max(A_temp - B_temp, 0f0) + max(-A_temp - B_temp, 0f0))
+        conv!(Q_temp, V_temp_1, p.k_C_d, p)
+        conv!(P_temp, V_temp_1, p.k_C_b, p)
+        @. P_temp = abs(P_temp)
+        @. v_C = p.γ * (max(Q_temp - P_temp, 0f0) + max(-Q_temp - P_temp, 0f0))
     end
     return nothing
 end

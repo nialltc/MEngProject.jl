@@ -121,8 +121,8 @@ function fun_v_C!(
     for k ∈ 1:p.K
         a = @view v_C_tempA[:, :, k]
         b = @view v_C[:, :, k]
-        imfilter!(a, v_C_temp1, centered(p.k_C_A[:, :, k]))
-        imfilter!(b, v_C_temp1, centered(p.k_C_B[:, :, k]))
+        imfilter!(a, v_C_temp1, centered(p.k_C_d[:, :, k]))
+        imfilter!(b, v_C_temp1, centered(p.k_C_b[:, :, k]))
     end
     # end
     @. v_C =
