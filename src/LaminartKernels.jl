@@ -6,17 +6,12 @@
 - Date: 2020-06-07
 
 functions to create LAMINART kernels for lgn -> L6, L4 and W kernel
-# Examples
-
-```jldoctest
-julia>
-```
 """
 
 
 module LaminartKernels
 
-export kern_A, kern_B
+export kern_d, kern_b
 
 # lgn to l6/l4
 using NNlib, ImageFiltering, Images, OffsetArrays
@@ -57,17 +52,17 @@ function kern_d_m(σ::Real, θ::Real, l = 4 * ceil(Int, σ) + 1)
     kern_d_mv(σ, θ, l) .* transpose(kern_d_mh(σ, θ, l))
 end
 
-function kern_A(σ::Real, θ::Real, l = 4 * ceil(Int, σ) + 1)
+function kern_d(σ::Real, θ::Real, l = 4 * ceil(Int, σ) + 1)
     kern_d_p(σ, θ, l) .- kern_d_m(σ, θ, l)
 end
 
 
-# function kern_A(σ::Real, θ::Real, l = 4*ceil(Int,σ)+1)
+# function kern_d(σ::Real, θ::Real, l = 4*ceil(Int,σ)+1)
 #     relu.(kern_d(σ, θ, l)) .- relu.(-1 .*(kern_d(σ, θ, l)))
 # end
 
-function kern_B(σ::Real, θ::Real, l = 4 * ceil(Int, σ) + 1)
-    relu.(kern_A(σ, θ, l)) .+ relu.(-1f0 .* (kern_A(σ, θ, l)))
+function kern_b(σ::Real, θ::Real, l = 4 * ceil(Int, σ) + 1)
+    relu.(kern_d(σ, θ, l)) .+ relu.(-1f0 .* (kern_d(σ, θ, l)))
 end
 
 

@@ -12,11 +12,6 @@ R. D. S. Raizada and S. Grossberg, ‘Context-sensitive binding by the laminar c
 
 Uses JuliaImages's imfilter with zeros boarding for convolution on CPU.
 
-# Examples
-
-```jldoctest
-julia>
-```
 """
 module LaminartEqImfilter
 

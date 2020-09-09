@@ -7,11 +7,6 @@
 
 
 Script to vary kernel parameters of LAMINART and plot layers and activation.
-# Examples
-
-```jldoctest
-julia>
-```
 """
 
 using DrWatson
@@ -331,7 +326,13 @@ for file in files
                     v4 =
                         @view sol[findmax(v3)[2][1], findmax(v3)[2][2], k, 1, :]
                     layer = Utils.layers_1[k]
-                    axs.plot(sol.t, v4, Utils.lines[k], label = "$layer", alpha=0.8)
+                    axs.plot(
+                        sol.t,
+                        v4,
+                        Utils.lines[k],
+                        label = "$layer",
+                        alpha = 0.8,
+                    )
                 end
                 axs.set_xlabel("Time")
                 axs.set_ylabel("Activation")
@@ -355,9 +356,9 @@ for file in files
                 prob = nothing
                 sol = nothing
                 close("all")
-				CUDA.reclaim()
+                CUDA.reclaim()
             end
-		catch err
+        catch err
             print(err)
         end
     end

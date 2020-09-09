@@ -5,12 +5,13 @@
 - Author: niallcullinane
 - Date: 2020-08-20
 
-# Examples
+LAMINART equations from
 
-```jldoctest
-julia>
-```
+R. D. S. Raizada and S. Grossberg, ‘Context-sensitive binding by the laminar circuits of V1 and V2: A unified model of perceptual grouping, attention, and orientation contrast’, Visual Cognition, vol. 8, no. 3–5, p. 431, Jun. 2001, doi: 10/d8phhc.
+
+Deprecated version
 """
+
 module LaminartEqImfilter_old
 
 using NNlib, ImageFiltering, Images, OffsetArrays

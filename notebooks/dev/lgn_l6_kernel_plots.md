@@ -79,14 +79,14 @@ end
 ```julia pycharm={"name": "#%%\n"}
 for k=1:1:2K
     θ = π*(k-1)/K
-    Utils.plot_rb(LamKernels.kern_A(σ_2, θ))
+    Utils.plot_rb(LamKernels.kern_d(σ_2, θ))
 end   
 ```
 
 ```julia pycharm={"name": "#%%\n"}
 for k=1:1:2K
     θ = π*(k-1)/K
-    Utils.plot_rb(LamKernels.kern_B(σ_2, θ))
+    Utils.plot_rb(LamKernels.kern_b(σ_2, θ))
 end   
 ```
 
@@ -110,14 +110,14 @@ Gray.(-(LamKernels.kern_d(σ_2, θ)-LamKernels.kern_d_p(σ_2, θ)))
 ```julia pycharm={"name": "#%%\n"}
 @manipulate for k=1:1:2K
     θ = π*(k-1)/K
-    Gray.(3 * LamKernels.kern_A(σ_2, θ))
+    Gray.(3 * LamKernels.kern_d(σ_2, θ))
 end
 ```
 
 ```julia pycharm={"name": "#%%\n"}
 @manipulate for k=1:1:2K
     θ = π*(k-1)/K
-    Gray.(3 * LamKernels.kern_B(σ_2, θ))
+    Gray.(3 * LamKernels.kern_b(σ_2, θ))
 end
 ```
 

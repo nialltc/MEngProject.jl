@@ -12,7 +12,7 @@ p = Laminart.add_I_u_p(img, p)
     c = 2 .* ones(p.dim_i, p.dim_j)
 
 
-    @test LaminartEqConv.conv!()≈
+    @test LaminartEqConv.conv!()
     @test LaminartEqConv.fun_f!()
     @test LaminartEqConv.I_u!()
     @test LaminartEqConv.fun_dv!()
@@ -132,13 +132,13 @@ p = Laminart.add_I_u_p(img, p)
     @test kern_d_mv()
     @test kern_d_p()
     @test kern_d_m()
-    @test kern_A()
-    @test kern_B()
+    @test kern_d()
+    @test kern_b()
     @test gaussian_rot()
     @test fun_R()
 
     @test Parameters.para_var()
     @test Parameters.para_var_k()
-    @test Parameters.parameters_f32
-    @test Parameters.parameters_f64
+    @test Parameters.parameters_f32()
+    @test Parameters.parameters_f64()
 end

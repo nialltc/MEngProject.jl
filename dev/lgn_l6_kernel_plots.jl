@@ -53,8 +53,8 @@ kern_d_mh(σ_2, θ)
 kern_d_p(σ_2, θ)
 kern_d_m(σ_2, θ)
 kern_d(σ_2, θ)
-kern_A(σ_2, θ)
-kern_B(σ_2, θ)
+kern_d(σ_2, θ)
+kern_b(σ_2, θ)
 
 # inter image plots
 imgA

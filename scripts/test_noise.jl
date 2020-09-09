@@ -7,11 +7,6 @@
 
 
 Script to add noise to input image, run LAMINART and plot layers and activation.
-# Examples
-
-```jldoctest
-julia>
-```
 """
 
 using DrWatson
@@ -45,30 +40,20 @@ tspan = (0.0f0, 800f0)
 batch_ = string(batch, "_", rand(1000:9999))
 mkdir(plotsdir(string("noise", batch_)))
 for file in files[1:end]
-    for noise in [0.01f0, 0.05f0, 0.1f0, 0.2f0, 0.5f0, 1f0,]
-		img = convert(Array{Float32,2},  load(datadir("img",files[1])));
-		img = mult_gauss(img,noise)
+    for noise in [0.01f0, 0.05f0, 0.1f0, 0.2f0, 0.5f0, 1f0]
+        img = convert(Array{Float32,2}, load(datadir("img", files[1])))
+        img = mult_gauss(img, noise)
         fig, ax = plt.subplots()
-		im = ax.imshow(
-			img,
-			cmap = matplotlib.cm.gray,
-			vmax = 1,
-			vmin = 0,
-		)
-		plt.title("Input image, noise \$σ=$noise\$")
-		plt.axis("off")
-		fig.tight_layout()
-		plt.savefig(plotsdir(
-			string("noise", batch_),
-			string(
-				file,
-				"_input_noise_",
-				noise,
-				".png",
-			),
-		))
-		close("all")
-		img = nothing
+        im = ax.imshow(img, cmap = matplotlib.cm.gray, vmax = 1, vmin = 0)
+        plt.title("Input image, noise \$σ=$noise\$")
+        plt.axis("off")
+        fig.tight_layout()
+        plt.savefig(plotsdir(
+            string("noise", batch_),
+            string(file, "_input_noise_", noise, ".png"),
+        ))
+        close("all")
+        img = nothing
 
         try
             p = LaminartInitFunc.parameterInit_conv_gpu_noise(
@@ -222,7 +207,7 @@ for file in files[1:end]
             v3 = @view sol[:, :, k, 1, end]
             v4 = @view sol[findmax(v3)[2][1], findmax(v3)[2][2], k, 1, :]
             layer = Utils.layers_1[k]
-            axs.plot(sol.t, v4, Utils.lines[k], label = "$layer", alpha=0.8)
+            axs.plot(sol.t, v4, Utils.lines[k], label = "$layer", alpha = 0.8)
         end
         axs.set_xlabel("Time")
         axs.set_ylabel("Activation")
@@ -241,6 +226,6 @@ for file in files[1:end]
         prob = nothing
         sol = nothing
         close("all")
-		CUDA.reclaim()
+        CUDA.reclaim()
     end
 end

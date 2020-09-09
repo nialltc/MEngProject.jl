@@ -6,11 +6,6 @@
 - Date: 2020-06-07
 
 Functions for plotting.
-# Examples
-
-```jldoctest
-julia>
-```
 """
 module Utils
 using PyPlot, Images, Statistics
@@ -352,12 +347,12 @@ function plot_t_act_mean(sol, name, batch, file; save = true)
         for k ∈ 1:12
             # v1 = @view sol[:, :, k, 1, end]
             # v2 = @view sol[findmax(v1)[2][1], findmax(v1)[2][2], k, 1, :]
-			v2 = Array{eltype(float32)}(undef, size(sol, 5))
-			for s in 1:size(sol, 5)
-				v2[s] = mean(@view sol[:,:, k, 1, s])
-			end
-			layer = Utils.layers_1[k]
-			axs.plot(sol.t, v2, Utils.lines[k], label = "$layer", alpha = 0.8)
+            v2 = Array{eltype(float32)}(undef, size(sol, 5))
+            for s = 1:size(sol, 5)
+                v2[s] = mean(@view sol[:, :, k, 1, s])
+            end
+            layer = Utils.layers_1[k]
+            axs.plot(sol.t, v2, Utils.lines[k], label = "$layer", alpha = 0.8)
         end
         axs.set_xlabel("Time")
         axs.set_ylabel("Activation")
@@ -380,7 +375,7 @@ Plots activation vs time with all layers and orientations.
 Uses highest value pixel at end of specified layer/orient.
 Default is z, k=1
 """
-function plot_t_act_px(sol, name, batch, file; d=7, save = true)
+function plot_t_act_px(sol, name, batch, file; d = 7, save = true)
     fig, axs = plt.subplots()
     @inbounds begin
         v1 = @view sol[:, :, d, 1, end]
@@ -412,10 +407,10 @@ Takes in pixel address.
 Default: (50,50)
 Default is z, k=1
 """
-function plot_t_act_spec(sol, name, batch, file; px=(50,50), save = true)
+function plot_t_act_spec(sol, name, batch, file; px = (50, 50), save = true)
     fig, axs = plt.subplots()
     @inbounds begin
-#         v1 = @view sol[:, :, d, 1, end]
+        #         v1 = @view sol[:, :, d, 1, end]
         for k ∈ 1:12
             v2 = @view sol[px[1], px[2], k, 1, :]
             layer = Utils.layers_1[k]
@@ -593,7 +588,7 @@ function plot_k2_vsep1(sol, t, name, batch, file; save = true, cb = true)
             cmap = matplotlib.cm.RdBu_r,
             vmax = axMax,
             vmin = -axMax,
-            alpha = 0.5
+            alpha = 0.5,
         )
         # im2 = ax.imshow(
         #     v2,

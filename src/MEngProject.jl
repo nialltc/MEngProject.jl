@@ -19,6 +19,4 @@ export LaminartFunc,
     LaminartEqImfilterGPU_FFT,
     LaminartEqImfilterGPU_FIR,
     LaminartEqImfilterGPU_IIR
-
-
 end

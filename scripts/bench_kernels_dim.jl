@@ -7,11 +7,6 @@
 
 
 Script to benchmark varations in kernel sizes.
-# Examples
-
-```jldoctest
-julia>
-```
 """
 
 using DrWatson
@@ -98,43 +93,43 @@ file = files[1]
 
 for para_test ∈ enumerate(para_sets)
     # try
-        p = LaminartInitFunc.parameterInit_conv_gpu(
-            datadir("img", file),
-            Parameters.para_var_k(para_test[2]),
-        )
+    p = LaminartInitFunc.parameterInit_conv_gpu(
+        datadir("img", file),
+        Parameters.para_var_k(para_test[2]),
+    )
 
-        u0 = cu(reshape(
-            zeros(Float32, p.dim_i, p.dim_j * (5 * p.K + 2)),
-            p.dim_i,
-            p.dim_j,
-            5 * p.K + 2,
-            1,
-        ))
+    u0 = cu(reshape(
+        zeros(Float32, p.dim_i, p.dim_j * (5 * p.K + 2)),
+        p.dim_i,
+        p.dim_j,
+        5 * p.K + 2,
+        1,
+    ))
 
-        arr1 = similar(@view u0[:, :, 1:2, :])
-        arr2 = similar(@view u0[:, :, 1:1, :])
+    arr1 = similar(@view u0[:, :, 1:2, :])
+    arr2 = similar(@view u0[:, :, 1:1, :])
 
-        f = LaminartFunc.LamFunction(
-            arr1, #x
-            similar(arr1), #m
-            similar(arr1), #s
-            arr2, #x_lgn,
-            similar(arr1), #C,
-            similar(arr1), #H_z,
-            similar(arr1), # dy_temp,
-            similar(arr1), # dm_temp,
-            similar(arr1), # dz_temp,
-            similar(arr1), # ds_temp,
-            similar(arr2), # dv_temp,
-            similar(arr1), # H_z_temp,
-            similar(arr2), #  V_temp_1,
-            similar(arr2), #  V_temp_2,
-            similar(arr1), #  A_temp,
-            similar(arr1), #   B_temp
-        )
-        global prob_ke = ODEProblem(f, u0, tspan, p)
-        push!(benchm_ke, @benchmark solve(prob_ke))
-        sol = solve(prob_ke)
+    f = LaminartFunc.LamFunction(
+        arr1, #x
+        similar(arr1), #m
+        similar(arr1), #s
+        arr2, #x_lgn,
+        similar(arr1), #C,
+        similar(arr1), #H_z,
+        similar(arr1), # dy_temp,
+        similar(arr1), # dm_temp,
+        similar(arr1), # dz_temp,
+        similar(arr1), # ds_temp,
+        similar(arr2), # dv_temp,
+        similar(arr1), # H_z_temp,
+        similar(arr2), #  V_temp_1,
+        similar(arr2), #  V_temp_2,
+        similar(arr1), #  A_temp,
+        similar(arr1), #   B_temp
+    )
+    global prob_ke = ODEProblem(f, u0, tspan, p)
+    push!(benchm_ke, @benchmark solve(prob_ke))
+    sol = solve(prob_ke)
 
     #     @inbounds begin
     #         t = 800

@@ -7,11 +7,6 @@
 
 
 Script to benchmark GPU and CPU implementions of model.
-# Examples
-
-```jldoctest
-julia>
-```
 """
 
 using DrWatson
@@ -142,7 +137,12 @@ p = LaminartInitFunc.parameterInit_imfil_cpu(
     Parameters.parameters_f32,
 );
 
-u0 = reshape(zeros(Float32, p.dim_i, p.dim_j*(5*p.K+2)), p.dim_i, p.dim_j, 5*p.K+2);
+u0 = reshape(
+    zeros(Float32, p.dim_i, p.dim_j * (5 * p.K + 2)),
+    p.dim_i,
+    p.dim_j,
+    5 * p.K + 2,
+);
 
 
 arr1 = u0[:, :, 1:p.K]
@@ -150,15 +150,15 @@ arr2 = u0[:, :, 1:1];
 
 
 f = LaminartFunc.LamFunction_imfil_cpu(
- arr2, #x_lgn,
-arr1, #C,
-similar(arr1), #H_z,
+    arr2, #x_lgn,
+    arr1, #C,
+    similar(arr1), #H_z,
     similar(arr1), # H_z_temp,
     similar(arr2), # v_C_temp1,
     similar(arr2), # v_C_temp2,
     similar(arr1), # v_C_tempA,
-    similar(arr1[:,:,1]), #W_temp
-    );
+    similar(arr1[:, :, 1]), #W_temp
+);
 
 prob = ODEProblem(f, u0, tspan, p)
 push!(benchm_i, @benchmark solve(prob))
@@ -172,7 +172,12 @@ p = LaminartInitFunc.parameterInit_imfil_cpu(
     Parameters.parameters_f32,
 );
 
-u0 = reshape(zeros(Float32, p.dim_i, p.dim_j*(5*p.K+2)), p.dim_i, p.dim_j, 5*p.K+2);
+u0 = reshape(
+    zeros(Float32, p.dim_i, p.dim_j * (5 * p.K + 2)),
+    p.dim_i,
+    p.dim_j,
+    5 * p.K + 2,
+);
 
 
 arr1 = u0[:, :, 1:p.K]
@@ -180,15 +185,15 @@ arr2 = u0[:, :, 1:1];
 
 
 f = LaminartFunc.LamFunction_imfil_gpu_fft(
- arr2, #x_lgn,
-arr1, #C,
-similar(arr1), #H_z,
+    arr2, #x_lgn,
+    arr1, #C,
+    similar(arr1), #H_z,
     similar(arr1), # H_z_temp,
     similar(arr2), # v_C_temp1,
     similar(arr2), # v_C_temp2,
     similar(arr1), # v_C_tempA,
-    similar(arr1[:,:,1]), #W_temp
-    );
+    similar(arr1[:, :, 1]), #W_temp
+);
 
 prob = ODEProblem(f, u0, tspan, p)
 push!(benchm_i, @benchmark solve(prob))
@@ -202,7 +207,12 @@ p = LaminartInitFunc.parameterInit_imfil_cpu(
     Parameters.parameters_f32,
 );
 
-u0 = reshape(zeros(Float32, p.dim_i, p.dim_j*(5*p.K+2)), p.dim_i, p.dim_j, 5*p.K+2);
+u0 = reshape(
+    zeros(Float32, p.dim_i, p.dim_j * (5 * p.K + 2)),
+    p.dim_i,
+    p.dim_j,
+    5 * p.K + 2,
+);
 
 
 arr1 = u0[:, :, 1:p.K]
@@ -210,15 +220,15 @@ arr2 = u0[:, :, 1:1];
 
 
 f = LaminartFunc.LamFunction_imfil_gpu_iir(
- arr2, #x_lgn,
-arr1, #C,
-similar(arr1), #H_z,
+    arr2, #x_lgn,
+    arr1, #C,
+    similar(arr1), #H_z,
     similar(arr1), # H_z_temp,
     similar(arr2), # v_C_temp1,
     similar(arr2), # v_C_temp2,
     similar(arr1), # v_C_tempA,
-    similar(arr1[:,:,1]), #W_temp
-    );
+    similar(arr1[:, :, 1]), #W_temp
+);
 
 prob = ODEProblem(f, u0, tspan, p)
 push!(benchm_i, @benchmark solve(prob))
@@ -232,7 +242,12 @@ p = LaminartInitFunc.parameterInit_imfil_cpu(
     Parameters.parameters_f32,
 );
 
-u0 = reshape(zeros(Float32, p.dim_i, p.dim_j*(5*p.K+2)), p.dim_i, p.dim_j, 5*p.K+2);
+u0 = reshape(
+    zeros(Float32, p.dim_i, p.dim_j * (5 * p.K + 2)),
+    p.dim_i,
+    p.dim_j,
+    5 * p.K + 2,
+);
 
 
 arr1 = u0[:, :, 1:p.K]
@@ -240,15 +255,15 @@ arr2 = u0[:, :, 1:1];
 
 
 f = LaminartFunc.LamFunction_imfil_gpu_fir(
- arr2, #x_lgn,
-arr1, #C,
-similar(arr1), #H_z,
+    arr2, #x_lgn,
+    arr1, #C,
+    similar(arr1), #H_z,
     similar(arr1), # H_z_temp,
     similar(arr2), # v_C_temp1,
     similar(arr2), # v_C_temp2,
     similar(arr1), # v_C_tempA,
-    similar(arr1[:,:,1]), #W_temp
-    );
+    similar(arr1[:, :, 1]), #W_temp
+);
 
 prob = ODEProblem(f, u0, tspan, p)
 push!(benchm_i, @benchmark solve(prob))
@@ -268,7 +283,7 @@ for ben in enumerate(test_name_plt)
 end
 
 ax.set_ylabel("Time (\$s\$)")
-ax.set_ylim(ymin=0)
+ax.set_ylim(ymin = 0)
 ax.grid(true)
 fig.tight_layout()
 plt.savefig(plotsdir(string("bench_imp", batch_), string("bench_imp_time.png")))
@@ -290,7 +305,7 @@ for ben in enumerate(test_name_plt)
 end
 
 ax.set_ylabel("Memory (\$MB\$)")
-ax.set_ylim(ymin=0)
+ax.set_ylim(ymin = 0)
 ax.grid(true)
 fig.tight_layout()
 plt.savefig(plotsdir(string("bench_imp", batch_), string("bench_imp_mem.png")))
@@ -310,7 +325,7 @@ for ben in enumerate(test_name_plt)
 end
 
 ax.set_ylabel("Allocations")
-ax.set_ylim(ymin=0)
+ax.set_ylim(ymin = 0)
 ax.grid(true)
 fig.tight_layout()
 plt.savefig(plotsdir(

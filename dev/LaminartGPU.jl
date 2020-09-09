@@ -948,8 +948,8 @@ C_B_temp = similar(C_A_temp)
         reshape(Array{eltype(img)}(undef, p.W_l, p.W_l * p.K * p.K), p.W_l, p.W_l, p.K, p.K)
     for k ∈ 1:p.K
         θ = π * (k - 1.0f0) / p.K
-        C_A_temp[:, :, 1,k] = LamKernels.kern_A(p.σ_2, θ)
-        C_B_temp[:, :, 1,k] = LamKernels.kern_B(p.σ_2, θ)
+        C_A_temp[:, :, 1,k] = LamKernels.kern_d(p.σ_2, θ)
+        C_B_temp[:, :, 1,k] = LamKernels.kern_b(p.σ_2, θ)
         H_temp[:, :, k,k] = p.H_fact .* LamKernels.gaussian_rot(p.H_σ_x, p.H_σ_y, θ, p.H_l)
 # 		todo make T kernel more general for higher K
         T_temp[1, 1, k,1] = p.T_fact[k]
@@ -1022,8 +1022,8 @@ C_B_temp = similar(C_A_temp)
         reshape(Array{eltype(img)}(undef, p.W_l, p.W_l * p.K * p.K), p.W_l, p.W_l, p.K, p.K)
     for k ∈ 1:p.K
         θ = π * (k - 1.0f0) / p.K
-        C_A_temp[:, :, 1,k] = LamKernels.kern_A(p.σ_2, θ)
-        C_B_temp[:, :, 1,k] = LamKernels.kern_B(p.σ_2, θ)
+        C_A_temp[:, :, 1,k] = LamKernels.kern_d(p.σ_2, θ)
+        C_B_temp[:, :, 1,k] = LamKernels.kern_b(p.σ_2, θ)
         H_temp[:, :, k,k] = p.H_fact .* LamKernels.gaussian_rot(p.H_σ_x, p.H_σ_y, θ, p.H_l)
 # 		todo make T kernel more general for higher K
         T_temp[1, 1, k,1] = p.T_fact[k]

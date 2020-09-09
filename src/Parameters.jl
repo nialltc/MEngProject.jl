@@ -15,11 +15,6 @@ unless stated otherwise.
 
 
 Functions para_var and para_var_k to replace parameters for testing
-# Examples
-
-```jldoctest
-julia>
-```
 """
 module Parameters
 

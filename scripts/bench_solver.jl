@@ -7,11 +7,6 @@
 
 
 Script to benchmark GPU and CPU implementions of model.
-# Examples
-
-```jldoctest
-julia>
-```
 """
 
 using DrWatson

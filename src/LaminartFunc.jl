@@ -7,11 +7,6 @@
 
 
 Functions for DiffEq to call LAMINART equations and hold values.
-# Examples
-
-```jldoctest
-julia>
-```
 """
 module LaminartFunc
 

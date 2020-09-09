@@ -5,11 +5,7 @@
 - Author: niallcullinane
 - Date: 2020-08-20
 
-# Examples
-
-```jldoctest
-julia>
-```
+Functions to create named tuple containing parameters, and input image in approprate type and dimensions for NNlib.conv/imfilter and CPU/GPU implementation.
 """
 module LaminartInitFunc
 
@@ -155,8 +151,8 @@ function kernels_conv_gpu(img::AbstractArray, p::NamedTuple)
 
     for k ∈ 1:p.K
         θ = π * (k - 1.0f0) / p.K
-        C_A_temp[:, :, 1, k] = LaminartKernels.kern_A(p.σ_2, θ)
-        C_B_temp[:, :, 1, k] = LaminartKernels.kern_B(p.σ_2, θ)
+        C_A_temp[:, :, 1, k] = LaminartKernels.kern_d(p.σ_2, θ)
+        C_B_temp[:, :, 1, k] = LaminartKernels.kern_b(p.σ_2, θ)
         H_temp[:, :, k, k] =
             p.H_fact .* LaminartKernels.gaussian_rot(p.H_σ_x, p.H_σ_y, θ, p.H_l)
         # 		todo make T kernel more general for higher K
@@ -368,8 +364,8 @@ function kernels_conv_cpu(img::AbstractArray, p::NamedTuple)
     )
     for k ∈ 1:p.K
         θ = π * (k - 1.0f0) / p.K
-        C_A_temp[:, :, 1, k] = LaminartKernels.kern_A(p.σ_2, θ)
-        C_B_temp[:, :, 1, k] = LaminartKernels.kern_B(p.σ_2, θ)
+        C_A_temp[:, :, 1, k] = LaminartKernels.kern_d(p.σ_2, θ)
+        C_B_temp[:, :, 1, k] = LaminartKernels.kern_b(p.σ_2, θ)
         H_temp[:, :, k, k] =
             p.H_fact .* LaminartKernels.gaussian_rot(p.H_σ_x, p.H_σ_y, θ, p.H_l)
         # 		todo make T kernel more general for higher K
@@ -579,8 +575,8 @@ function kernels_imfil_cpu(img::AbstractArray, p::NamedTuple)
     )    #ijk,  1x1xk,   ijk
     for k ∈ 1:p.K
         θ = π * (k - 1) / p.K
-        C_A_temp[:, :, k] = reflect(centered(LaminartKernels.kern_A(p.σ_2, θ)))           #ij ijk ijk
-        C_B_temp[:, :, k] = reflect(centered(LaminartKernels.kern_B(p.σ_2, θ)))               #ij ijk ijk
+        C_A_temp[:, :, k] = reflect(centered(LaminartKernels.kern_d(p.σ_2, θ)))           #ij ijk ijk
+        C_B_temp[:, :, k] = reflect(centered(LaminartKernels.kern_b(p.σ_2, θ)))               #ij ijk ijk
         H_temp[:, :, k] = reflect(
             p.H_fact .*
             LaminartKernels.gaussian_rot(p.H_σ_x, p.H_σ_y, θ, p.H_l),

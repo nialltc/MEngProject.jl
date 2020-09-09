@@ -11,11 +11,6 @@ R. D. S. Raizada and S. Grossberg, ‘Context-sensitive binding by the laminar c
 
 
 Uses JuliaImages's imfilter with zeros boarding for convolution on GPU with FIR algorithm.
-# Examples
-
-```jldoctest
-julia>
-```
 """
 module LaminartEqImfilterGPU_FIR
 
@@ -66,13 +61,7 @@ function func_filter_W!(
         #     todo fix W
         img_k = @view img[:, :, k]
         out_k = @view W_out[:, :, k]
-        imfilter!(
-            filter_resource,
-            out_k,
-            img_k,
-            centered(W[:, :, k, k]),
-
-        )
+        imfilter!(filter_resource, out_k, img_k, centered(W[:, :, k, k]))
         for l ∈ 1:p.K
             if l ≠ k
                 img_l = @view img[:, :, l]
@@ -81,7 +70,6 @@ function func_filter_W!(
                     W_temp,
                     img_l,
                     centered(W[:, :, k, l]),
-
                 )
                 @. out_k += W_temp
             end
@@ -127,10 +115,9 @@ function fun_v_C!(
     @. v_C_temp2 = exp(-1.0f0 / 8.0f0) * (max(v_p, 0f0) - max(v_m, 0f0))
     imfilter!(
         filter_resource,
-        v_C_temp1[:,:,1],
-        v_C_temp2[:,:,1],
+        v_C_temp1[:, :, 1],
+        v_C_temp2[:, :, 1],
         centered(p.k_gauss_2),
-
     )
 
     #     A = similar(v_C)
@@ -142,16 +129,14 @@ function fun_v_C!(
         imfilter!(
             filter_resource,
             a,
-            v_C_temp1[:,:,1],
+            v_C_temp1[:, :, 1],
             centered(p.k_C_A[:, :, k]),
-
         )
         imfilter!(
             filter_resource,
             b,
-            v_C_temp1[:,:,1],
+            v_C_temp1[:, :, 1],
             centered(p.k_C_B[:, :, k]),
-
         )
     end
     # end
@@ -263,13 +248,7 @@ function fun_H_z!(
     for k ∈ 1:p.K
         H_z_k = @view H_z[:, :, k]
         temp_k = @view H_z_temp[:, :, k]
-        imfilter!(
-            filter_resource,
-            H_z_k,
-            temp_k,
-            centered(p.k_H[:, :, k]),
-
-        )
+        imfilter!(filter_resource, H_z_k, temp_k, centered(p.k_H[:, :, k]))
     end
     # end
     return nothing

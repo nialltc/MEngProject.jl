@@ -11,11 +11,6 @@ R. D. S. Raizada and S. Grossberg, ‘Context-sensitive binding by the laminar c
 
 
 Uses JuliaImages's imfilter with zeros boarding for convolution on GPU with IIR algorithm.
-# Examples
-
-```jldoctest
-julia>
-```
 """
 module LaminartEqImfilterGPU_IIR
 

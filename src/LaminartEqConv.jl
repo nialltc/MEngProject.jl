@@ -11,12 +11,6 @@ R. D. S. Raizada and S. Grossberg, ‘Context-sensitive binding by the laminar c
 
 
 Uses CuArray and NNlib.conv with zeros boarding for convolution on GPU.
-
-# Examples
-
-```jldoctest
-julia>
-```
 """
 
 module LaminartEqConv

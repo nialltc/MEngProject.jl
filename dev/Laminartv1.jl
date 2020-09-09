@@ -74,8 +74,8 @@ function kernels(img::AbstractArray, p::NamedTuple)
     W_temp = reshape(Array{eltype(img)}(undef, 19, 19 * p.K * p.K), 19, 19, p.K, p.K)     #ijk,  1x1xk,   ijk
     for k ∈ 1:p.K
         θ = π*(k-1)/p.K
-        C_A_temp[:,:,k] = reflect(centered(LamKernels.kern_A(p.σ_2, θ)))           #ij ijk ijk
-        C_B_temp[:,:,k] = reflect(centered(LamKernels.kern_B(p.σ_2, θ)))               #ij ijk ijk
+        C_A_temp[:,:,k] = reflect(centered(LamKernels.kern_d(p.σ_2, θ)))           #ij ijk ijk
+        C_B_temp[:,:,k] = reflect(centered(LamKernels.kern_b(p.σ_2, θ)))               #ij ijk ijk
         H_temp[:,:,k] = reflect(p.H_fact .* LamKernels.gaussian_rot(p.H_σ_x, p.H_σ_y, θ, p.H_l))  #ijk, ij for each k; ijk
         T_temp[:,:,k] = reshape([p.T_fact[k]],1,1)
 #todo: generalise T and W for higher K
